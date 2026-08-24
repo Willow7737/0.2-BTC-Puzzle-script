@@ -574,12 +574,30 @@ class TestPositionMap(unittest.TestCase):
         self.assertEqual((pos, {n, m}), (9, {4, 5}))
         self.assertLess(err, 3.0)
 
-    def test_eye_is_strong_not_confirmed(self):
-        """A single 1.3 deg hit happens ~9% of the time by chance."""
+    def test_eye_is_now_weak(self):
+        """Four objects share its ray, and the Needle is nearer than the eye."""
         eye = positions.EYE
         self.assertEqual(eye.position, 9)
-        self.assertEqual(eye.evidence, positions.Evidence.STRONG)
+        self.assertEqual(eye.evidence, positions.Evidence.WEAK)
         self.assertNotIn(9, {a.position for a in positions.CONFIRMED})
+        self.assertEqual(positions.PROPOSED_STRONG, [])
+
+    def test_ray_matching_refutation_is_recorded(self):
+        """The survey that closed the 'object on a ray names a word' idea."""
+        r = positions.RAY_MATCHING_REFUTED
+        self.assertEqual(r["objects_surveyed"], 32)
+        self.assertGreater(r["max_objects_on_one_position"], 1)
+        self.assertGreater(r["positions_with_multiple_objects"], 1)
+        # a real effect holds across thresholds; this one does not
+        ps = list(r["p_values_by_tolerance"].values())
+        self.assertGreater(max(ps), 0.05)
+        self.assertLess(min(ps), 0.05)
+
+    def test_only_confirmed_mechanisms_remain(self):
+        """Three clock hands plus the plinth. Nothing else is established."""
+        got = {a.position for a in positions.CONFIRMED}
+        self.assertEqual(got, {1, 3, 13})
+        self.assertIn(21, positions.ORPHAN_NUMBERS)
 
     def test_chance_probability(self):
         """Default is now the full 24-ray model: 15 deg spacing."""
@@ -626,13 +644,23 @@ class TestPositionMap(unittest.TestCase):
         self.assertEqual(d["phrase_length"], 24)
         self.assertEqual(d["positions"]["13"]["candidates"], ["moon"])
         self.assertEqual(d["positions"]["13"]["confidence"], "confirmed")
-        self.assertEqual(d["positions"]["9"]["confidence"], "strong")
+        # 9 lost its promotion when four objects turned up on the same ray
+        self.assertEqual(d["positions"]["9"]["confidence"], "unresolved")
+        self.assertEqual(d["positions"]["9"]["candidates"], [])
         self.assertEqual(d["positions"]["2"]["candidates"], [])
         self.assertEqual(d["positions"]["2"]["confidence"], "unresolved")
         self.assertTrue(d["positions"]["13"]["basis"])
         back = positions.PositionMap.from_dict(d)
         self.assertEqual(back.slots, pm.slots)
         self.assertEqual(back.length, pm.length)
+
+        # a weak assignment still round-trips with its confidence intact
+        weak = positions.build(24, include_proposed=True).to_dict()
+        self.assertEqual(weak["positions"]["9"]["confidence"], "weak")
+        self.assertEqual(weak["positions"]["9"]["candidates"], ["eye"])
+        self.assertEqual(
+            positions.PositionMap.from_dict(weak).provenance[9].evidence,
+            positions.Evidence.WEAK)
 
     def test_unclaimed_axes_recorded(self):
         """Traced and found empty - recorded so nobody re-traces them."""

@@ -183,9 +183,17 @@ position. Two mechanisms are confirmed directly against the image:
   → `subject → 1`
 * **the clock** — all three hands sit at *midpoints* between numerals, which
   sum to the position → `tower → 3`, `moon → 13`, and an unlabelled `→ 21`
-* **the Great Seal's eye** — sits on the midpoint(4,5) ray: predicted 62.4°,
-  measured 61.1° → `eye → 9`. Graded `STRONG`, not confirmed: a lone 1.3° hit
-  happens ~9% of the time by chance
+**Can the rays name the words? No.** Thirty-two objects were catalogued from
+the artwork before being measured. The hit rate tracks the null as the
+tolerance varies and the p-value wanders (0.125 → 0.017 → 0.061 → 0.021 →
+0.630 from 1° to 5°), the objects are angularly clustered, and **five of nine
+occupied positions carry more than one object** — position 9 carries four. A
+ray that four objects sit on cannot name a word. `eye → 9` fell to `WEAK`
+because the Space Needle is *nearer* to the same ray.
+
+What survives is narrower: the confirmed clues all have the **word written on
+the object** (`moon`/`tower` along the hands, `subject` underlined). The clock
+supplies a number only for things that *are* hands — and there are three.
 
 **One rule, two alignments.** Rune 2 says "sum of two numbers" — not
 *adjacent* numbers. Adjacent numerals sum to `2n+1` (odd); numerals two apart
@@ -293,7 +301,7 @@ puzzle/candidates.py     curated candidate tiers
 puzzle/positions.py      word-plus-number position map and its evidence scale
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    92 tests: published vectors + planted targets
+tests/test_vectors.py    94 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 

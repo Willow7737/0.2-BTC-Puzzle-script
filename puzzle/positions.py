@@ -224,17 +224,16 @@ CONFIRMED: list[Assignment] = [
        "clock seconds hand at midpoint(12,1); predicted 302.4, measured 302-304"),
 ]
 
-#: Downgraded after a chance calculation. The eye really does sit 1.3 degrees
-#: off the midpoint(4,5) ray - but with 12 rays 30 degrees apart, a random
-#: feature lands that close about 9% of the time (Monte-Carlo: 8.6%). One
-#: tight alignment is not proof. It stays STRONG because the community
-#: proposed eye = 4+5 = 9 independently of this measurement, so the
-#: measurement is a successful *prediction* rather than a fitted result.
-EYE = _a(9, "eye", Evidence.STRONG,
-         "Great Seal's eye at midpoint(4,5): predicted 62.4, measured 61.1 "
-         "(off 1.3 deg, ~9% by chance). Independently proposed as 4+5 before "
-         "being measured, which is what lifts it above coincidence")
-PROPOSED_STRONG = [EYE]
+#: Downgraded twice, and now WEAK. The eye does sit 1.4 degrees off the
+#: midpoint(4,5) ray, but a survey of 32 catalogued objects (see
+#: RAY_MATCHING_REFUTED) found the Space Needle at **0.5 degrees** on the same
+#: ray, plus the toppled bust and the map of China within 2.2. Four objects on
+#: one ray cannot name one word, and by proximity the eye is not even the best
+#: candidate. It is kept only as a record of a tested and failed promotion.
+EYE = _a(9, "eye", Evidence.WEAK,
+         "midpoint(4,5) at 1.4 deg - but the Space Needle is at 0.5 deg on the "
+         "same ray and two more objects within 2.2, so the ray names no word")
+PROPOSED_STRONG: list[Assignment] = []
 
 #: The unlabelled hour hand gives a number with no word attached to it.
 ORPHAN_NUMBERS: dict[int, str] = {
@@ -396,6 +395,35 @@ def build(length: int = 24, include_proposed: bool = False,
 #: they pass through large text blocks and several objects at once. So the
 #: "object sits on a ray" mechanism does **not** obviously extend beyond the
 #: clock's own hands, and positions 5, 7, 11, 15, 17, 19 and 23 remain open.
+#: A survey of 32 objects catalogued from the artwork *before* being measured,
+#: testing whether "an object sits on a ray" can assign words to positions.
+#: It cannot, and this records why so the approach is not retried:
+#:
+#: * the hit rate tracks the null as the tolerance is varied, and the p-value
+#:   wanders (0.125, 0.017, 0.061, 0.016, 0.021, 0.195, 0.630 at 1.0 to 5.0
+#:   degrees) instead of holding - researcher degrees of freedom, not signal;
+#: * the objects are angularly clustered (13 of 32 between 45 and 90 degrees,
+#:   none between 135 and 180), because the artwork's content is concentrated;
+#: * **5 of the 9 occupied positions carry more than one object**, and
+#:   position 9 carries four. A ray that four objects sit on names no word.
+#:
+#: What survives is narrower and more demanding: a clue needs the word
+#: *written on* the object (moon and tower along the hands, food down the
+#: Needle's shaft, subject underlined, real inserted into an inscription).
+#: The ray then supplies that object's number - but only three hands exist,
+#: so the clock yields three positions, not twenty-one.
+RAY_MATCHING_REFUTED = {
+    "objects_surveyed": 32,
+    "hit_rate_at_3deg": 0.594,
+    "null_at_3deg": 0.400,
+    "p_values_by_tolerance": {1.0: 0.125, 1.5: 0.017, 2.0: 0.061,
+                              2.5: 0.016, 3.0: 0.021, 4.0: 0.195, 5.0: 0.630},
+    "positions_with_multiple_objects": 5,
+    "max_objects_on_one_position": 4,
+    "conclusion": "ray proximity does not assign words; only the clock's own "
+                  "hands carry both a word and a number",
+}
+
 UNCLAIMED_AXES: dict[tuple[int, int], tuple[float, float, str]] = {
     (5, 17):  (2.7, 181.9, "up through the SEED PHRASE display text; "
                            "down into the bottom whitepaper strip"),

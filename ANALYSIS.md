@@ -341,7 +341,64 @@ than a fitted result. That is worth something, but it is not 1-in-2,500.
 `positions.chance_probability(error)` computes this, and should be consulted
 before promoting any future ray match.
 
-### The mechanism does not obviously extend: the unclaimed axes are empty
+### Can the rays name the words? No — a survey says they cannot
+
+With 24 rays covering positions 3–23, the obvious next step is to read a word
+off each ray. It does not work, and the failure is measurable.
+
+Thirty-two objects were catalogued from the artwork **before** being measured,
+to avoid picking the ones that happen to fit. Then all were tested at once:
+
+| tolerance | hits | observed | null | p |
+|---:|---:|---:|---:|---:|
+| 1.0° | 7 | 21.9% | 13.3% | 0.125 |
+| 1.5° | 12 | 37.5% | 20.0% | 0.017 |
+| 2.0° | 13 | 40.6% | 26.7% | 0.061 |
+| 2.5° | 17 | 53.1% | 33.3% | 0.016 |
+| 3.0° | 19 | 59.4% | 40.0% | 0.021 |
+| 4.0° | 20 | 62.5% | 53.3% | 0.195 |
+| 5.0° | 21 | 65.6% | 66.7% | 0.630 |
+
+**The p-value wanders instead of holding.** A real effect survives every
+threshold; this one is significant at 1.5°, not at 2.0°, significant again at
+2.5° and 3.0°, then gone. That is what researcher degrees of freedom look
+like, not signal.
+
+Two further problems finish it off:
+
+* **The objects are angularly clustered** — 13 of 32 between 45° and 90°, none
+  at all between 135° and 180° — because the artwork's content is concentrated
+  to the upper right of the dial. Ray coverage is not uniform.
+* **Five of the nine occupied positions carry more than one object**, and
+  position 9 carries **four** (Space Needle 0.5°, eye 1.4°, toppled bust 2.2°,
+  map of China 2.2°). A ray that four objects sit on cannot name a word.
+
+That last point also kills the eye. It is not even the closest object on its
+own ray — the Space Needle is nearer. `eye → 9` drops to `WEAK`, and
+`PROPOSED_STRONG` is now empty.
+
+### What actually survives
+
+The confirmed clues share a property the survey objects do not: **the word is
+written on the object**.
+
+| Clue | Word | How the word is marked | How the number is given |
+|---|---|---|---|
+| seconds hand | `moon` | written along the hand | its own bearing → 13 |
+| minutes hand | `tower` | written along the hand | its own bearing → 3 |
+| hours hand | *(none)* | — | its own bearing → 21 |
+| plinth | `subject` | underlined | underlined `Section 1` → 1 |
+
+So the clock gives a number only for objects that *are* clock hands, and there
+are three of them. The mechanism is real and it is narrow: **three positions
+from the clock, one from the plinth, and no established mechanism for the
+other twenty.**
+
+Words that are marked but have no number — `food` on the Needle's shaft,
+`real` inserted into the Statue's inscription — remain unplaced. Finding what
+numbers *those* carry is a better use of effort than tracing more rays.
+
+### The unclaimed axes are empty too
 
 Three axes carry no hand — 5↔17, 7↔19, 11↔23. Each was traced across the full
 artwork:
@@ -352,14 +409,9 @@ artwork:
 | 7 ↔ 19 | up-right through `NEW WORLD` toward Floyd; down-left across the dial past numeral 10 |
 | 11 ↔ 23 | right through the pyramid, Trump/Biden and the plinth; left through the Statue's robe |
 
-**None lands on a crisp, isolated feature the way the eye does.** They cross
-large text blocks and several objects at once, and with a 9% per-object
-false-positive rate, picking any one of those and declaring a match would be
-pattern matching rather than decoding.
-
-That is a real negative. The "object sits on a ray" idea works for the clock's
-own hands and possibly the eye, and then stops. Positions 5, 7, 11, 15, 17, 19
-and 23 remain open, and something other than ray-tracing will be needed.
+**None lands on a crisp, isolated feature.** They cross large text blocks and
+several objects at once — consistent with the survey above, which shows ray
+proximity is not discriminating at 15° spacing.
 
 ### The mechanism extends past the hands: the Great Seal's eye
 
