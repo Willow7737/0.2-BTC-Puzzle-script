@@ -491,8 +491,7 @@ class TestPositionMap(unittest.TestCase):
 
     def test_confirmed_assignments(self):
         got = {a.position: sorted(a.words) for a in positions.CONFIRMED}
-        self.assertEqual(got, {1: ["subject"], 3: ["tower"], 9: ["eye"],
-                               13: ["moon"]})
+        self.assertEqual(got, {1: ["subject"], 3: ["tower"], 13: ["moon"]})
         for a in positions.CONFIRMED:
             self.assertEqual(a.evidence, positions.Evidence.CONFIRMED)
 
@@ -568,12 +567,33 @@ class TestPositionMap(unittest.TestCase):
         self.assertEqual(set(positions.NUMERAL_BEARING) - measured, {4, 5, 6, 7})
 
     def test_eye_sits_on_the_four_five_midpoint(self):
-        """The measurement that promoted eye -> 9 to CONFIRMED."""
+        """The eye really is on the ray - but see the chance test below."""
         got = positions.position_at(648, 843)
         self.assertIsNotNone(got)
         pos, n, m, _bearing, err = got
         self.assertEqual((pos, {n, m}), (9, {4, 5}))
         self.assertLess(err, 3.0)
+
+    def test_eye_is_strong_not_confirmed(self):
+        """A single 1.3 deg hit happens ~9% of the time by chance."""
+        eye = positions.EYE
+        self.assertEqual(eye.position, 9)
+        self.assertEqual(eye.evidence, positions.Evidence.STRONG)
+        self.assertNotIn(9, {a.position for a in positions.CONFIRMED})
+
+    def test_chance_probability(self):
+        """12 rays 30 deg apart: the false-positive rate for ray-matching."""
+        self.assertAlmostEqual(positions.chance_probability(1.3), 2*1.3/30, places=6)
+        self.assertAlmostEqual(positions.chance_probability(15.0), 1.0, places=6)
+        self.assertGreater(positions.chance_probability(1.3), 0.08)
+
+    def test_unclaimed_axes_recorded(self):
+        """Traced and found empty - recorded so nobody re-traces them."""
+        self.assertEqual(sorted(positions.UNCLAIMED_AXES),
+                         [(5, 17), (7, 19), (11, 23)])
+        for (a, b), (ba, bb, note) in positions.UNCLAIMED_AXES.items():
+            self.assertAlmostEqual(abs(ba - bb), 180.0, delta=1.5)
+            self.assertTrue(note)
 
     def test_position_at_rejects_a_point_off_every_ray(self):
         cx, cy = positions.CLOCK_CENTRE

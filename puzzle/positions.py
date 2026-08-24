@@ -84,6 +84,19 @@ def bearing_of(x: float, y: float) -> float:
     return math.degrees(math.atan2(x - cx, -(y - cy))) % 360
 
 
+def chance_probability(error_deg: float, n_rays: int = 12) -> float:
+    """Probability a *random* bearing lands this close to some midpoint ray.
+
+    This is the sanity check that keeps ray-matching honest. Twelve rays 30
+    degrees apart means a random feature is within 1.3 degrees of one about
+    **9%** of the time - so a single tight alignment is suggestive, not proof.
+    Only a joint alignment of several independent features, or a feature the
+    mechanism is intrinsically *about* (a clock's own hands), carries weight.
+    """
+    spacing = 360.0 / n_rays
+    return min(1.0, 2.0 * error_deg / spacing)
+
+
 def position_at(x: float, y: float, tolerance: float = 3.0):
     """Which position, if any, an image feature at (x, y) encodes.
 
@@ -157,11 +170,19 @@ CONFIRMED: list[Assignment] = [
        "clock minute hand at midpoint(1,2); predicted bearing 332.4 deg"),
     _a(13, "moon",    Evidence.CONFIRMED,
        "clock seconds hand at midpoint(12,1); predicted 302.4, measured 302-304"),
-    _a(9,  "eye",     Evidence.CONFIRMED,
-       "Great Seal's eye at midpoint(4,5); predicted 62.4, measured 61.1 "
-       "(off 1.3 deg). Numerals 4-7 are hidden behind the Seal, so the Seal's "
-       "own features carry the clues those numerals would have"),
 ]
+
+#: Downgraded after a chance calculation. The eye really does sit 1.3 degrees
+#: off the midpoint(4,5) ray - but with 12 rays 30 degrees apart, a random
+#: feature lands that close about 9% of the time (Monte-Carlo: 8.6%). One
+#: tight alignment is not proof. It stays STRONG because the community
+#: proposed eye = 4+5 = 9 independently of this measurement, so the
+#: measurement is a successful *prediction* rather than a fitted result.
+EYE = _a(9, "eye", Evidence.STRONG,
+         "Great Seal's eye at midpoint(4,5): predicted 62.4, measured 61.1 "
+         "(off 1.3 deg, ~9% by chance). Independently proposed as 4+5 before "
+         "being measured, which is what lifts it above coincidence")
+PROPOSED_STRONG = [EYE]
 
 #: The unlabelled hour hand gives a number with no word attached to it.
 ORPHAN_NUMBERS: dict[int, str] = {
@@ -183,7 +204,7 @@ PROPOSED: list[Assignment] = [
        "so the number is incidental rather than chosen"),
     _a(9,  "eye",     Evidence.WEAK, "4 + 5 pyramid/eye clue"),
     _a(10, "black day", Evidence.WEAK, "rune 4 'black day number X'; word unresolved"),
-    _a(11, "pyramid", Evidence.STRONG,
+    _a(11, "pyramid", Evidence.WEAK,
        "the midpoint(5,6) ray at 92.4 deg passes through the pyramid's brick "
        "body, but its centroid bearing is 101.1 - off 8.7 deg, too loose to "
        "confirm the way the eye was"),
@@ -255,13 +276,33 @@ class PositionMap:
         return "\n".join(lines)
 
 
-def build(length: int = 24, include_proposed: bool = False) -> PositionMap:
-    """Assemble a map from the confirmed assignments, optionally the weak ones."""
+def build(length: int = 24, include_proposed: bool = False,
+          include_strong: bool = False) -> PositionMap:
+    """Assemble a map: confirmed always, then optionally strong, then weak."""
     pm = PositionMap(length=length)
     for a in CONFIRMED:
         pm.place(a)
+    if include_strong or include_proposed:
+        for a in PROPOSED_STRONG:
+            if a.position <= length:
+                pm.place(a)
     if include_proposed:
         for a in PROPOSED:
             if a.position <= length:
                 pm.place(a)
     return pm
+
+
+#: The three axes that carry no drawn hand. Each ray was traced across the
+#: artwork and none lands on a crisp, isolated feature the way the eye does -
+#: they pass through large text blocks and several objects at once. So the
+#: "object sits on a ray" mechanism does **not** obviously extend beyond the
+#: clock's own hands, and positions 5, 7, 11, 15, 17, 19 and 23 remain open.
+UNCLAIMED_AXES: dict[tuple[int, int], tuple[float, float, str]] = {
+    (5, 17):  (2.7, 181.9, "up through the SEED PHRASE display text; "
+                           "down into the bottom whitepaper strip"),
+    (7, 19):  (32.6, 211.7, "up-right through NEW WORLD toward Floyd; "
+                            "down-left across the dial past numeral 10"),
+    (11, 23): (92.4, 272.5, "right through the pyramid, Trump/Biden and the "
+                            "plinth; left through the Statue's robe"),
+}

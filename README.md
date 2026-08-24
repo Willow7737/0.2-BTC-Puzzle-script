@@ -183,8 +183,9 @@ position. Two mechanisms are confirmed directly against the image:
   → `subject → 1`
 * **the clock** — all three hands sit at *midpoints* between numerals, which
   sum to the position → `tower → 3`, `moon → 13`, and an unlabelled `→ 21`
-* **the Great Seal's eye** — numerals 4–7 hide behind the Seal, and its eye
-  sits on the midpoint(4,5) ray: predicted 62.4°, measured 61.1° → `eye → 9`
+* **the Great Seal's eye** — sits on the midpoint(4,5) ray: predicted 62.4°,
+  measured 61.1° → `eye → 9`. Graded `STRONG`, not confirmed: a lone 1.3° hit
+  happens ~9% of the time by chance
 
 Because consecutive numerals sum to `2n+1`, **the clock can only produce odd
 positions** (3, 5, … 23). Every *even* position in the community table
@@ -272,7 +273,7 @@ puzzle/candidates.py     curated candidate tiers
 puzzle/positions.py      word-plus-number position map and its evidence scale
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    82 tests: published vectors + planted targets
+tests/test_vectors.py    85 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 

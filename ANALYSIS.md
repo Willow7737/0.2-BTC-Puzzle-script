@@ -297,6 +297,70 @@ That criterion is encoded in `puzzle/positions.py` as the `Evidence` scale,
 and it is why the community's proposed assignments stay `WEAK` however cleanly
 they can be counted.
 
+### The six axes, and why the moon hand is the giveaway
+
+Each hand is a *line*, so it covers two opposite midpoints. There are six axes:
+
+| Axis | ↔ | Carries a hand? |
+|---|---|---|
+| 3 (332.4°) | 15 (151.8°) | **tower** |
+| 5 (2.7°) | 17 (181.9°) | no |
+| 7 (32.6°) | 19 (211.7°) | no |
+| **13 (302.4°)** | **13 (122.4°)** | **moon** |
+| 9 (62.4°) | 21 (241.7°) | **hour** |
+| 11 (92.4°) | 23 (272.5°) | no |
+
+Two things fall out. The `13 ↔ 13` axis is the **only one whose two ends give
+the same number** — 12+1 and 6+7 both sum to 13 — and it is opposite to 0.0°.
+The artist put the unambiguous word on the unambiguous axis. Every other hand
+is ambiguous between two positions, resolved only by which end the word is
+written on.
+
+Second, **the hour hand's far end lands on 9, exactly where the Seal's eye
+sits**. The "unlabelled" hand is not unlabelled; it points at the eye.
+
+### How surprising is any of this?
+
+Ray-matching needs a false-positive rate or it degenerates into pattern
+matching. Twelve rays 30° apart means a random bearing is within 1.3° of one
+about **9% of the time** (Monte-Carlo over 200k samples: 8.6%).
+
+| Claim | Error | By chance |
+|---|---:|---:|
+| all three hands within ~2° | — | **0.24%** |
+| …and `moon` on the one self-matching axis (1 of 6) | — | **~0.04%** |
+| the Seal's eye alone | 1.3° | **8.7%** |
+
+So the **clock mechanism is strong** — about 1 in 2,500 by chance, and it
+comes with its own caption (rune 2, "sum of two numbers", drawn inside the
+dial). The **eye is not, on its own**. It stays `STRONG` rather than
+`CONFIRMED` for one specific reason: the community proposed `eye = 4+5 = 9`
+*before* it was measured, so the measurement is a successful prediction rather
+than a fitted result. That is worth something, but it is not 1-in-2,500.
+
+`positions.chance_probability(error)` computes this, and should be consulted
+before promoting any future ray match.
+
+### The mechanism does not obviously extend: the unclaimed axes are empty
+
+Three axes carry no hand — 5↔17, 7↔19, 11↔23. Each was traced across the full
+artwork:
+
+| Axis | What the rays actually pass through |
+|---|---|
+| 5 ↔ 17 | up through the `SEED PHRASE` display text; down into the bottom whitepaper strip |
+| 7 ↔ 19 | up-right through `NEW WORLD` toward Floyd; down-left across the dial past numeral 10 |
+| 11 ↔ 23 | right through the pyramid, Trump/Biden and the plinth; left through the Statue's robe |
+
+**None lands on a crisp, isolated feature the way the eye does.** They cross
+large text blocks and several objects at once, and with a 9% per-object
+false-positive rate, picking any one of those and declaring a match would be
+pattern matching rather than decoding.
+
+That is a real negative. The "object sits on a ray" idea works for the clock's
+own hands and possibly the eye, and then stops. Positions 5, 7, 11, 15, 17, 19
+and 23 remain open, and something other than ray-tracing will be needed.
+
 ### The mechanism extends past the hands: the Great Seal's eye
 
 Numerals 4, 5, 6 and 7 are hidden behind the Great Seal — and the Seal's own
@@ -305,8 +369,8 @@ features sit on the rays those numerals define. The community table proposes
 
 | Feature | Predicted ray | Measured bearing | Error | Verdict |
 |---|---:|---:|---:|---|
-| Seal's eye | midpoint(4,5) = 62.4° | **61.1°** | **1.3°** | **CONFIRMED → 9** |
-| Pyramid centroid | midpoint(5,6) = 92.4° | 101.1° | 8.7° | not confirmed |
+| Seal's eye | midpoint(4,5) = 62.4° | **61.1°** | **1.3°** | **STRONG → 9** |
+| Pyramid centroid | midpoint(5,6) = 92.4° | 101.1° | 8.7° | rejected (58% by chance) |
 
 The eye lands inside the artwork's own drafting scatter. The pyramid does not:
 the 92.4° ray passes *through* its brick body, but a large triangle's centroid
