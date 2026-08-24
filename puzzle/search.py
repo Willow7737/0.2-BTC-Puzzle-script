@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterator, Sequence
 
-from . import brainwallet
+from . import brainwallet, electrum
 from .bip39 import checksum_ok_12, checksum_ok, mnemonic_to_seed
 from .derive import Scheme, iter_hash160s
 from .wordlist import INDEX
@@ -35,7 +35,7 @@ class SearchConfig:
     pool: list[str]
     target_hash160: bytes
     phrase_len: int = 12
-    mode: str = "bip39"                      # "bip39" | "brain"
+    mode: str = "bip39"                      # "bip39" | "brain" | "electrum"
     schemes: tuple[Scheme, ...] = ()
     passphrase: str = ""
     pinned: dict[int, str] = field(default_factory=dict)
@@ -45,6 +45,7 @@ class SearchConfig:
     workers: int = 1
     prefix_len: int = 1
     limit: int | None = None
+    electrum_depth: int = 5            # address indices scanned per Electrum chain
     unit_limit: int | None = None      # max orderings per unit (derived from limit)
     deadline: float | None = None      # absolute time.time() cutoff
 
@@ -171,6 +172,52 @@ def _run_unit_bip39(cfg: SearchConfig, subset, prefix) -> tuple[int, int, list[H
     return tested, valid, hits, not truncated
 
 
+def _run_unit_electrum(cfg: SearchConfig, subset, prefix) -> tuple[int, int, list[Hit], bool]:
+    """Electrum standard seeds.
+
+    The seed-version check is an 8-bit prefix, so it rejects 255 of every 256
+    orderings for one HMAC-SHA512 - a filter sixteen times stronger than
+    BIP-39's, which is what makes this mode cheap enough to sweep many word
+    sets. Only the "01" (standard) type can produce a legacy 1... address;
+    segwit and 2FA seeds derive bech32, so they cannot match this target.
+    """
+    target = cfg.target_hash160
+    passphrase = cfg.passphrase
+    depth = cfg.electrum_depth
+    rest = list(subset)
+    for w in prefix:
+        rest.remove(w)
+
+    tested = valid = 0
+    hits: list[Hit] = []
+    unit_limit = cfg.unit_limit
+    deadline = cfg.deadline
+    truncated = False
+    check = electrum.is_seed_type
+
+    for tail in itertools.permutations(rest, len(rest)):
+        order = prefix + tail
+        tested += 1
+        if not tested & 0x3FF:
+            if unit_limit and tested >= unit_limit:
+                truncated = True
+                break
+            if deadline and time.time() >= deadline:
+                truncated = True
+                break
+        placed = order if not cfg.pinned else tuple(_positional(order, cfg))
+        phrase = " ".join(placed)
+        if not check(phrase, electrum.LEGACY_PREFIX):
+            continue
+        valid += 1
+        for h160, chain, idx in electrum.iter_hash160s(phrase, passphrase, depth):
+            if h160 == target:
+                hits.append(Hit(phrase, chain, idx, f"electrum standard, passphrase={passphrase!r}"))
+        if hits:
+            break
+    return tested, valid, hits, not truncated
+
+
 def _run_unit_brain(cfg: SearchConfig, subset, prefix) -> tuple[int, int, list[Hit]]:
     target = cfg.target_hash160
     rest = list(subset)
@@ -212,7 +259,8 @@ def _run_unit(args) -> tuple[int, int, int, list[dict], bool]:
     unit_id, subset, prefix = args
     cfg = _WORKER_CFG
     assert cfg is not None
-    runner = _run_unit_brain if cfg.mode == "brain" else _run_unit_bip39
+    runner = {"brain": _run_unit_brain,
+              "electrum": _run_unit_electrum}.get(cfg.mode, _run_unit_bip39)
     tested, valid, hits, complete = runner(cfg, subset, prefix)
     return unit_id, tested, valid, [h.to_dict() for h in hits], complete
 

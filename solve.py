@@ -55,7 +55,11 @@ def _resolve_pool(args) -> list[str]:
 
 
 def _require_valid(pool: list[str], mode: str) -> list[str]:
-    """In BIP-39 mode a non-BIP-39 word makes the whole search pointless."""
+    """In BIP-39 mode a non-BIP-39 word makes the whole search pointless.
+
+    Electrum's English list is the BIP-39 English list, so the same check
+    applies; only brainwallet mode is unrestricted.
+    """
     if mode == "brain":
         return pool
     good, bad = validate(pool)
@@ -257,6 +261,7 @@ def cmd_search(args) -> int:
         passphrase=args.passphrase, pinned=pinned, required=required,
         joiners=tuple(args.joiners.split(",")), casings=tuple(args.casings.split(",")),
         workers=args.workers, prefix_len=args.prefix_len, limit=args.limit,
+        electrum_depth=args.depth if args.depth else 5,
     )
 
     ckpt = Checkpoint(Path(args.checkpoint) if args.checkpoint else None)
@@ -336,7 +341,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("estimate", help="size and time a search without running it")
     pool_args(sp)
     sp.add_argument("--length", type=int, default=12)
-    sp.add_argument("--mode", choices=("bip39", "brain"), default="bip39")
+    sp.add_argument("--mode", choices=("bip39", "brain", "electrum"), default="bip39")
     sp.add_argument("--workers", type=int, default=os.cpu_count() or 1)
     sp.add_argument("--pin")
     sp.add_argument("--require")
@@ -359,10 +364,10 @@ def build_parser() -> argparse.ArgumentParser:
     pool_args(sp)
     sp.add_argument("--target", default=TARGET_ADDRESS)
     sp.add_argument("--length", type=int, default=12, help="mnemonic length")
-    sp.add_argument("--mode", choices=("bip39", "brain"), default="bip39")
+    sp.add_argument("--mode", choices=("bip39", "brain", "electrum"), default="bip39")
     sp.add_argument("--schemes", help=f"comma list or 'all'; default: {','.join(DEFAULT_SCHEMES)}")
     sp.add_argument("--depth", type=int,
-                    help="address indices to scan per scheme (default 5). "
+                    help="address indices to scan per scheme/chain (default 5). "
                          "--depth 1 roughly doubles throughput")
     sp.add_argument("--passphrase", default="", help="BIP-39 passphrase (13th word)")
     sp.add_argument("--pin", help="fix words to positions, e.g. 0=moon,11=black")

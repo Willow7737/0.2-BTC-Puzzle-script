@@ -287,7 +287,52 @@ Both compressed and uncompressed public keys were tested for every candidate.
 **A brainwallet of up to six words from this vocabulary is ruled out.** That is
 a real closure, not a sample: the space was covered completely.
 
-## 4. Why the original script could not have worked
+## 4. Electrum seeds: a whole search space nobody had checked
+
+Everything above assumes BIP-39. **Electrum does not use BIP-39**, and the
+differences are not cosmetic:
+
+| | BIP-39 | Electrum |
+|---|---|---|
+| checksum | 4 bits, in the last word | 8 bits, `HMAC-SHA512(b"Seed version", seed)` prefix |
+| PBKDF2 salt | `b"mnemonic"` | `b"electrum"` |
+| script type | chosen by the derivation path | **encoded in the seed itself** |
+| legacy path | `m/44'/0'/0'/0/i` | `m/0/i` receiving, `m/1/i` change |
+
+A phrase can be a perfectly valid Electrum seed and an invalid BIP-39
+mnemonic, and vice versa — the two checksums are unrelated. So a BIP-39-only
+search walks straight past an Electrum wallet no matter how long it runs. For
+a 2020-era puzzle whose description says "seed **passphrase**", this was a
+real gap.
+
+`puzzle/electrum.py` implements it, verified against Electrum's own
+`tests/test_wallet_vertical.py` vectors — seed typing for standard, segwit and
+2FA-segwit phrases, and the `m/0/0` / `m/1/0` addresses of a known standard
+seed.
+
+Only the **standard** type (`01` prefix) can produce a legacy `1...` address;
+segwit and 2FA seeds derive bech32, so they cannot match this target and are
+skipped.
+
+### It is also seven times cheaper to search
+
+The 8-bit seed-version prefix rejects **255 of every 256** orderings for the
+cost of one HMAC-SHA512, where BIP-39's 4-bit checksum only rejects 15 of 16.
+That sixteen-fold stronger filter more than pays for the slightly dearer
+derivation:
+
+```
+seed-version filter :  122,394 orderings/sec/core   (measured pass rate 0.00385, expected 1/256)
+full candidate      :      518 /sec/core            (PBKDF2 + m/0/0 + m/1/0)
+effective           :   63,677 orderings/sec/core -> 254,709/s on four cores
+```
+
+**A twelve-word pool takes 31 minutes in Electrum mode against 3.8 hours in
+BIP-39 mode.** That changes the strategy: word *sets* can be swept, not just
+sampled. Where BIP-39 lets four cores exhaust roughly one set per working day,
+Electrum lets them do a dozen.
+
+## 5. Why the original script could not have worked
 
 The script this repository shipped with did:
 
@@ -345,7 +390,7 @@ words is a tractable search; sixteen is not.
 
 ---
 
-## 5. What this toolkit does instead
+## 6. What this toolkit does instead
 
 | Problem | Fix | Measured effect |
 |---|---|---|
@@ -372,7 +417,7 @@ keeps it off 15 of every 16 candidates.
 
 ---
 
-## 6. Recommended search order
+## 7. Recommended search order
 
 Ranked by probability-per-CPU-hour.
 
@@ -410,7 +455,7 @@ pushes the run past a year.
 
 ---
 
-## 7. Coverage so far
+## 8. Coverage so far
 
 Two runs, both against the target's HASH160, both checkpointed and resumable.
 
@@ -450,7 +495,7 @@ full     ~3.8 hours on four cores; checkpointed
 None of these has found the key. Runs 2 and 3 cover one derivation path each;
 run 4 is the only one that closes its space completely.
 
-## 8. Open questions
+## 9. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
   accepts 15/18/21/24, and brainwallet mode accepts any length. A 24-word
@@ -487,7 +532,7 @@ run 4 is the only one that closes its space completely.
 
 ---
 
-## 9. Verification
+## 10. Verification
 
 Every cryptographic primitive is pinned to a published test vector, and the
 search engine is tested against planted targets it must find:

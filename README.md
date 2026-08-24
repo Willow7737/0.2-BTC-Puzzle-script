@@ -102,6 +102,7 @@ Useful flags:
 | `--pin 0=moon,11=black` | fix words to positions — divides work by the pool size |
 | `--require brave` | force a word to appear somewhere |
 | `--mode brain` | free-form passphrase, ~65x faster, any vocabulary |
+| `--mode electrum` | Electrum seeds — different checksum and salt, **7x faster** |
 | `--schemes all` | test all six derivation schemes |
 | `--passphrase X` | BIP-39 passphrase (the "13th word") |
 | `--length 15` | non-12-word mnemonics |
@@ -157,7 +158,7 @@ bip39 candidate :          278 /sec/core   (PBKDF2-2048 + 4 schemes)
 brain candidate :       18,154 /sec/core
 
 $ ./solve.py selftest
-Ran 52 tests in 1.158s
+Ran 60 tests in 1.374s
 OK
 ```
 
@@ -218,12 +219,13 @@ puzzle/keys.py           secp256k1, HASH160, Base58Check
 puzzle/_ripemd160.py     pure-Python RIPEMD-160 (OpenSSL 3 fallback)
 puzzle/derive.py         BIP-32 and the six derivation schemes
 puzzle/brainwallet.py    free-form passphrase mode
+puzzle/electrum.py       Electrum seed derivation (different checksum and salt)
 puzzle/search.py         parallel, checkpointed search engine
 puzzle/feasibility.py    search-space arithmetic and time estimates
 puzzle/candidates.py     curated candidate tiers
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    52 tests: published vectors + planted targets
+tests/test_vectors.py    60 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 
@@ -243,6 +245,23 @@ implementations (Trezor's `mnemonic` and the `bip32` package) over 200 random
 mnemonics with zero disagreements.
 
 ---
+
+## Electrum seeds
+
+Electrum does not use BIP-39. Different checksum (8 bits, not 4), different
+PBKDF2 salt (`electrum`, not `mnemonic`), and the script type is baked into
+the seed rather than chosen by the path — legacy wallets sit at `m/0/i`, not
+`m/44'/0'/0'/0/i`. A phrase can be a valid Electrum seed and an invalid BIP-39
+mnemonic, so **a BIP-39-only search will never find an Electrum wallet.**
+
+```bash
+./solve.py search --mode electrum --extra "$(...)" --depth 2 --workers 4
+```
+
+It is also the *cheapest* mode: the 8-bit seed-version prefix rejects 255 of
+every 256 orderings, so a 12-word pool takes **31 minutes** instead of 3.8
+hours. That is fast enough to sweep word sets rather than sample them.
+Verified against Electrum's own test vectors.
 
 ## What has been ruled out
 

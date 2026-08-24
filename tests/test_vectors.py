@@ -11,7 +11,7 @@ import itertools
 import os
 import unittest
 
-from puzzle import bip39, brainwallet, candidates, derive, feasibility, keys
+from puzzle import bip39, brainwallet, candidates, derive, electrum, feasibility, keys
 from puzzle._ripemd160 import ripemd160
 from puzzle.search import Checkpoint, SearchConfig, count_units, run_search
 from puzzle.wordlist import (INDEX, WORDS, WORDLIST_SHA256, is_valid, load_wordlist,
@@ -326,6 +326,78 @@ class TestForensicsRegions(unittest.TestCase):
         import forensics
         for name in ("clock", "plinth", "needle", "statue-base", "vertical"):
             self.assertIn(name, forensics.REGIONS)
+
+
+class TestElectrum(unittest.TestCase):
+    """Official vectors from Electrum's own tests/test_wallet_vertical.py.
+
+    Electrum does not use BIP-39: different checksum, different PBKDF2 salt,
+    and the script type is encoded in the seed. A BIP-39-only search would
+    walk straight past an Electrum wallet, so this path has to be right.
+    """
+
+    STANDARD = ("cycle rocket west magnet parrot shuffle foot correct "
+                "salt library feed song")
+    SEGWIT = ("bitter grass shiver impose acquire brush forget axis "
+              "eager alone wine silver")
+    TWOFA_SW = ("universe topic remind silver february ranch shine worth "
+                "innocent cattle enhance wise")
+
+    def test_seed_types(self):
+        self.assertEqual(electrum.seed_type(self.STANDARD), "standard")
+        self.assertEqual(electrum.seed_type(self.SEGWIT), "segwit")
+        self.assertEqual(electrum.seed_type(self.TWOFA_SW), "2fa_segwit")
+
+    def test_non_electrum_phrase_has_no_type(self):
+        bip39 = ("abandon abandon abandon abandon abandon abandon abandon "
+                 "abandon abandon abandon abandon about")
+        self.assertIsNone(electrum.seed_type(bip39))
+
+    def test_standard_wallet_addresses(self):
+        """m/0/0 receiving and m/1/0 change, straight off the master node."""
+        got = {(c, i): keys.address_from_hash160(h)
+               for h, c, i in electrum.iter_hash160s(self.STANDARD, depth=1)}
+        self.assertEqual(got[("electrum-receiving", 0)],
+                         "1NNkttn1YvVGdqBW4PR6zvc3Zx3H5owKRf")
+        self.assertEqual(got[("electrum-change", 0)],
+                         "1KSezYMhAJMWqFbVFB2JshYg69UpmEXR4D")
+
+    def test_salt_is_electrum_not_mnemonic(self):
+        """The one-byte difference that makes this a separate search space."""
+        self.assertNotEqual(electrum.mnemonic_to_seed(self.STANDARD),
+                            bip39.mnemonic_to_seed(self.STANDARD))
+
+    def test_normalisation(self):
+        self.assertEqual(electrum.normalize_text("  Cycle   ROCKET \n west "),
+                         "cycle rocket west")
+
+    def test_legacy_prefix_is_standard(self):
+        """Only the standard type yields a 1... address; segwit gives bc1."""
+        self.assertEqual(electrum.LEGACY_PREFIX, electrum.SEED_PREFIX)
+        self.assertTrue(electrum.is_seed_type(self.STANDARD))
+        self.assertFalse(electrum.is_seed_type(self.SEGWIT))
+
+    def test_filter_rate_is_one_in_256(self):
+        """8 checksum bits, versus BIP-39's 4 - what makes this mode cheap."""
+        pool = candidates.BEST_12
+        n = ok = 0
+        for p in itertools.islice(itertools.permutations(pool, 12), 20000):
+            ok += electrum.is_seed_type(" ".join(p))
+            n += 1
+        self.assertAlmostEqual(ok / n, 1 / 256, delta=0.002)
+
+
+class TestElectrumSearch(unittest.TestCase):
+    def test_finds_planted_electrum_target(self):
+        seed = TestElectrum.STANDARD
+        target = next(h for h, c, i in electrum.iter_hash160s(seed, depth=1)
+                      if c == "electrum-receiving" and i == 0)
+        cfg = SearchConfig(pool=seed.split(), target_hash160=target, mode="electrum",
+                           workers=2, prefix_len=1, electrum_depth=1)
+        hits, _ = run_search(cfg, Checkpoint(None))
+        self.assertTrue(hits, "engine failed to find a planted Electrum target")
+        self.assertEqual(hits[0].phrase, seed)
+        self.assertEqual(hits[0].scheme, "electrum-receiving")
 
 
 class TestRuneAnalysis(unittest.TestCase):
