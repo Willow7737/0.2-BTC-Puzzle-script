@@ -491,7 +491,8 @@ class TestPositionMap(unittest.TestCase):
 
     def test_confirmed_assignments(self):
         got = {a.position: sorted(a.words) for a in positions.CONFIRMED}
-        self.assertEqual(got, {1: ["subject"], 3: ["tower"], 13: ["moon"]})
+        self.assertEqual(got, {1: ["subject"], 3: ["tower"], 9: ["eye"],
+                               13: ["moon"]})
         for a in positions.CONFIRMED:
             self.assertEqual(a.evidence, positions.Evidence.CONFIRMED)
 
@@ -533,6 +534,60 @@ class TestPositionMap(unittest.TestCase):
         self.assertEqual(pm.combinations(), 2)
         del pm.slots[3]
         self.assertEqual(pm.combinations(vocabulary=2048), 2 * 2048)
+
+    def test_clock_mechanism_only_yields_odd_positions(self):
+        """Consecutive numerals sum to 2n+1, so evens need another mechanism."""
+        reachable = sorted(positions.midpoint_bearings())
+        self.assertEqual(reachable, [3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23])
+        self.assertTrue(all(p % 2 == 1 for p in reachable))
+
+    def test_numeral_bearings_are_evenly_spaced(self):
+        """~30 degree steps, with the scatter of hand-drawn numerals.
+
+        Measured steps run 28.0 to 32.0 degrees. That scatter is the noise
+        floor for every midpoint prediction, which is why a 1.3 degree match
+        counts as a hit and an 8.7 degree one does not.
+        """
+        b = positions.NUMERAL_BEARING
+        self.assertEqual(len(b), 12)
+        steps = []
+        for n in range(1, 13):
+            m = n + 1 if n < 12 else 1
+            steps.append((b[m] - b[n]) % 360)
+        self.assertAlmostEqual(sum(steps), 360.0, delta=0.5)
+        for n, step in zip(range(1, 13), steps):
+            self.assertAlmostEqual(step, 30.0, delta=2.5, msg=f"numeral {n}")
+
+    def test_measured_numerals_beat_interpolated_ones(self):
+        """12, 1, 2, 3, 8, 9, 10, 11 are measured; 4-7 are interpolated.
+
+        Midpoints built from two measured numerals (moon at 12+1) are firmer
+        than ones involving an interpolated numeral (eye at 4+5).
+        """
+        measured = {12, 1, 2, 3, 8, 9, 10, 11}
+        self.assertEqual(set(positions.NUMERAL_BEARING) - measured, {4, 5, 6, 7})
+
+    def test_eye_sits_on_the_four_five_midpoint(self):
+        """The measurement that promoted eye -> 9 to CONFIRMED."""
+        got = positions.position_at(648, 843)
+        self.assertIsNotNone(got)
+        pos, n, m, _bearing, err = got
+        self.assertEqual((pos, {n, m}), (9, {4, 5}))
+        self.assertLess(err, 3.0)
+
+    def test_position_at_rejects_a_point_off_every_ray(self):
+        cx, cy = positions.CLOCK_CENTRE
+        # numeral 1 itself sits 15 degrees off any midpoint
+        import math
+        th = math.radians(positions.NUMERAL_BEARING[1])
+        x, y = cx + math.sin(th) * 150, cy - math.cos(th) * 150
+        self.assertIsNone(positions.position_at(x, y))
+
+    def test_bearing_of_is_compass_oriented(self):
+        cx, cy = positions.CLOCK_CENTRE
+        self.assertAlmostEqual(positions.bearing_of(cx, cy - 100), 0.0, delta=0.01)
+        self.assertAlmostEqual(positions.bearing_of(cx + 100, cy), 90.0, delta=0.01)
+        self.assertAlmostEqual(positions.bearing_of(cx, cy + 100), 180.0, delta=0.01)
 
     def test_rejects_non_bip39_word(self):
         with self.assertRaises(ValueError):

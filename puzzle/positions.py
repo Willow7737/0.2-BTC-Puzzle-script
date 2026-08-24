@@ -35,7 +35,71 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import IntEnum
 
+import math
+
 from .wordlist import is_valid
+
+#: Centre of the clock dial in the 1600x1200 artwork, and its radius.
+CLOCK_CENTRE = (473.0, 940.0)
+CLOCK_RADIUS = 185.0
+
+#: Bearings of the drawn numerals, measured from the artwork. Eight are
+#: measured directly; 4-7 lie behind the Great Seal and are interpolated at
+#: 30 degree steps from 12.
+#:
+#: The measured steps run 28.0 to 32.0 degrees - hand-drawn scatter of about
+#: +/-2 degrees. **That scatter is the noise floor for every prediction made
+#: here**, so a 1-2 degree match is a hit and anything past ~4 is not. It also
+#: means midpoints between two *measured* numerals (moon, tower, the hour
+#: hand) are firmer than ones involving an interpolated numeral (the eye).
+NUMERAL_BEARING: dict[int, float] = {
+    12: 287.4, 1: 317.4, 2: 347.5, 3: 17.9,
+    8: 166.1, 9: 197.7, 10: 225.7, 11: 257.7,
+}
+for _n in (4, 5, 6, 7):
+    NUMERAL_BEARING[_n] = (287.4 + 30.0 * _n) % 360
+
+
+def midpoint_bearings() -> dict[int, list[tuple[int, int, float]]]:
+    """Map each attainable position to the midpoint rays that produce it.
+
+    A clue's number is the sum of the two numerals its bearing falls between.
+    Because consecutive numerals always sum to ``2n+1``, **every position this
+    mechanism can produce is odd** - 3, 5, 7 ... 23. Even positions must come
+    from some other mechanism, which is a hard structural constraint on any
+    proposed position table.
+    """
+    out: dict[int, list[tuple[int, int, float]]] = {}
+    for n in range(1, 13):
+        m = n + 1 if n < 12 else 1
+        a, b = NUMERAL_BEARING[n], NUMERAL_BEARING[m]
+        bearing = (a + ((b - a) % 360) / 2) % 360
+        out.setdefault(n + m, []).append((n, m, bearing))
+    return out
+
+
+def bearing_of(x: float, y: float) -> float:
+    """Compass bearing of an image point from the clock centre (0 = up)."""
+    cx, cy = CLOCK_CENTRE
+    return math.degrees(math.atan2(x - cx, -(y - cy))) % 360
+
+
+def position_at(x: float, y: float, tolerance: float = 3.0):
+    """Which position, if any, an image feature at (x, y) encodes.
+
+    Returns ``(position, n, m, bearing, error_degrees)`` for the nearest
+    midpoint ray within *tolerance*, else ``None``. This is the falsifiable
+    test that confirmed the three clock hands and the Great Seal's eye: state
+    where a feature should sit, then measure whether it does.
+    """
+    b = bearing_of(x, y)
+    best = None
+    for pos, rays in midpoint_bearings().items():
+        for n, m, rb in rays:
+            err = min(abs(b - rb), 360 - abs(b - rb))
+            if best is None or err < best[4]:
+                best = (pos, n, m, rb, err)
+    return best if best and best[4] <= tolerance else None
 
 
 class Evidence(IntEnum):
@@ -93,6 +157,10 @@ CONFIRMED: list[Assignment] = [
        "clock minute hand at midpoint(1,2); predicted bearing 332.4 deg"),
     _a(13, "moon",    Evidence.CONFIRMED,
        "clock seconds hand at midpoint(12,1); predicted 302.4, measured 302-304"),
+    _a(9,  "eye",     Evidence.CONFIRMED,
+       "Great Seal's eye at midpoint(4,5); predicted 62.4, measured 61.1 "
+       "(off 1.3 deg). Numerals 4-7 are hidden behind the Seal, so the Seal's "
+       "own features carry the clues those numerals would have"),
 ]
 
 #: The unlabelled hour hand gives a number with no word attached to it.
@@ -115,7 +183,10 @@ PROPOSED: list[Assignment] = [
        "so the number is incidental rather than chosen"),
     _a(9,  "eye",     Evidence.WEAK, "4 + 5 pyramid/eye clue"),
     _a(10, "black day", Evidence.WEAK, "rune 4 'black day number X'; word unresolved"),
-    _a(11, "pyramid", Evidence.WEAK, "5 + 6 in/behind the pyramid"),
+    _a(11, "pyramid", Evidence.STRONG,
+       "the midpoint(5,6) ray at 92.4 deg passes through the pyramid's brick "
+       "body, but its centroid bearing is 101.1 - off 8.7 deg, too loose to "
+       "confirm the way the eye was"),
     _a(12, "vote",    Evidence.WEAK, "mirrored '.vs.' read as 12"),
     _a(16, "rifle",   Evidence.WEAK, "M16 clue"),
     _a(17, "gold",    Evidence.WEAK, "chart spans 17 years"),

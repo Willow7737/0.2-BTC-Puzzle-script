@@ -297,6 +297,53 @@ That criterion is encoded in `puzzle/positions.py` as the `Evidence` scale,
 and it is why the community's proposed assignments stay `WEAK` however cleanly
 they can be counted.
 
+### The mechanism extends past the hands: the Great Seal's eye
+
+Numerals 4, 5, 6 and 7 are hidden behind the Great Seal — and the Seal's own
+features sit on the rays those numerals define. The community table proposes
+`eye = 4+5 = 9` and `pyramid = 5+6 = 11`; both are testable the same way.
+
+| Feature | Predicted ray | Measured bearing | Error | Verdict |
+|---|---:|---:|---:|---|
+| Seal's eye | midpoint(4,5) = 62.4° | **61.1°** | **1.3°** | **CONFIRMED → 9** |
+| Pyramid centroid | midpoint(5,6) = 92.4° | 101.1° | 8.7° | not confirmed |
+
+The eye lands inside the artwork's own drafting scatter. The pyramid does not:
+the 92.4° ray passes *through* its brick body, but a large triangle's centroid
+is a loose anchor and 8.7° is well outside the noise floor, so it stays
+`STRONG` rather than `CONFIRMED`.
+
+**The noise floor matters.** Measured numeral steps run 28.0° to 32.0° — about
+±2° of hand-drawn scatter. That is what makes 1.3° a hit and 8.7° a miss, and
+it is why midpoints between two *measured* numerals (`moon`, `tower`, the hour
+hand) are firmer than ones involving an interpolated numeral (the `eye`).
+
+`positions.position_at(x, y)` implements the test: give it an image
+coordinate, and it returns the position that coordinate encodes, or nothing.
+
+### A hard structural constraint: the clock can only produce odd positions
+
+Consecutive numerals sum to `n + (n+1) = 2n+1`, so **every position this
+mechanism can yield is odd**:
+
+```
+3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23
+```
+
+That is a real constraint on any proposed table, and it has not been stated
+before. It means the *even* positions — `camera = 2`, `mask = 4`,
+`black = 10`, `vote = 12`, `rifle = 16`, `apple = 20` in the community table —
+**cannot** come from the clock. They require a second, entirely different
+mechanism, and no such mechanism has been demonstrated for any of them.
+
+So the table is not one hypothesis of uniform strength. It is:
+
+* **four positions** with a confirmed mechanism (1, 3, 9, 13) plus an orphan
+  number at 21;
+* **odd positions** that at least *could* come from the clock, if a feature
+  can be shown to sit on the right ray;
+* **even positions** resting on object counts, with no mechanism at all.
+
 ### A correction
 
 Section 2 of this document argued the underlined `1` beside
@@ -318,9 +365,8 @@ structurally incapable of succeeding, no matter how long it ran.
 `puzzle/positions.py` models the map and refuses to pretend:
 
 ```console
-  len 21 confirmed only  : NOT searchable: 18 unresolved, 4.02e+59 phrases
-  len 21 + all proposed  : NOT searchable:  6 unresolved, 1.48e+20 phrases
-  len 24 confirmed only  : NOT searchable: 21 unresolved, 3.45e+69 phrases
+  len 21 confirmed only  : NOT searchable: 17 unresolved, ~2e+56 phrases
+  len 24 confirmed only  : NOT searchable: 20 unresolved, 1.68e+66 phrases
   len 24 + all proposed  : NOT searchable:  9 unresolved, 1.27e+30 phrases
 ```
 
