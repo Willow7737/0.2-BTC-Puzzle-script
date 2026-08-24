@@ -11,10 +11,12 @@ import itertools
 import os
 import unittest
 
-from puzzle import bip39, brainwallet, candidates, derive, feasibility, keys
+from puzzle import (bip39, brainwallet, candidates, derive, electrum, feasibility,
+                    keys, positions)
 from puzzle._ripemd160 import ripemd160
 from puzzle.search import Checkpoint, SearchConfig, count_units, run_search
-from puzzle.wordlist import INDEX, WORDS, WORDLIST_SHA256, load_wordlist, parse_words, validate
+from puzzle.wordlist import (INDEX, WORDS, WORDLIST_SHA256, is_valid, load_wordlist,
+                             parse_words, validate)
 
 
 class TestRipemd160(unittest.TestCase):
@@ -256,6 +258,31 @@ class TestFeasibility(unittest.TestCase):
         pinned = feasibility.estimate(14, 12, workers=4, pinned=3)
         self.assertLess(pinned.seconds, loose.seconds / 100)
 
+    def test_electrum_is_cheaper_like_for_like(self):
+        """The documented ~7x, comparing modes doing comparable derivation work.
+
+        The headline figure is BIP-44 fast path (one scheme, one index) against
+        Electrum (two chains); both minimal. Compared at each mode's *default*
+        breadth the gap is wider still, because BIP-39's default scans 26
+        addresses per seed to Electrum's 10 - see the next test.
+        """
+        b = feasibility.estimate(12, 12, mode="bip39", workers=4, rate_candidate=554)
+        e = feasibility.estimate(12, 12, mode="electrum", workers=4, rate_candidate=518)
+        self.assertEqual(b.total_candidates, e.total_candidates)
+        ratio = b.seconds / e.seconds
+        self.assertGreater(ratio, 6.0, f"like-for-like ratio {ratio:.1f}")
+        self.assertLess(ratio, 9.0, f"like-for-like ratio {ratio:.1f}")
+
+    def test_electrum_cheaper_at_default_breadth_too(self):
+        b = feasibility.estimate(12, 12, mode="bip39", workers=4)
+        e = feasibility.estimate(12, 12, mode="electrum", workers=4)
+        self.assertGreater(b.seconds / e.seconds, 10.0)
+
+    def test_electrum_filter_is_one_in_256(self):
+        e = feasibility.estimate(12, 12, mode="electrum", workers=1)
+        self.assertAlmostEqual(e.checksum_valid / e.total_candidates,
+                               1 / 256, delta=1e-6)
+
     def test_humanize(self):
         self.assertIn("seconds", feasibility.humanize(30))
         self.assertIn("hours", feasibility.humanize(7200))
@@ -269,6 +296,25 @@ class TestCandidates(unittest.TestCase):
     def test_not_in_bip39_really_is_not(self):
         valid, _ = validate(candidates.NOT_IN_BIP39)
         self.assertEqual(valid, [])
+
+    def test_marked_words_are_the_six_with_a_mechanism(self):
+        """The words the artist singled out, not merely drew (ANALYSIS.md s2)."""
+        self.assertEqual(candidates.MARKED,
+                         ["moon", "tower", "food", "real", "subject", "one"])
+        self.assertEqual(validate(candidates.MARKED)[1], [])
+
+    def test_best_12_is_a_single_exhaustible_subset(self):
+        """Exactly twelve words means one subset, so a run is exhaustive."""
+        self.assertEqual(len(candidates.BEST_12), 12)
+        self.assertEqual(len(set(candidates.BEST_12)), 12)
+        self.assertEqual(validate(candidates.BEST_12)[1], [])
+        for w in candidates.MARKED + candidates.FAINT:
+            self.assertIn(w, candidates.BEST_12)
+
+    def test_one_is_a_bip39_word(self):
+        """The reading that the underlined numeral is a word, not an index."""
+        self.assertTrue(is_valid("one"))
+        self.assertIn("one", candidates.TIER_A)
 
     def test_best_13_is_the_documented_pool(self):
         """The 13 words recovered by direct inspection (ANALYSIS.md s2)."""
@@ -306,6 +352,352 @@ class TestForensicsRegions(unittest.TestCase):
         import forensics
         for name in ("clock", "plinth", "needle", "statue-base", "vertical"):
             self.assertIn(name, forensics.REGIONS)
+
+
+class TestElectrum(unittest.TestCase):
+    """Official vectors from Electrum's own tests/test_wallet_vertical.py.
+
+    Electrum does not use BIP-39: different checksum, different PBKDF2 salt,
+    and the script type is encoded in the seed. A BIP-39-only search would
+    walk straight past an Electrum wallet, so this path has to be right.
+    """
+
+    STANDARD = ("cycle rocket west magnet parrot shuffle foot correct "
+                "salt library feed song")
+    SEGWIT = ("bitter grass shiver impose acquire brush forget axis "
+              "eager alone wine silver")
+    TWOFA_SW = ("universe topic remind silver february ranch shine worth "
+                "innocent cattle enhance wise")
+
+    def test_seed_types(self):
+        self.assertEqual(electrum.seed_type(self.STANDARD), "standard")
+        self.assertEqual(electrum.seed_type(self.SEGWIT), "segwit")
+        self.assertEqual(electrum.seed_type(self.TWOFA_SW), "2fa_segwit")
+
+    def test_non_electrum_phrase_has_no_type(self):
+        bip39 = ("abandon abandon abandon abandon abandon abandon abandon "
+                 "abandon abandon abandon abandon about")
+        self.assertIsNone(electrum.seed_type(bip39))
+
+    def test_standard_wallet_addresses(self):
+        """m/0/0 receiving and m/1/0 change, straight off the master node."""
+        got = {(c, i): keys.address_from_hash160(h)
+               for h, c, i in electrum.iter_hash160s(self.STANDARD, depth=1)}
+        self.assertEqual(got[("electrum-receiving", 0)],
+                         "1NNkttn1YvVGdqBW4PR6zvc3Zx3H5owKRf")
+        self.assertEqual(got[("electrum-change", 0)],
+                         "1KSezYMhAJMWqFbVFB2JshYg69UpmEXR4D")
+
+    def test_salt_is_electrum_not_mnemonic(self):
+        """The one-byte difference that makes this a separate search space."""
+        self.assertNotEqual(electrum.mnemonic_to_seed(self.STANDARD),
+                            bip39.mnemonic_to_seed(self.STANDARD))
+
+    def test_normalisation(self):
+        self.assertEqual(electrum.normalize_text("  Cycle   ROCKET \n west "),
+                         "cycle rocket west")
+
+    def test_legacy_prefix_is_standard(self):
+        """Only the standard type yields a 1... address; segwit gives bc1."""
+        self.assertEqual(electrum.LEGACY_PREFIX, electrum.SEED_PREFIX)
+        self.assertTrue(electrum.is_seed_type(self.STANDARD))
+        self.assertFalse(electrum.is_seed_type(self.SEGWIT))
+
+    def test_filter_rate_is_one_in_256(self):
+        """8 checksum bits, versus BIP-39's 4 - what makes this mode cheap."""
+        pool = candidates.BEST_12
+        n = ok = 0
+        for p in itertools.islice(itertools.permutations(pool, 12), 20000):
+            ok += electrum.is_seed_type(" ".join(p))
+            n += 1
+        self.assertAlmostEqual(ok / n, 1 / 256, delta=0.002)
+
+
+class TestElectrumSearch(unittest.TestCase):
+    def test_finds_planted_electrum_target(self):
+        seed = TestElectrum.STANDARD
+        target = next(h for h, c, i in electrum.iter_hash160s(seed, depth=1)
+                      if c == "electrum-receiving" and i == 0)
+        cfg = SearchConfig(pool=seed.split(), target_hash160=target, mode="electrum",
+                           workers=2, prefix_len=1, electrum_depth=1)
+        hits, _ = run_search(cfg, Checkpoint(None))
+        self.assertTrue(hits, "engine failed to find a planted Electrum target")
+        self.assertEqual(hits[0].phrase, seed)
+        self.assertEqual(hits[0].scheme, "electrum-receiving")
+
+
+class TestPassphrase(unittest.TestCase):
+    """The "13th word". A search that silently ignored it would burn hours."""
+
+    MNEMONIC = "moon tower food real black subject this time world only proof find"
+
+    def _planted(self, passphrase):
+        seed = bip39.mnemonic_to_seed(self.MNEMONIC, passphrase)
+        return next(h for h, _, _ in
+                    derive.iter_hash160s(seed, derive.resolve_schemes(["bip44"], depth=1)))
+
+    def test_passphrase_changes_the_address(self):
+        seen = {pp: self._planted(pp) for pp in ("", "breathe", "Breathe", "tuesday")}
+        self.assertEqual(len(set(seen.values())), 4, "passphrases must not collide")
+
+    def test_checksum_is_independent_of_passphrase(self):
+        """Why one enumeration pass can serve every passphrase."""
+        self.assertTrue(bip39.is_valid_mnemonic(self.MNEMONIC))
+        a = bip39.mnemonic_to_seed(self.MNEMONIC, "")
+        b = bip39.mnemonic_to_seed(self.MNEMONIC, "breathe")
+        self.assertNotEqual(a, b)
+
+    def test_passphrase_list_defaults_to_single(self):
+        cfg = SearchConfig(pool=[], target_hash160=bytes(20))
+        self.assertEqual(cfg.passphrase_list(), ("",))
+        cfg2 = SearchConfig(pool=[], target_hash160=bytes(20), passphrase="x")
+        self.assertEqual(cfg2.passphrase_list(), ("x",))
+        cfg3 = SearchConfig(pool=[], target_hash160=bytes(20), passphrases=("a", "b"))
+        self.assertEqual(cfg3.passphrase_list(), ("a", "b"))
+
+    def test_finds_target_only_reachable_via_passphrase(self):
+        target = self._planted("breathe")
+        cfg = SearchConfig(pool=self.MNEMONIC.split(), target_hash160=target,
+                           workers=2, prefix_len=1,
+                           schemes=tuple(derive.resolve_schemes(["bip44"], depth=1)),
+                           passphrases=("", "tuesday", "breathe"))
+        hits, _ = run_search(cfg, Checkpoint(None))
+        self.assertTrue(hits)
+        self.assertEqual(hits[0].phrase, self.MNEMONIC)
+        self.assertIn("breathe", hits[0].detail)
+
+    def test_misses_when_the_right_passphrase_is_absent(self):
+        """Guards against the passphrase being ignored and matching anyway."""
+        target = self._planted("breathe")
+        cfg = SearchConfig(pool=self.MNEMONIC.split(), target_hash160=target,
+                           workers=2, prefix_len=1, limit=40_000,
+                           schemes=tuple(derive.resolve_schemes(["bip44"], depth=1)),
+                           passphrases=("", "tuesday"))
+        hits, prog = run_search(cfg, Checkpoint(None))
+        self.assertEqual(hits, [])
+        self.assertGreater(prog.tested, 0)
+
+    def test_electrum_passphrase_also_applies(self):
+        seed = TestElectrum.STANDARD
+        a = next(h for h, c, i in electrum.iter_hash160s(seed, "", depth=1)
+                 if c == "electrum-receiving" and i == 0)
+        b = next(h for h, c, i in electrum.iter_hash160s(seed, "breathe", depth=1)
+                 if c == "electrum-receiving" and i == 0)
+        self.assertNotEqual(a, b)
+
+
+class TestPositionMap(unittest.TestCase):
+    """The word-plus-number construction (ANALYSIS.md)."""
+
+    def test_confirmed_assignments(self):
+        got = {a.position: sorted(a.words) for a in positions.CONFIRMED}
+        self.assertEqual(got, {1: ["subject"], 3: ["tower"], 13: ["moon"]})
+        for a in positions.CONFIRMED:
+            self.assertEqual(a.evidence, positions.Evidence.CONFIRMED)
+
+    def test_every_assignment_uses_real_words(self):
+        for a in positions.CONFIRMED + positions.PROPOSED:
+            for w in a.words:
+                self.assertTrue(is_valid(w), f"{w} at position {a.position}")
+
+    def test_position_21_forces_a_long_mnemonic(self):
+        """The hour hand gives 21, so 12 words is impossible."""
+        self.assertIn(21, positions.ORPHAN_NUMBERS)
+        self.assertEqual(positions.VIABLE_LENGTHS, (21, 24))
+        for length in positions.VIABLE_LENGTHS:
+            self.assertIn(length, bip39.LENGTHS)
+        self.assertNotIn(12, positions.VIABLE_LENGTHS)
+
+    def test_map_is_not_yet_searchable(self):
+        """Honest bookkeeping: even with every proposed clue, it is hopeless."""
+        for length in (21, 24):
+            for inc in (False, True):
+                pm = positions.build(length, include_proposed=inc)
+                self.assertFalse(pm.searchable())
+                self.assertIn("NOT searchable", pm.verdict())
+
+    def test_searchable_threshold(self):
+        pm = positions.PositionMap(length=24)
+        for i in range(1, 25):
+            pm.slots[i] = frozenset({"moon"})
+        self.assertTrue(pm.searchable())
+        for i in range(1, 5):
+            del pm.slots[i]
+        self.assertFalse(pm.searchable(), "4 unresolved must not be searchable")
+
+    def test_combinations_counts_alternatives(self):
+        pm = positions.PositionMap(length=3)
+        pm.slots[1] = frozenset({"moon"})
+        pm.slots[2] = frozenset({"black", "day"})
+        pm.slots[3] = frozenset({"tower"})
+        self.assertEqual(pm.combinations(), 2)
+        del pm.slots[3]
+        self.assertEqual(pm.combinations(vocabulary=2048), 2 * 2048)
+
+    def test_clock_mechanism_only_yields_odd_positions(self):
+        """Consecutive numerals sum to 2n+1, so evens need another mechanism."""
+        reachable = sorted(positions.midpoint_bearings())
+        self.assertEqual(reachable, [3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23])
+        self.assertTrue(all(p % 2 == 1 for p in reachable))
+
+    def test_numeral_bearings_are_evenly_spaced(self):
+        """~30 degree steps, with the scatter of hand-drawn numerals.
+
+        Measured steps run 28.0 to 32.0 degrees. That scatter is the noise
+        floor for every midpoint prediction, which is why a 1.3 degree match
+        counts as a hit and an 8.7 degree one does not.
+        """
+        b = positions.NUMERAL_BEARING
+        self.assertEqual(len(b), 12)
+        steps = []
+        for n in range(1, 13):
+            m = n + 1 if n < 12 else 1
+            steps.append((b[m] - b[n]) % 360)
+        self.assertAlmostEqual(sum(steps), 360.0, delta=0.5)
+        for n, step in zip(range(1, 13), steps):
+            self.assertAlmostEqual(step, 30.0, delta=2.5, msg=f"numeral {n}")
+
+    def test_measured_numerals_beat_interpolated_ones(self):
+        """12, 1, 2, 3, 8, 9, 10, 11 are measured; 4-7 are interpolated.
+
+        Midpoints built from two measured numerals (moon at 12+1) are firmer
+        than ones involving an interpolated numeral (eye at 4+5).
+        """
+        measured = {12, 1, 2, 3, 8, 9, 10, 11}
+        self.assertEqual(set(positions.NUMERAL_BEARING) - measured, {4, 5, 6, 7})
+
+    def test_eye_sits_on_the_four_five_midpoint(self):
+        """The eye really is on the ray - but see the chance test below."""
+        got = positions.position_at(648, 843)
+        self.assertIsNotNone(got)
+        pos, n, m, _bearing, err = got
+        self.assertEqual((pos, {n, m}), (9, {4, 5}))
+        self.assertLess(err, 3.0)
+
+    def test_eye_is_now_weak(self):
+        """Four objects share its ray, and the Needle is nearer than the eye."""
+        eye = positions.EYE
+        self.assertEqual(eye.position, 9)
+        self.assertEqual(eye.evidence, positions.Evidence.WEAK)
+        self.assertNotIn(9, {a.position for a in positions.CONFIRMED})
+        self.assertEqual(positions.PROPOSED_STRONG, [])
+
+    def test_ray_matching_refutation_is_recorded(self):
+        """The survey that closed the 'object on a ray names a word' idea."""
+        r = positions.RAY_MATCHING_REFUTED
+        self.assertEqual(r["objects_surveyed"], 32)
+        self.assertGreater(r["max_objects_on_one_position"], 1)
+        self.assertGreater(r["positions_with_multiple_objects"], 1)
+        # a real effect holds across thresholds; this one does not
+        ps = list(r["p_values_by_tolerance"].values())
+        self.assertGreater(max(ps), 0.05)
+        self.assertLess(min(ps), 0.05)
+
+    def test_only_confirmed_mechanisms_remain(self):
+        """Three clock hands plus the plinth. Nothing else is established."""
+        got = {a.position for a in positions.CONFIRMED}
+        self.assertEqual(got, {1, 3, 13})
+        self.assertIn(21, positions.ORPHAN_NUMBERS)
+
+    def test_chance_probability(self):
+        """Default is now the full 24-ray model: 15 deg spacing."""
+        self.assertAlmostEqual(positions.chance_probability(1.3), 2*1.3/15, places=6)
+        self.assertAlmostEqual(positions.chance_probability(7.5), 1.0, places=6)
+        self.assertGreater(positions.chance_probability(1.3), 0.17)
+
+    def test_even_positions_come_from_on_numeral_rays(self):
+        even = sorted(positions.numeral_rays())
+        self.assertEqual(even, [4, 6, 8, 10, 12, 14, 16, 18, 20, 22])
+        self.assertTrue(all(p % 2 == 0 for p in even))
+
+    def test_both_alignments_cover_3_to_23_with_no_gaps(self):
+        """One rule, two alignments: between numerals (odd), on one (even)."""
+        got = sorted(positions.all_rays())
+        self.assertEqual(got, list(range(3, 24)))
+
+    def test_clock_cannot_reach_1_2_or_24(self):
+        reach = set(positions.all_rays())
+        for p in positions.CLOCK_CANNOT_REACH:
+            self.assertNotIn(p, reach)
+        self.assertEqual(positions.CLOCK_CANNOT_REACH, (1, 2, 24))
+
+    def test_self_matching_axes_are_the_middle_three(self):
+        self.assertEqual(sorted(positions.SELF_MATCHING_AXES), [12, 13, 14])
+
+    def test_more_rays_means_a_worse_false_positive_rate(self):
+        """Completing the mechanism weakens every single-object match."""
+        self.assertAlmostEqual(positions.chance_probability(1.3, n_rays=12), 2*1.3/30, places=6)
+        self.assertAlmostEqual(positions.chance_probability(1.3, n_rays=24), 2*1.3/15, places=6)
+        self.assertGreater(positions.chance_probability(1.3, n_rays=24),
+                           positions.chance_probability(1.3, n_rays=12))
+
+    def test_map_refuses_to_enumerate_unresolved_positions(self):
+        """A negative from guessed fillers is not a result."""
+        pm = positions.build(24, include_proposed=True)
+        ok, why = pm.enumerable()
+        self.assertFalse(ok)
+        self.assertIn("guesses", why)
+
+    def test_json_round_trip_preserves_confidence(self):
+        pm = positions.build(24, include_strong=True)
+        d = pm.to_dict()
+        self.assertEqual(d["phrase_length"], 24)
+        self.assertEqual(d["positions"]["13"]["candidates"], ["moon"])
+        self.assertEqual(d["positions"]["13"]["confidence"], "confirmed")
+        # 9 lost its promotion when four objects turned up on the same ray
+        self.assertEqual(d["positions"]["9"]["confidence"], "unresolved")
+        self.assertEqual(d["positions"]["9"]["candidates"], [])
+        self.assertEqual(d["positions"]["2"]["candidates"], [])
+        self.assertEqual(d["positions"]["2"]["confidence"], "unresolved")
+        self.assertTrue(d["positions"]["13"]["basis"])
+        back = positions.PositionMap.from_dict(d)
+        self.assertEqual(back.slots, pm.slots)
+        self.assertEqual(back.length, pm.length)
+
+        # a weak assignment still round-trips with its confidence intact
+        weak = positions.build(24, include_proposed=True).to_dict()
+        self.assertEqual(weak["positions"]["9"]["confidence"], "weak")
+        self.assertEqual(weak["positions"]["9"]["candidates"], ["eye"])
+        self.assertEqual(
+            positions.PositionMap.from_dict(weak).provenance[9].evidence,
+            positions.Evidence.WEAK)
+
+    def test_unclaimed_axes_recorded(self):
+        """Traced and found empty - recorded so nobody re-traces them."""
+        self.assertEqual(sorted(positions.UNCLAIMED_AXES),
+                         [(5, 17), (7, 19), (11, 23)])
+        for (a, b), (ba, bb, note) in positions.UNCLAIMED_AXES.items():
+            self.assertAlmostEqual(abs(ba - bb), 180.0, delta=1.5)
+            self.assertTrue(note)
+
+    def test_position_at_rejects_a_point_off_every_ray(self):
+        """With both alignments live, only a quarter-step misses everything.
+
+        Numerals are themselves rays now (numeral 1 -> 12+2 = 14), so the
+        genuinely empty bearings sit halfway between a numeral and a midpoint.
+        """
+        import math
+        cx, cy = positions.CLOCK_CENTRE
+        gap = (positions.NUMERAL_BEARING[3] + 32.6) / 2  # numeral 3 <-> midpoint(3,4)
+        th = math.radians(gap)
+        x, y = cx + math.sin(th) * 150, cy - math.cos(th) * 150
+        self.assertIsNone(positions.position_at(x, y))
+        # ...and with the even alignment switched off, a numeral is empty again
+        th1 = math.radians(positions.NUMERAL_BEARING[1])
+        x1, y1 = cx + math.sin(th1) * 150, cy - math.cos(th1) * 150
+        self.assertIsNone(positions.position_at(x1, y1, include_even=False))
+        self.assertIsNotNone(positions.position_at(x1, y1, include_even=True))
+
+    def test_bearing_of_is_compass_oriented(self):
+        cx, cy = positions.CLOCK_CENTRE
+        self.assertAlmostEqual(positions.bearing_of(cx, cy - 100), 0.0, delta=0.01)
+        self.assertAlmostEqual(positions.bearing_of(cx + 100, cy), 90.0, delta=0.01)
+        self.assertAlmostEqual(positions.bearing_of(cx, cy + 100), 180.0, delta=0.01)
+
+    def test_rejects_non_bip39_word(self):
+        with self.assertRaises(ValueError):
+            positions.Assignment(1, frozenset({"breathe"}),
+                                 positions.Evidence.WEAK, "x")
 
 
 class TestRuneAnalysis(unittest.TestCase):

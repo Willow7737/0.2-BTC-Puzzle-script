@@ -20,7 +20,9 @@ from .wordlist import is_valid
 #:   real    - inserted into "ONLY real Bitcoin" on the Statue's base
 #:   this    - "IN THE THIS PICTURE", "FUCK THIS SHIT", "THIS IS THE FIRST..."
 #:   black   - rune 4's "chorny den" (black day) plus the BLM text and the Latin
-TIER_A = ["moon", "tower", "food", "this", "subject", "real", "black"]
+#:   one     - the numeral 1 in "Section 1" carries the same underline as
+#:             "subject", in the same hand and weight (verified at 20x)
+TIER_A = ["moon", "tower", "food", "this", "subject", "real", "black", "one"]
 
 #: Prominent rendered text, also read directly off the artwork.
 #:   brave/world - "WELCOME TO THE BRAVE NEW WORLD" (the whitepaper calligram)
@@ -31,11 +33,25 @@ TIER_A = ["moon", "tower", "food", "this", "subject", "real", "black"]
 TIER_B = ["brave", "world", "order", "only", "first", "future",
           "seed", "phrase", "picture", "find"]
 
-#: The 13 words with the strongest direct evidence - tier A plus the six
-#: tier-B words that are rendered as display text rather than instructions.
-#: This is the pool worth exhausting first; P(13,12) is about 4 days on four
-#: cores, or half that on the BIP-44 fast path.
-BEST_13 = TIER_A + ["only", "first", "future", "brave", "world", "order"]
+#: The words that are *marked* rather than merely present: written tiny along
+#: a thin object, inserted, or underlined. This is the mechanism the artist
+#: actually used, and it is a much stronger signal than display text.
+MARKED = ["moon", "tower", "food", "real", "subject", "one"]
+
+#: Set faintly rendered rather than displayed - "PAY FOR THE FUTURE. THIS IS
+#: THE FIRST PREDICTION." is barely visible without a contrast stretch, which
+#: puts it closer to MARKED than to the banner text.
+FAINT = ["future", "this", "first"]
+
+#: The pool actually being searched: everything marked or faint, plus "black"
+#: (rune 4's "chorny den", the Latin kettle proverb and the BLM text all point
+#: at it) and the two strongest display words. Exactly twelve.
+BEST_12 = MARKED + FAINT + ["black", "only", "world"]
+
+#: Wider pool, tier A plus the six tier-B display words. P(13,12) is about
+#: 4 days on four cores, or half that on the BIP-44 fast path.
+BEST_13 = ["moon", "tower", "food", "this", "subject", "real", "black",
+           "only", "first", "future", "brave", "world", "order"]
 
 #: Objects drawn in the image, in rough order of visual prominence.
 TIER_C = [

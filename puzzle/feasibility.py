@@ -16,6 +16,13 @@ from math import comb, perm
 RATE_CHECKSUM_FILTER = 657_000.0   # permutations/second/core (12-word packing + SHA-256)
 RATE_BIP39_CANDIDATE = 278.0       # full PBKDF2 + 4-scheme derivation/second/core
 RATE_BRAIN_CANDIDATE = 18_000.0    # SHA-256 + EC multiply + hash160/second/core
+RATE_ELECTRUM_FILTER = 122_000.0   # seed-version HMAC-SHA512/second/core
+RATE_ELECTRUM_CANDIDATE = 518.0    # PBKDF2 + m/0/0 + m/1/0 per second per core
+
+#: Electrum's seed version is an 8-bit prefix, so it rejects 255 of every 256
+#: orderings - sixteen times stronger than BIP-39's 4-bit checksum, and the
+#: reason Electrum mode is roughly seven times cheaper to search.
+ELECTRUM_PASS_RATE = 1.0 / 256.0
 
 CHECKSUM_PASS_RATE = 1.0 / 16.0    # 4 checksum bits for a 12-word mnemonic
 
@@ -106,6 +113,11 @@ def estimate(
         rate = rate_candidate or RATE_BRAIN_CANDIDATE
         checksum_valid = total
         seconds = total / (rate * workers)
+    elif mode == "electrum":
+        rate = rate_candidate or RATE_ELECTRUM_CANDIDATE
+        checksum_valid = int(total * ELECTRUM_PASS_RATE)
+        seconds = (total / (RATE_ELECTRUM_FILTER * workers)
+                   + checksum_valid / (rate * workers))
     else:
         rate = rate_candidate or RATE_BIP39_CANDIDATE
         checksum_valid = int(total * CHECKSUM_PASS_RATE)
@@ -123,7 +135,9 @@ def report(est: Estimate, pool_size: int, phrase_len: int) -> str:
         f"  orderings / subset  {humanize_count(est.orderings)}",
         f"  total candidates    {humanize_count(est.total_candidates)}",
     ]
-    if est.mode != "brain":
+    if est.mode == "electrum":
+        lines.append(f"  seed-version valid  {humanize_count(est.checksum_valid)}  (1 in 256)")
+    elif est.mode != "brain":
         lines.append(f"  checksum-valid      {humanize_count(est.checksum_valid)}  (1 in 16)")
     lines += [
         f"  workers             {est.workers}",

@@ -55,7 +55,11 @@ def _resolve_pool(args) -> list[str]:
 
 
 def _require_valid(pool: list[str], mode: str) -> list[str]:
-    """In BIP-39 mode a non-BIP-39 word makes the whole search pointless."""
+    """In BIP-39 mode a non-BIP-39 word makes the whole search pointless.
+
+    Electrum's English list is the BIP-39 English list, so the same check
+    applies; only brainwallet mode is unrestricted.
+    """
     if mode == "brain":
         return pool
     good, bad = validate(pool)
@@ -226,6 +230,32 @@ def cmd_selftest(args) -> int:
                             str(here / "tests"), "-t", str(here), "-v"])
 
 
+def cmd_positions(args) -> int:
+    """Show or export the word-plus-number position map."""
+    import json as _json
+    from puzzle import positions as pos
+
+    pm = pos.build(args.length, include_proposed=args.proposed,
+                   include_strong=not args.confirmed_only)
+    print(pm.summary())
+    print()
+    print(pm.verdict())
+    ok, why = pm.enumerable()
+    print(f"enumerable: {ok} - {why}")
+    print()
+    print(f"clock reaches positions {sorted(pos.all_rays())[0]}-"
+          f"{sorted(pos.all_rays())[-1]} with no gaps; "
+          f"it cannot reach {list(pos.CLOCK_CANNOT_REACH)}")
+    print("self-matching axes (same position at both ends): "
+          + ", ".join(f"{k}" for k in sorted(pos.SELF_MATCHING_AXES)))
+    print(f"false-positive rate for a 1.3 deg ray match: "
+          f"{pos.chance_probability(1.3):.1%}")
+    if args.out:
+        Path(args.out).write_text(_json.dumps(pm.to_dict(), indent=2))
+        print(f"\nwritten to {args.out}")
+    return 0
+
+
 def cmd_search(args) -> int:
     pool = _resolve_pool(args)
     if not pool:
@@ -254,9 +284,12 @@ def cmd_search(args) -> int:
         schemes=tuple(resolve_schemes(
             args.schemes.split(",") if args.schemes else list(DEFAULT_SCHEMES),
             depth=args.depth)),
-        passphrase=args.passphrase, pinned=pinned, required=required,
+        passphrase=args.passphrase,
+        passphrases=tuple(args.passphrases.split(",")) if args.passphrases else (),
+        pinned=pinned, required=required,
         joiners=tuple(args.joiners.split(",")), casings=tuple(args.casings.split(",")),
         workers=args.workers, prefix_len=args.prefix_len, limit=args.limit,
+        electrum_depth=args.depth if args.depth else 5,
     )
 
     ckpt = Checkpoint(Path(args.checkpoint) if args.checkpoint else None)
@@ -268,6 +301,9 @@ def cmd_search(args) -> int:
         print("pinned : " + ", ".join(f"{k}={v}" for k, v in sorted(pinned.items())))
     print(f"target : {args.target}")
     print(f"mode   : {args.mode}   workers: {args.workers}   units: {total_units}")
+    if cfg.passphrase_list() != ("",):
+        print(f"passphrases ({len(cfg.passphrase_list())}): "
+              + ", ".join(repr(x) for x in cfg.passphrase_list()))
     if args.max_seconds:
         print(f"time cap: {args.max_seconds}s")
     print("\nsearching (ctrl-c to stop; progress is checkpointed)\n")
@@ -336,7 +372,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("estimate", help="size and time a search without running it")
     pool_args(sp)
     sp.add_argument("--length", type=int, default=12)
-    sp.add_argument("--mode", choices=("bip39", "brain"), default="bip39")
+    sp.add_argument("--mode", choices=("bip39", "brain", "electrum"), default="bip39")
     sp.add_argument("--workers", type=int, default=os.cpu_count() or 1)
     sp.add_argument("--pin")
     sp.add_argument("--require")
@@ -355,16 +391,32 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("selftest", help="run the crypto test vectors")
     sp.set_defaults(func=cmd_selftest)
 
+    sp = sub.add_parser("positions", help="show the word-plus-number position map")
+    sp.add_argument("--length", type=int, default=24, choices=(21, 24))
+    sp.add_argument("--proposed", action="store_true",
+                    help="include the community's weak assignments")
+    sp.add_argument("--confirmed-only", action="store_true",
+                    help="exclude even the strong ones")
+    sp.add_argument("--out", help="write the map as JSON")
+    sp.set_defaults(func=cmd_positions)
+
     sp = sub.add_parser("search", help="run the search")
     pool_args(sp)
     sp.add_argument("--target", default=TARGET_ADDRESS)
     sp.add_argument("--length", type=int, default=12, help="mnemonic length")
-    sp.add_argument("--mode", choices=("bip39", "brain"), default="bip39")
+    sp.add_argument("--mode", choices=("bip39", "brain", "electrum"), default="bip39")
     sp.add_argument("--schemes", help=f"comma list or 'all'; default: {','.join(DEFAULT_SCHEMES)}")
     sp.add_argument("--depth", type=int,
-                    help="address indices to scan per scheme (default 5). "
+                    help="address indices to scan per scheme/chain (default 5). "
                          "--depth 1 roughly doubles throughput")
     sp.add_argument("--passphrase", default="", help="BIP-39 passphrase (13th word)")
+    sp.add_argument("--passphrases",
+                    help="comma-separated passphrases to try per candidate. "
+                         "Neither the BIP-39 checksum nor the Electrum seed "
+                         "version depends on the passphrase, so one "
+                         "enumeration pass serves all of them and only PBKDF2 "
+                         "repeats. Use a leading comma to include the empty "
+                         "passphrase, e.g. --passphrases ,breathe")
     sp.add_argument("--pin", help="fix words to positions, e.g. 0=moon,11=black")
     sp.add_argument("--require", help="words that must appear somewhere")
     sp.add_argument("--joiners", default="space", help="brain mode: space,none,dash,comma")

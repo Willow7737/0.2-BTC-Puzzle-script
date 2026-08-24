@@ -54,15 +54,25 @@ not a seed word.
 **(c) The hints are simply wrong.** They are community-derived, not authored by
 the puzzle's creator, and no one has verified them against a solution.
 
-Interpretation (b) is the most productive, because it is the only one that
-keeps a BIP-39 search alive while explaining the non-BIP-39 hints. The tooling
-here supports (a) too, via `--mode brain`.
+**Update after the image work in section 2 and the negatives in section 3:**
+interpretation (a) has weakened considerably and (c) has strengthened.
+`breathe` is *plain visible text on Floyd's hoodie* and nothing more — at 16x
+the Statue's neck shows only robe drapery, no lettering, so it is not a
+*marked* word the way `moon`, `tower`, `food`, `real`, `subject` and `one` are.
+And brainwallet phrases of up to six words over a vocabulary that deliberately
+included `breathe` and `tuesday` are now **exhausted** with no match.
+
+So the working position is: the six marked words are real, `breathe` is
+thematic decoration that the hint list over-read, and a 12-word BIP-39
+mnemonic remains the best model. The tooling still supports (a) via
+`--mode brain` for longer phrases.
 
 ### Words the hints support that *are* valid BIP-39
 
 `moon` · `tower` · `food` · `this` · `subject` · `real` · `black`
+— plus `one`, recovered in section 2.
 
-Seven words. A 12-word mnemonic needs five more.
+Eight words. A 12-word mnemonic needs four more.
 
 ---
 
@@ -189,6 +199,42 @@ is a property of the 1600x1200 scan, not of the method — the same code reads
 rune 4 cleanly. A higher-resolution original would very likely let the same
 crib approach verify rune 2's "sum of two numbers" too.
 
+### The plinth's second underline is a word, not an index
+
+Re-examined at 20x with the red channel isolated, the stroke under the numeral
+`1` in "Section 1" is a **deliberate underline** — same hand, same weight, same
+length-past-the-glyph as the one under `subject`. It is not a serif on the
+numeral.
+
+That changes the reading. Two identical marks are most economically explained
+by one mechanism, not two: **underline marks a seed word**. And `one` is a
+BIP-39 word. The earlier reading — that `1` is a positional index for
+`subject` — needs a second, unevidenced mechanism to work.
+
+So the plinth contributes **two** words, `subject` and `one`, and the position
+hypothesis loses its clearest support. `puzzle/candidates.py` now exposes
+`MARKED`, the six words the artist actually singled out:
+
+    moon  tower  food     written tiny along a thin object
+    real                  inserted into an existing inscription
+    subject  one          underlined
+
+### The Great Seal was rewritten
+
+All three of the seal's inscriptions are replaced, which is deliberate but
+appears to be thematic rather than a word source:
+
+| Position | Artwork | Standard seal |
+|---|---|---|
+| top arc | `RERUM COGNOSCERE CAUSAS` | `ANNUIT COEPTIS` |
+| pyramid base | `FIAT JUSTITIA ET PEREAT MUNDUS` | `MDCCLXXVI` |
+| bottom arc | `UBI BENE IBI PATRIA` | `NOVUS ORDO SECLORUM` |
+
+"To know the causes of things" (Virgil), "let justice be done though the world
+perish", "where it is well, there is my homeland". `mundus` = world is a second
+independent pointer at `world`, but none of the three is *marked* the way the
+six words above are.
+
 ### What could not be confirmed
 
 - **`breathe` on the Statue's neck.** It is plainly printed on Floyd's hoodie
@@ -202,7 +248,400 @@ crib approach verify rune 2's "sum of two numbers" too.
   measured hand bearings land 3–13° off the nearest numeral, which is not
   clean enough to call.
 
-## 3. Why the original script could not have worked
+## 3. The construction rule: word plus number gives position
+
+This is the finding that reframes everything else, and it invalidates most of
+the search work in this repository — including several runs reported below.
+
+The artwork does not hand over an unordered bag of words to permute. **Each
+clue pairs a word with a number, and the number is that word's position in the
+mnemonic.**
+
+### The clock proves it
+
+All three clock hands point *midway between two numerals* rather than at one,
+and the two numerals sum to the position. Numeral bearings measured from the
+artwork sit at exact 30.0 degree steps with 12 at 287.4 degrees, which makes
+the midpoints predictable to a fraction of a degree:
+
+| Hand | Label | Midpoint | Predicted bearing | Measured | Position |
+|---|---|---|---:|---|---:|
+| seconds | `moon` | 12 + 1 | 302.4° | **302–304°** | **13** |
+| minutes | `tower` | 1 + 2 | 332.4° | on-hand | **3** |
+| hours | *(none)* | 10 + 11 | 241.7° | on-hand | **21** |
+
+The seconds hand is measurable in isolation because it is the only red line on
+the dial: 604 red pixels in the annulus around the centre, with a dominant
+bearing of 302–304° against a prediction of 302.4°, and the opposite end at
+122–124° confirming a single line through the centre. The two grey hands
+cannot be separated from grey artwork by ridge detection, but overlaying the
+predicted bearings puts them exactly along the drawn hands — the red overlay
+runs down the hand captioned `MOON`, the green down the one captioned `TOWER`.
+
+Reproduce with `./forensics.py regions puzzle.png --only clock`.
+
+### Why this is evidence and object-counting is not
+
+The test is **deviation from the default**. Hands normally point *at* a
+numeral, so placing all three between numerals is a deliberate choice that
+carries information. Likewise the plinth's underlines are marks added on top
+of text that did not need them.
+
+Counting objects is different. The Statue's crown does have exactly 7 rays —
+verified — but the real Statue has 7 rays, so an accurate drawing yields 7
+whether or not 7 means anything. The same goes for 2 cameras and 4 masked
+figures: both counts are correct, and both are ordinary composition. An
+illustration will always yield numbers if you count things in it.
+
+That criterion is encoded in `puzzle/positions.py` as the `Evidence` scale,
+and it is why the community's proposed assignments stay `WEAK` however cleanly
+they can be counted.
+
+### The six axes, and why the moon hand is the giveaway
+
+Each hand is a *line*, so it covers two opposite midpoints. There are six axes:
+
+| Axis | ↔ | Carries a hand? |
+|---|---|---|
+| 3 (332.4°) | 15 (151.8°) | **tower** |
+| 5 (2.7°) | 17 (181.9°) | no |
+| 7 (32.6°) | 19 (211.7°) | no |
+| **13 (302.4°)** | **13 (122.4°)** | **moon** |
+| 9 (62.4°) | 21 (241.7°) | **hour** |
+| 11 (92.4°) | 23 (272.5°) | no |
+
+Two things fall out. The `13 ↔ 13` axis is the **only one whose two ends give
+the same number** — 12+1 and 6+7 both sum to 13 — and it is opposite to 0.0°.
+The artist put the unambiguous word on the unambiguous axis. Every other hand
+is ambiguous between two positions, resolved only by which end the word is
+written on.
+
+Second, **the hour hand's far end lands on 9, exactly where the Seal's eye
+sits**. The "unlabelled" hand is not unlabelled; it points at the eye.
+
+### How surprising is any of this?
+
+Ray-matching needs a false-positive rate or it degenerates into pattern
+matching. Twelve rays 30° apart means a random bearing is within 1.3° of one
+about **9% of the time** (Monte-Carlo over 200k samples: 8.6%).
+
+| Claim | Error | By chance |
+|---|---:|---:|
+| all three hands within ~2° | — | **0.24%** |
+| …and `moon` on the one self-matching axis (1 of 6) | — | **~0.04%** |
+| the Seal's eye alone | 1.3° | **8.7%** |
+
+So the **clock mechanism is strong** — about 1 in 2,500 by chance, and it
+comes with its own caption (rune 2, "sum of two numbers", drawn inside the
+dial). The **eye is not, on its own**. It stays `STRONG` rather than
+`CONFIRMED` for one specific reason: the community proposed `eye = 4+5 = 9`
+*before* it was measured, so the measurement is a successful prediction rather
+than a fitted result. That is worth something, but it is not 1-in-2,500.
+
+`positions.chance_probability(error)` computes this, and should be consulted
+before promoting any future ray match.
+
+### Can the rays name the words? No — a survey says they cannot
+
+With 24 rays covering positions 3–23, the obvious next step is to read a word
+off each ray. It does not work, and the failure is measurable.
+
+Thirty-two objects were catalogued from the artwork **before** being measured,
+to avoid picking the ones that happen to fit. Then all were tested at once:
+
+| tolerance | hits | observed | null | p |
+|---:|---:|---:|---:|---:|
+| 1.0° | 7 | 21.9% | 13.3% | 0.125 |
+| 1.5° | 12 | 37.5% | 20.0% | 0.017 |
+| 2.0° | 13 | 40.6% | 26.7% | 0.061 |
+| 2.5° | 17 | 53.1% | 33.3% | 0.016 |
+| 3.0° | 19 | 59.4% | 40.0% | 0.021 |
+| 4.0° | 20 | 62.5% | 53.3% | 0.195 |
+| 5.0° | 21 | 65.6% | 66.7% | 0.630 |
+
+**The p-value wanders instead of holding.** A real effect survives every
+threshold; this one is significant at 1.5°, not at 2.0°, significant again at
+2.5° and 3.0°, then gone. That is what researcher degrees of freedom look
+like, not signal.
+
+Two further problems finish it off:
+
+* **The objects are angularly clustered** — 13 of 32 between 45° and 90°, none
+  at all between 135° and 180° — because the artwork's content is concentrated
+  to the upper right of the dial. Ray coverage is not uniform.
+* **Five of the nine occupied positions carry more than one object**, and
+  position 9 carries **four** (Space Needle 0.5°, eye 1.4°, toppled bust 2.2°,
+  map of China 2.2°). A ray that four objects sit on cannot name a word.
+
+That last point also kills the eye. It is not even the closest object on its
+own ray — the Space Needle is nearer. `eye → 9` drops to `WEAK`, and
+`PROPOSED_STRONG` is now empty.
+
+### What actually survives
+
+The confirmed clues share a property the survey objects do not: **the word is
+written on the object**.
+
+| Clue | Word | How the word is marked | How the number is given |
+|---|---|---|---|
+| seconds hand | `moon` | written along the hand | its own bearing → 13 |
+| minutes hand | `tower` | written along the hand | its own bearing → 3 |
+| hours hand | *(none)* | — | its own bearing → 21 |
+| plinth | `subject` | underlined | underlined `Section 1` → 1 |
+
+So the clock gives a number only for objects that *are* clock hands, and there
+are three of them. The mechanism is real and it is narrow: **three positions
+from the clock, one from the plinth, and no established mechanism for the
+other twenty.**
+
+Words that are marked but have no number — `food` on the Needle's shaft,
+`real` inserted into the Statue's inscription — remain unplaced. Finding what
+numbers *those* carry is a better use of effort than tracing more rays.
+
+### The unclaimed axes are empty too
+
+Three axes carry no hand — 5↔17, 7↔19, 11↔23. Each was traced across the full
+artwork:
+
+| Axis | What the rays actually pass through |
+|---|---|
+| 5 ↔ 17 | up through the `SEED PHRASE` display text; down into the bottom whitepaper strip |
+| 7 ↔ 19 | up-right through `NEW WORLD` toward Floyd; down-left across the dial past numeral 10 |
+| 11 ↔ 23 | right through the pyramid, Trump/Biden and the plinth; left through the Statue's robe |
+
+**None lands on a crisp, isolated feature.** They cross large text blocks and
+several objects at once — consistent with the survey above, which shows ray
+proximity is not discriminating at 15° spacing.
+
+### The mechanism extends past the hands: the Great Seal's eye
+
+Numerals 4, 5, 6 and 7 are hidden behind the Great Seal — and the Seal's own
+features sit on the rays those numerals define. The community table proposes
+`eye = 4+5 = 9` and `pyramid = 5+6 = 11`; both are testable the same way.
+
+| Feature | Predicted ray | Measured bearing | Error | Verdict |
+|---|---:|---:|---:|---|
+| Seal's eye | midpoint(4,5) = 62.4° | **61.1°** | **1.3°** | **STRONG → 9** |
+| Pyramid centroid | midpoint(5,6) = 92.4° | 101.1° | 8.7° | rejected (58% by chance) |
+
+The eye lands inside the artwork's own drafting scatter. The pyramid does not:
+the 92.4° ray passes *through* its brick body, but a large triangle's centroid
+is a loose anchor and 8.7° is well outside the noise floor, so it stays
+`STRONG` rather than `CONFIRMED`.
+
+**The noise floor matters.** Measured numeral steps run 28.0° to 32.0° — about
+±2° of hand-drawn scatter. That is what makes 1.3° a hit and 8.7° a miss, and
+it is why midpoints between two *measured* numerals (`moon`, `tower`, the hour
+hand) are firmer than ones involving an interpolated numeral (the `eye`).
+
+`positions.position_at(x, y)` implements the test: give it an image
+coordinate, and it returns the position that coordinate encodes, or nothing.
+
+### The even mechanism: one rule, two alignments
+
+Rune 2 says *"sum of two numbers"* — it never says *adjacent* numbers.
+
+* two **adjacent** numerals sum to `2n+1`, always **odd**
+* two numerals **two apart** sum to `2n`, always **even** — and their
+  geometric midpoint is exactly *on* the numeral between them
+
+So it is a single rule with two alignments: a feature **between** two numerals
+encodes an odd position; a feature **on** a numeral encodes an even one, by
+summing its two neighbours.
+
+| Alignment | Rays | Positions |
+|---|---:|---|
+| between numerals | 12 | 3, 5, 7 … 23 (odd) |
+| on a numeral | 12 | 4, 6, 8 … 22 (even) |
+| **combined** | **24** | **3 … 23, no gaps** |
+
+Twenty-four rays, 15° apart, covering every position from 3 to 23. Three axes
+double up — and they are exactly the ones whose two ends give the *same*
+number:
+
+| Axis | Both ends give |
+|---|---:|
+| numeral 6 ↔ numeral 12 | **12** |
+| midpoint(6,7) ↔ midpoint(12,1) | **13** |
+| numeral 7 ↔ numeral 1 | **14** |
+
+`12, 13, 14` — consecutive, and the exact middle of a 24-position phrase. Every
+other axis is ambiguous between two positions, resolved only by which end
+carries the word. The `moon` hand sits on the middle one.
+
+**What the clock cannot reach: 1, 2 and 24.** Position 1 is supplied by the
+plinth. Positions 2 and 24 have no known clue, and that is now the precise
+shape of the gap — not "most of the table is missing" but "two positions plus
+the words for twenty rays".
+
+Note this also decides the length question in favour of **24** over 21: a
+21-word phrase would leave the rays for 22 and 23 spurious, whereas 24 uses
+every one of the clock's 21 reachable positions.
+
+### The cost: a worse false-positive rate
+
+Completing the mechanism makes single matches **weaker**, not stronger. Going
+from 12 rays at 30° to 24 rays at 15° doubles the chance of a coincidental
+hit:
+
+| Model | Spacing | P(random bearing within 1.3°) |
+|---|---:|---:|
+| midpoints only | 30° | 8.7% |
+| **both alignments** | **15°** | **17.3%** |
+
+The Seal's eye re-scores from 8.7% to **18.7%**. It stays `STRONG` only
+because it was predicted before being measured. Nothing else should be
+promoted on a single ray match at this rate — a joint alignment of several
+independent features, or a feature the mechanism is intrinsically about, is
+now the minimum bar.
+
+### A hard structural constraint on the odd half
+
+Taking only the midpoint alignment, consecutive numerals sum to `n + (n+1) =
+2n+1`, so every position *that* alignment can yield is odd:
+
+```
+3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23
+```
+
+This is what forced the search for an even mechanism, and the on-numeral
+alignment above supplies it — except for `camera = 2`, which the clock
+provably cannot reach under either alignment and which therefore still needs
+a standalone clue. Two cameras are in fact drawn, which is the right *shape*
+of clue for it, though a bare count remains weak evidence.
+
+So the table is not one hypothesis of uniform strength. It is:
+
+* **four positions** with a confirmed mechanism (1, 3, 9, 13) plus an orphan
+  number at 21;
+* **odd positions** that at least *could* come from the clock, if a feature
+  can be shown to sit on the right ray;
+* **even positions** resting on object counts, with no mechanism at all.
+
+### A correction
+
+Section 2 of this document argued the underlined `1` beside
+`subject` was the *word* `one`, on the grounds that two identical underlines
+were most economically explained by one mechanism. **That reading is
+withdrawn.** With the word-plus-number mechanism now confirmed independently
+on the clock, `Section 1` is a position marker: `subject -> 1`. `one` has been
+removed from the confirmed vocabulary.
+
+### Consequence: it is not a 12-word mnemonic
+
+Position 21 exists. BIP-39 permits 12, 15, 18, 21 and 24 words, so the phrase
+is **21 or 24 words**. Every 12-word search ever run against this puzzle —
+including all of this repository's, and the original script's — was
+structurally incapable of succeeding, no matter how long it ran.
+
+### What it would take to search
+
+`puzzle/positions.py` models the map and refuses to pretend:
+
+```console
+  len 21 confirmed only  : NOT searchable: 17 unresolved, ~2e+56 phrases
+  len 24 confirmed only  : NOT searchable: 20 unresolved, 1.68e+66 phrases
+  len 24 + all proposed  : NOT searchable:  9 unresolved, 1.27e+30 phrases
+```
+
+Enumeration, not PBKDF2, is the wall. Three unresolved positions is 2048³ ≈
+8.6e9 — about an hour to enumerate and five to derive. Four is 2048⁴ ≈ 1.8e13,
+roughly three months. **Three unresolved positions is the practical ceiling**,
+so the map needs 18 more verified assignments before any search is worth
+starting.
+
+That is the whole game now. One more decoded clue is worth more than any
+amount of hardware, and no amount of CPU substitutes for it.
+
+## 4. Negative results
+
+Recorded so nobody re-treads them. Each of these looked promising and is now
+closed.
+
+| Checked | Result |
+|---|---|
+| Steganography (metadata, alpha, LSB) | nothing hidden below the pixels |
+| Rune 4's "number X" | a placeholder asterisk, not a digit |
+| `breathe` on the Statue's neck | **no lettering at 16x** — only robe drapery. It is plain visible text on Floyd's hoodie and nothing more |
+| Flag stripes | clean; no text along any stripe |
+| Whitepaper calligram | uniform whitepaper prose, no word emphasised or altered |
+| Fine-detail sweep of unexamined regions | no further text cache — the marked-word list is likely complete for this scan |
+| **Brainwallet, phrases of 3–6 words** | **exhausted, no match** (see below) |
+| Blockchain history | funded 2020-05-10 08:01 UTC, 0.20000000 BTC, from four P2SH inputs; never spent; no OP_RETURN. Later deposits are third-party dust |
+
+### Brainwallet is exhausted for short phrases
+
+The puzzle says "seed **passphrase**", and a brainwallet — `SHA-256(phrase)`
+used directly as a private key — accepts any vocabulary and any length. It is
+also ~65x cheaper per candidate than BIP-39, which makes short phrases
+*exhaustively* searchable rather than merely sampled. Nobody appears to have
+closed this off, so it was worth doing properly.
+
+Vocabulary: the six marked words plus `this black only first future brave
+world order breathe tuesday` — 16 words, deliberately including the two that
+are **not** BIP-39, since brainwallet mode does not care.
+
+| Length | Orderings | Variants | Result |
+|---:|---:|---|---|
+| 3 | 3,360 | 9 (space/none/dash x lower/upper/title) | no match |
+| 4 | 43,680 | 9 | no match |
+| 5 | 524,160 | 9 | no match |
+| 6 | 5,765,760 | 1 (space + lower) | no match |
+
+Both compressed and uncompressed public keys were tested for every candidate.
+**A brainwallet of up to six words from this vocabulary is ruled out.** That is
+a real closure, not a sample: the space was covered completely.
+
+## 5. Electrum seeds: a whole search space nobody had checked
+
+Everything above assumes BIP-39. **Electrum does not use BIP-39**, and the
+differences are not cosmetic:
+
+| | BIP-39 | Electrum |
+|---|---|---|
+| checksum | 4 bits, in the last word | 8 bits, `HMAC-SHA512(b"Seed version", seed)` prefix |
+| PBKDF2 salt | `b"mnemonic"` | `b"electrum"` |
+| script type | chosen by the derivation path | **encoded in the seed itself** |
+| legacy path | `m/44'/0'/0'/0/i` | `m/0/i` receiving, `m/1/i` change |
+
+A phrase can be a perfectly valid Electrum seed and an invalid BIP-39
+mnemonic, and vice versa — the two checksums are unrelated. So a BIP-39-only
+search walks straight past an Electrum wallet no matter how long it runs. For
+a 2020-era puzzle whose description says "seed **passphrase**", this was a
+real gap.
+
+`puzzle/electrum.py` implements it, verified against Electrum's own
+`tests/test_wallet_vertical.py` vectors — seed typing for standard, segwit and
+2FA-segwit phrases, and the `m/0/0` / `m/1/0` addresses of a known standard
+seed.
+
+Only the **standard** type (`01` prefix) can produce a legacy `1...` address;
+segwit and 2FA seeds derive bech32, so they cannot match this target and are
+skipped.
+
+### It is also seven times cheaper to search
+
+The 8-bit seed-version prefix rejects **255 of every 256** orderings for the
+cost of one HMAC-SHA512, where BIP-39's 4-bit checksum only rejects 15 of 16.
+That sixteen-fold stronger filter more than pays for the slightly dearer
+derivation:
+
+```
+seed-version filter :  122,394 orderings/sec/core   (measured pass rate 0.00385, expected 1/256)
+full candidate      :      518 /sec/core            (PBKDF2 + m/0/0 + m/1/0)
+effective           :   63,677 orderings/sec/core -> 254,709/s on four cores
+```
+
+**A twelve-word pool takes 31 minutes in Electrum mode against 3.8 hours in
+BIP-39 mode** — that is like-for-like, comparing Electrum's two chains against
+BIP-39's *fast path* of one scheme and one address index. Compared at each
+mode's default breadth the gap is wider still (14x), because BIP-39's default
+scans 26 addresses per seed to Electrum's 10.
+
+That changes the strategy: word *sets* can be swept, not just sampled. Where BIP-39 lets four cores exhaust roughly one set per working day,
+Electrum lets them do a dozen.
+
+## 6. Why the original script could not have worked
 
 The script this repository shipped with did:
 
@@ -260,7 +699,7 @@ words is a tractable search; sixteen is not.
 
 ---
 
-## 4. What this toolkit does instead
+## 7. What this toolkit does instead
 
 | Problem | Fix | Measured effect |
 |---|---|---|
@@ -287,7 +726,7 @@ keeps it off 15 of every 16 candidates.
 
 ---
 
-## 5. Recommended search order
+## 8. Recommended search order
 
 Ranked by probability-per-CPU-hour.
 
@@ -325,7 +764,7 @@ pushes the run past a year.
 
 ---
 
-## 6. Coverage so far
+## 9. Coverage so far
 
 Two runs, both against the target's HASH160, both checkpointed and resumable.
 
@@ -338,28 +777,112 @@ result   15,505,408 orderings (968,858 checksum-valid) in 15.0 minutes
          17,228 orderings/sec on four cores
 ```
 
-**Run 2 — depth.** The 13 words recovered in section 2, on the BIP-44 fast
-path (`m/44'/0'/0'/0/0` only). Halving the derivation work doubles throughput,
-which is the right trade when only a small fraction of the space is reachable
-anyway — better to cover more of the single most likely path than less of six:
+**Run 2 — depth.** Thirteen words, BIP-44 fast path (`m/44'/0'/0'/0/0` only).
+Halving the derivation work doubles throughput, which is the right trade when
+only a small fraction of the space is reachable anyway:
 
 ```
 pool     moon tower food subject real this black only first future brave world order
 space    P(13,12) = 6,227,020,800 orderings, 389,188,800 checksum-valid
 rate     ~35,000 orderings/sec on four cores  (2x run 1)
-full     ~2.1 days; resumable via runs/img13.json
+covered  63,665,280 orderings = 1.0%, no match; paused, checkpointed
 ```
 
-Neither run has found the key. To be blunt about what that means: a few
-percent of one candidate pool on one derivation path is a baseline, not a
-result, and it rules almost nothing out.
+**Run 3 — the revised set.** `candidates.BEST_12`, which swaps the display
+words for `one` (section 2) and drops the weakest. Twelve words is a *single*
+subset, so this run is exhaustive rather than a sample and completes in about
+four hours:
 
-## 7. Open questions
+```
+pool     moon tower food real subject one future this first black only world
+space    479,001,600 orderings, 29,937,600 checksum-valid
+full     ~3.8 hours on four cores; checkpointed
+```
+
+**Run 4 — brainwallet, lengths 3-6.** Exhausted, no match (section 3).
+
+> **All five runs below assume a 12-word phrase, which section 3 shows is
+> wrong.** They are kept as an honest record of what was spent and of the
+> engine's measured throughput, not as progress toward the answer.
+
+**Run 5 — `BEST_12` as an Electrum standard seed. COMPLETE.** The first
+exhaustive closure of a twelve-word set in a seed scheme:
+
+```
+pool      moon tower food real subject one future this first black only world
+space     479,001,600 orderings - all of them
+addresses m/0/0, m/0/1, m/1/0, m/1/1
+result    11,880 / 11,880 units, 1,869,966 seed-version-valid, no match
+time      32.9 minutes on four cores (model predicted 31.4)
+```
+
+The run checks itself: the observed seed-version pass rate was **0.003904**
+against a predicted **1/256 = 0.003906**. Had units been skipped or the filter
+been wrong, that number would not land within 0.05% of theory. The space
+really was covered.
+
+**So that set is ruled out as an Electrum standard seed** — with two caveats
+worth stating: no passphrase was applied, and only address indices 0 and 1 on
+each chain were scanned.
+
+Runs 2 and 3 sample one derivation path each; runs 4 and 5 close their spaces
+completely. None has found the key.
+
+## 10. The passphrase hypothesis
+
+BIP-39 and Electrum both support an optional **passphrase** — the "13th word"
+— which is mixed into the PBKDF2 salt. It can be any string, so it is not
+restricted to the wordlist.
+
+That matters here because the puzzle's own description says the *seed
+passphrase* is hidden in the picture, and the single most prominent word in
+the artwork, `breathe`, is **not** a BIP-39 word. "Twelve marked words, with
+`breathe` as the passphrase" reconciles both facts without needing the hint
+list to be wrong.
+
+### One enumeration pass serves every passphrase
+
+Neither the BIP-39 checksum nor the Electrum seed version depends on the
+passphrase — both are computed from the words alone. So a single pass can
+enumerate, filter, and then try *N* passphrases against each surviving
+candidate; only the PBKDF2 repeats. `--passphrases` does this.
+
+For a twelve-word pool on four cores:
+
+| Mode | Filter (once) | Per passphrase | 8 passphrases |
+|---|---:|---:|---:|
+| BIP-39 (fast path) | 3 min | 3.75 h | 30 h |
+| Electrum | 16 min | 15 min | **2.3 h** |
+
+Electrum's 1-in-256 seed-version prefix leaves only 1.87M candidates needing
+PBKDF2, against BIP-39's 29.9M — which is why the same passphrase sweep is
+thirteen times cheaper there.
+
+### Running
+
+1. **BIP-39, `BEST_12`, passphrase `breathe`** — the prioritised test, ~3.8 h.
+2. **Electrum, `BEST_12`, eight passphrases** — chained behind it, ~2.3 h:
+   `breathe`, `Breathe`, `BREATHE`, `tuesday`, `Tuesday`, `i can't breathe`,
+   `icantbreathe`, `black`.
+
+The engine is tested against a planted target reachable *only* under a
+passphrase, and against the same target with the correct passphrase removed
+from the list — the second case guards against the passphrase being silently
+ignored, which would otherwise produce a false negative across an entire run.
+
+## 11. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
   accepts 15/18/21/24, and brainwallet mode accepts any length. A 24-word
   phrase is unsearchable by permutation and would need the word *order* to be
   determined by the image.
+- **Is the word *set* right at all?** This is now the binding constraint, not
+  the ordering. Six words are securely marked and three more are faint; the
+  remaining three of any twelve are guesswork drawn from display text. A
+  wrong set makes every ordering search worthless, and there is currently no
+  way to test a set except by exhausting its 479M orderings (~4 hours). If the
+  runes or the clock ever yield positions, that cost collapses to a single
+  derivation per set and the whole problem becomes tractable.
 - **What do runes 1 and 2 encode?** Rune 4 is now settled (section 2) and its
   "number X" turned out to be a placeholder, so the remaining numeric hope is
   rune 2's "sum of two numbers". Both runes need a higher-resolution scan
@@ -384,7 +907,7 @@ result, and it rules almost nothing out.
 
 ---
 
-## 8. Verification
+## 12. Verification
 
 Every cryptographic primitive is pinned to a published test vector, and the
 search engine is tested against planted targets it must find:
