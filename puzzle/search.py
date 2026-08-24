@@ -38,6 +38,11 @@ class SearchConfig:
     mode: str = "bip39"                      # "bip39" | "brain" | "electrum"
     schemes: tuple[Scheme, ...] = ()
     passphrase: str = ""
+    #: Passphrases to try per candidate. The BIP-39 checksum and the Electrum
+    #: seed version both depend only on the words, never on the passphrase, so
+    #: one enumeration+filter pass can serve any number of passphrases - only
+    #: the PBKDF2 is repeated.
+    passphrases: tuple[str, ...] = ()
     pinned: dict[int, str] = field(default_factory=dict)
     required: list[str] = field(default_factory=list)
     joiners: tuple[str, ...] = ("space",)
@@ -48,6 +53,10 @@ class SearchConfig:
     electrum_depth: int = 5            # address indices scanned per Electrum chain
     unit_limit: int | None = None      # max orderings per unit (derived from limit)
     deadline: float | None = None      # absolute time.time() cutoff
+
+    def passphrase_list(self) -> tuple[str, ...]:
+        """Passphrases to try, falling back to the single ``passphrase``."""
+        return self.passphrases or (self.passphrase,)
 
     def free_positions(self) -> list[int]:
         return [i for i in range(self.phrase_len) if i not in self.pinned]
@@ -130,7 +139,7 @@ def _positional(order: Sequence[str], cfg: SearchConfig) -> list[str]:
 def _run_unit_bip39(cfg: SearchConfig, subset, prefix) -> tuple[int, int, list[Hit]]:
     target = cfg.target_hash160
     schemes = cfg.schemes
-    passphrase = cfg.passphrase
+    passphrases = cfg.passphrase_list()
     plain = not cfg.pinned and cfg.phrase_len == 12
     rest = list(subset)
     for w in prefix:
@@ -162,11 +171,12 @@ def _run_unit_bip39(cfg: SearchConfig, subset, prefix) -> tuple[int, int, list[H
             continue
         valid += 1
         phrase = " ".join(placed)
-        seed = mnemonic_to_seed(phrase, passphrase)
-        for h160, scheme_name, address_index in iter_hash160s(seed, schemes):
-            if h160 == target:
-                hits.append(Hit(phrase, scheme_name, address_index,
-                                f"passphrase={passphrase!r}"))
+        for pp in passphrases:
+            seed = mnemonic_to_seed(phrase, pp)
+            for h160, scheme_name, address_index in iter_hash160s(seed, schemes):
+                if h160 == target:
+                    hits.append(Hit(phrase, scheme_name, address_index,
+                                    f"passphrase={pp!r}"))
         if hits:
             break  # answer found; the rest of this unit is wasted work
     return tested, valid, hits, not truncated
@@ -182,7 +192,7 @@ def _run_unit_electrum(cfg: SearchConfig, subset, prefix) -> tuple[int, int, lis
     segwit and 2FA seeds derive bech32, so they cannot match this target.
     """
     target = cfg.target_hash160
-    passphrase = cfg.passphrase
+    passphrases = cfg.passphrase_list()
     depth = cfg.electrum_depth
     rest = list(subset)
     for w in prefix:
@@ -210,9 +220,11 @@ def _run_unit_electrum(cfg: SearchConfig, subset, prefix) -> tuple[int, int, lis
         if not check(phrase, electrum.LEGACY_PREFIX):
             continue
         valid += 1
-        for h160, chain, idx in electrum.iter_hash160s(phrase, passphrase, depth):
-            if h160 == target:
-                hits.append(Hit(phrase, chain, idx, f"electrum standard, passphrase={passphrase!r}"))
+        for pp in passphrases:
+            for h160, chain, idx in electrum.iter_hash160s(phrase, pp, depth):
+                if h160 == target:
+                    hits.append(Hit(phrase, chain, idx,
+                                    f"electrum standard, passphrase={pp!r}"))
         if hits:
             break
     return tested, valid, hits, not truncated

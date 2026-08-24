@@ -258,7 +258,9 @@ def cmd_search(args) -> int:
         schemes=tuple(resolve_schemes(
             args.schemes.split(",") if args.schemes else list(DEFAULT_SCHEMES),
             depth=args.depth)),
-        passphrase=args.passphrase, pinned=pinned, required=required,
+        passphrase=args.passphrase,
+        passphrases=tuple(args.passphrases.split(",")) if args.passphrases else (),
+        pinned=pinned, required=required,
         joiners=tuple(args.joiners.split(",")), casings=tuple(args.casings.split(",")),
         workers=args.workers, prefix_len=args.prefix_len, limit=args.limit,
         electrum_depth=args.depth if args.depth else 5,
@@ -273,6 +275,9 @@ def cmd_search(args) -> int:
         print("pinned : " + ", ".join(f"{k}={v}" for k, v in sorted(pinned.items())))
     print(f"target : {args.target}")
     print(f"mode   : {args.mode}   workers: {args.workers}   units: {total_units}")
+    if cfg.passphrase_list() != ("",):
+        print(f"passphrases ({len(cfg.passphrase_list())}): "
+              + ", ".join(repr(x) for x in cfg.passphrase_list()))
     if args.max_seconds:
         print(f"time cap: {args.max_seconds}s")
     print("\nsearching (ctrl-c to stop; progress is checkpointed)\n")
@@ -370,6 +375,13 @@ def build_parser() -> argparse.ArgumentParser:
                     help="address indices to scan per scheme/chain (default 5). "
                          "--depth 1 roughly doubles throughput")
     sp.add_argument("--passphrase", default="", help="BIP-39 passphrase (13th word)")
+    sp.add_argument("--passphrases",
+                    help="comma-separated passphrases to try per candidate. "
+                         "Neither the BIP-39 checksum nor the Electrum seed "
+                         "version depends on the passphrase, so one "
+                         "enumeration pass serves all of them and only PBKDF2 "
+                         "repeats. Use a leading comma to include the empty "
+                         "passphrase, e.g. --passphrases ,breathe")
     sp.add_argument("--pin", help="fix words to positions, e.g. 0=moon,11=black")
     sp.add_argument("--require", help="words that must appear somewhere")
     sp.add_argument("--joiners", default="space", help="brain mode: space,none,dash,comma")

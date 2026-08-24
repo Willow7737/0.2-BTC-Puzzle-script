@@ -519,7 +519,49 @@ each chain were scanned.
 Runs 2 and 3 sample one derivation path each; runs 4 and 5 close their spaces
 completely. None has found the key.
 
-## 9. Open questions
+## 9. The passphrase hypothesis
+
+BIP-39 and Electrum both support an optional **passphrase** — the "13th word"
+— which is mixed into the PBKDF2 salt. It can be any string, so it is not
+restricted to the wordlist.
+
+That matters here because the puzzle's own description says the *seed
+passphrase* is hidden in the picture, and the single most prominent word in
+the artwork, `breathe`, is **not** a BIP-39 word. "Twelve marked words, with
+`breathe` as the passphrase" reconciles both facts without needing the hint
+list to be wrong.
+
+### One enumeration pass serves every passphrase
+
+Neither the BIP-39 checksum nor the Electrum seed version depends on the
+passphrase — both are computed from the words alone. So a single pass can
+enumerate, filter, and then try *N* passphrases against each surviving
+candidate; only the PBKDF2 repeats. `--passphrases` does this.
+
+For a twelve-word pool on four cores:
+
+| Mode | Filter (once) | Per passphrase | 8 passphrases |
+|---|---:|---:|---:|
+| BIP-39 (fast path) | 3 min | 3.75 h | 30 h |
+| Electrum | 16 min | 15 min | **2.3 h** |
+
+Electrum's 1-in-256 seed-version prefix leaves only 1.87M candidates needing
+PBKDF2, against BIP-39's 29.9M — which is why the same passphrase sweep is
+thirteen times cheaper there.
+
+### Running
+
+1. **BIP-39, `BEST_12`, passphrase `breathe`** — the prioritised test, ~3.8 h.
+2. **Electrum, `BEST_12`, eight passphrases** — chained behind it, ~2.3 h:
+   `breathe`, `Breathe`, `BREATHE`, `tuesday`, `Tuesday`, `i can't breathe`,
+   `icantbreathe`, `black`.
+
+The engine is tested against a planted target reachable *only* under a
+passphrase, and against the same target with the correct passphrase removed
+from the list — the second case guards against the passphrase being silently
+ignored, which would otherwise produce a false negative across an entire run.
+
+## 10. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
   accepts 15/18/21/24, and brainwallet mode accepts any length. A 24-word
@@ -556,7 +598,7 @@ completely. None has found the key.
 
 ---
 
-## 10. Verification
+## 11. Verification
 
 Every cryptographic primitive is pinned to a published test vector, and the
 search engine is tested against planted targets it must find:

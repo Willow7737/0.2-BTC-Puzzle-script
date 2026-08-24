@@ -425,6 +425,66 @@ class TestElectrumSearch(unittest.TestCase):
         self.assertEqual(hits[0].scheme, "electrum-receiving")
 
 
+class TestPassphrase(unittest.TestCase):
+    """The "13th word". A search that silently ignored it would burn hours."""
+
+    MNEMONIC = "moon tower food real black subject this time world only proof find"
+
+    def _planted(self, passphrase):
+        seed = bip39.mnemonic_to_seed(self.MNEMONIC, passphrase)
+        return next(h for h, _, _ in
+                    derive.iter_hash160s(seed, derive.resolve_schemes(["bip44"], depth=1)))
+
+    def test_passphrase_changes_the_address(self):
+        seen = {pp: self._planted(pp) for pp in ("", "breathe", "Breathe", "tuesday")}
+        self.assertEqual(len(set(seen.values())), 4, "passphrases must not collide")
+
+    def test_checksum_is_independent_of_passphrase(self):
+        """Why one enumeration pass can serve every passphrase."""
+        self.assertTrue(bip39.is_valid_mnemonic(self.MNEMONIC))
+        a = bip39.mnemonic_to_seed(self.MNEMONIC, "")
+        b = bip39.mnemonic_to_seed(self.MNEMONIC, "breathe")
+        self.assertNotEqual(a, b)
+
+    def test_passphrase_list_defaults_to_single(self):
+        cfg = SearchConfig(pool=[], target_hash160=bytes(20))
+        self.assertEqual(cfg.passphrase_list(), ("",))
+        cfg2 = SearchConfig(pool=[], target_hash160=bytes(20), passphrase="x")
+        self.assertEqual(cfg2.passphrase_list(), ("x",))
+        cfg3 = SearchConfig(pool=[], target_hash160=bytes(20), passphrases=("a", "b"))
+        self.assertEqual(cfg3.passphrase_list(), ("a", "b"))
+
+    def test_finds_target_only_reachable_via_passphrase(self):
+        target = self._planted("breathe")
+        cfg = SearchConfig(pool=self.MNEMONIC.split(), target_hash160=target,
+                           workers=2, prefix_len=1,
+                           schemes=tuple(derive.resolve_schemes(["bip44"], depth=1)),
+                           passphrases=("", "tuesday", "breathe"))
+        hits, _ = run_search(cfg, Checkpoint(None))
+        self.assertTrue(hits)
+        self.assertEqual(hits[0].phrase, self.MNEMONIC)
+        self.assertIn("breathe", hits[0].detail)
+
+    def test_misses_when_the_right_passphrase_is_absent(self):
+        """Guards against the passphrase being ignored and matching anyway."""
+        target = self._planted("breathe")
+        cfg = SearchConfig(pool=self.MNEMONIC.split(), target_hash160=target,
+                           workers=2, prefix_len=1, limit=40_000,
+                           schemes=tuple(derive.resolve_schemes(["bip44"], depth=1)),
+                           passphrases=("", "tuesday"))
+        hits, prog = run_search(cfg, Checkpoint(None))
+        self.assertEqual(hits, [])
+        self.assertGreater(prog.tested, 0)
+
+    def test_electrum_passphrase_also_applies(self):
+        seed = TestElectrum.STANDARD
+        a = next(h for h, c, i in electrum.iter_hash160s(seed, "", depth=1)
+                 if c == "electrum-receiving" and i == 0)
+        b = next(h for h, c, i in electrum.iter_hash160s(seed, "breathe", depth=1)
+                 if c == "electrum-receiving" and i == 0)
+        self.assertNotEqual(a, b)
+
+
 class TestRuneAnalysis(unittest.TestCase):
     """Rune-4 crib verification. Skipped unless the artwork is available."""
 

@@ -104,7 +104,8 @@ Useful flags:
 | `--mode brain` | free-form passphrase, ~65x faster, any vocabulary |
 | `--mode electrum` | Electrum seeds — different checksum and salt, **~7x faster** |
 | `--schemes all` | test all six derivation schemes |
-| `--passphrase X` | BIP-39 passphrase (the "13th word") |
+| `--passphrase X` | passphrase (the "13th word") |
+| `--passphrases a,b,c` | try several per candidate in one pass — the checksum doesn't depend on the passphrase, so only PBKDF2 repeats |
 | `--length 15` | non-12-word mnemonics |
 | `--depth 1` | scan one address index per scheme — roughly doubles throughput |
 | `--max-seconds N` | bounded run, reports coverage |
@@ -225,7 +226,7 @@ puzzle/feasibility.py    search-space arithmetic and time estimates
 puzzle/candidates.py     curated candidate tiers
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    60 tests: published vectors + planted targets
+tests/test_vectors.py    69 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 
