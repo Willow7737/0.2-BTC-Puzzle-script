@@ -15,6 +15,7 @@ steganography out.
 
     ./forensics.py probe puzzle.png
     ./forensics.py regions puzzle.png -o out/       # every known hiding place
+    ./forensics.py runes puzzle.png                 # verify the rune-4 plaintext
     ./forensics.py crop puzzle.png 1295,790,1495,1000 -m channel --channel r
 """
 
@@ -139,6 +140,29 @@ def cmd_regions(args) -> int:
     return 0
 
 
+def cmd_runes(args) -> int:
+    """Check the published rune-4 plaintext against the segmented glyphs."""
+    from puzzle.runes import verify_rune4
+
+    r = verify_rune4(args.image)
+    print(f"rune 4: {r['glyphs']} glyphs ({r['letters']} letters, "
+          f"{r['glyphs'] - r['letters']} separators)")
+    print(f"  word lengths from image : {r['word_lengths'][:len(r['crib_word_lengths'])]}")
+    print(f"  word lengths from crib  : {r['crib_word_lengths']}")
+    ok = r["word_lengths"][:len(r["crib_word_lengths"])] == r["crib_word_lengths"]
+    print(f"  -> {'MATCH' if ok else 'MISMATCH'}")
+    print(f"\n  recovered alphabet: {r['alphabet']} ({len(r['alphabet'])} letters)")
+    print(f"  mean distance between glyphs the crib calls the same letter: "
+          f"{r['mean_intra_letter_distance']:.1f}")
+    print(f"  mean distance between all glyph pairs                     : "
+          f"{r['mean_all_pairs_distance']:.1f}")
+    print("  (the first being much lower is what confirms the alignment)")
+    print("\n  trailing glyphs - the 'number X':")
+    for idx, note, d in r["tail"]:
+        print(f"    glyph {idx}: {note}" + (f"  (distance {d})" if d else ""))
+    return 0
+
+
 def cmd_crop(args) -> int:
     box = tuple(int(v) for v in args.box.split(","))
     size = render(Path(args.image), box, Path(args.out), args.scale, args.mode,
@@ -163,6 +187,10 @@ def main(argv=None) -> int:
     sp.add_argument("--channel", default="r", choices=list("rgb"))
     sp.add_argument("--mirror", action="store_true")
     sp.set_defaults(func=cmd_regions)
+
+    sp = sub.add_parser("runes", help="verify the rune-4 plaintext against the image")
+    sp.add_argument("image")
+    sp.set_defaults(func=cmd_runes)
 
     sp = sub.add_parser("crop", help="render an arbitrary box")
     sp.add_argument("image")

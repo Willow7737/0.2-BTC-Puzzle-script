@@ -8,6 +8,7 @@ itself is exercised end to end against a planted target.
 from __future__ import annotations
 
 import itertools
+import os
 import unittest
 
 from puzzle import bip39, brainwallet, candidates, derive, feasibility, keys
@@ -305,6 +306,57 @@ class TestForensicsRegions(unittest.TestCase):
         import forensics
         for name in ("clock", "plinth", "needle", "statue-base", "vertical"):
             self.assertIn(name, forensics.REGIONS)
+
+
+class TestRuneAnalysis(unittest.TestCase):
+    """Rune-4 crib verification. Skipped unless the artwork is available."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def setUp(self):
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}; "
+                          "set PUZZLE_IMAGE to run this test")
+
+    def test_crib_word_lengths_match(self):
+        from puzzle.runes import verify_rune4
+        r = verify_rune4(self.IMAGE)
+        n = len(r["crib_word_lengths"])
+        self.assertEqual(r["word_lengths"][:n], r["crib_word_lengths"])
+
+    def test_repeated_letters_look_alike(self):
+        """What makes the alignment more than a coincidence of counts."""
+        from puzzle.runes import verify_rune4
+        r = verify_rune4(self.IMAGE)
+        self.assertLess(r["mean_intra_letter_distance"],
+                        r["mean_all_pairs_distance"] * 0.6)
+
+    def test_trailing_glyph_is_not_a_letter(self):
+        """'number X' is a placeholder symbol, not a recoverable digit."""
+        from puzzle.runes import verify_rune4
+        r = verify_rune4(self.IMAGE)
+        chars = [t for t in r["tail"] if t[2] is not None]
+        self.assertTrue(chars, "expected one non-solid trailing glyph")
+        for _, _, d in chars:
+            self.assertGreater(d, r["mean_intra_letter_distance"])
+
+
+class TestRuneConstants(unittest.TestCase):
+    """Checks that need no image."""
+
+    def test_crib_is_consistent_with_separator_count(self):
+        from puzzle import runes
+        words = runes.RUNE4_CRIB.split()
+        self.assertEqual(len(words), 7)
+        self.assertEqual(sum(len(w) for w in words), 41)
+        # 7 separators: six between the seven crib words, one before "number X"
+        self.assertEqual(len(runes.RUNE4_SEPARATORS), 7)
+
+    def test_box_inside_artwork(self):
+        from puzzle import runes
+        x0, y0, x1, y1 = runes.RUNE4_BOX
+        self.assertTrue(0 <= x0 < x1 <= 1600)
+        self.assertTrue(0 <= y0 < y1 <= 1200)
 
 
 class TestSearchEngine(unittest.TestCase):

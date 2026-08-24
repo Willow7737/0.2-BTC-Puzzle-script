@@ -134,6 +134,61 @@ search to run at all — the phrase is assembled, not brute-forced. This is the
 single most valuable thing left to nail down, and it is why decoding the runes
 beats buying CPU.
 
+### Rune 4 decoded — and a lead closed
+
+The long rune strip up the right edge segments cleanly. Rotating it so reading
+order runs left to right yields **50 glyphs: 43 characters and 7 separators**.
+Two independent checks confirm the published Russian plaintext:
+
+```console
+$ ./forensics.py runes puzzle.png
+rune 4: 50 glyphs (43 letters, 7 separators)
+  word lengths from image : [5, 11, 8, 2, 6, 4, 5]
+  word lengths from crib  : [5, 11, 8, 2, 6, 4, 5]
+  -> MATCH
+
+  recovered alphabet: ЁАБВДЕЗИЙКМНОРСТФЧШЫЬ (21 letters)
+  mean distance between glyphs the crib calls the same letter: 27.2
+  mean distance between all glyph pairs                     : 66.7
+```
+
+The word-length match alone could be luck. The second number is what settles
+it: glyphs the crib says are the *same letter* are far more alike (27.2) than
+glyphs picked at random (66.7). Both the segmentation and the translation are
+sound, and the crib yields a **21-letter substitution alphabet** as a
+by-product.
+
+Reading direction is worth noting: the text runs **bottom-to-top**. The
+word-length sequence only matches in that direction (reversed it would be
+2,5,4,6,2,8,11,5, which matches nothing).
+
+**The lead this closes.** Rune 4 ends "…НОМЕР X" — "number X" — and that
+trailing value looked like the most promising index in the whole puzzle. It is
+not recoverable, because it is not a digit:
+
+```
+  trailing glyphs - the 'number X':
+    glyph 48: nearest letter Д  (distance 39)
+    glyph 49: solid block - artwork frame, not a character
+```
+
+Glyph 49 is a fully-inked rectangle — the frame, not a character. Glyph 48 is a
+six-pointed asterisk whose nearest letter sits at distance 39, well above the
+27.2 same-letter average, so it is **not** in the cipher alphabet. The author
+wrote a literal placeholder. "Number X" means number *X*; there is no hidden
+digit to extract.
+
+That is a genuine negative result, and worth having: it removes the strongest
+apparent numeric lead and pushes the weight of the position hypothesis back
+onto the plinth's underlined `1` and the clock hands.
+
+**Runes 1 and 2 are below the resolution limit.** Their glyphs are drawn much
+smaller. Connected components merge into blobs at every threshold tried, and
+projection profiles split individual pen strokes rather than characters. That
+is a property of the 1600x1200 scan, not of the method — the same code reads
+rune 4 cleanly. A higher-resolution original would very likely let the same
+crib approach verify rune 2's "sum of two numbers" too.
+
 ### What could not be confirmed
 
 - **`breathe` on the Statue's neck.** It is plainly printed on Floyd's hoodie
@@ -305,14 +360,17 @@ result, and it rules almost nothing out.
   accepts 15/18/21/24, and brainwallet mode accepts any length. A 24-word
   phrase is unsearchable by permutation and would need the word *order* to be
   determined by the image.
-- **What do the runes encode?** This is now the top priority, not a
-  side-note. Section 2 shows the plinth pairing a word with a number, and
-  three of the four runes talk about numbers ("sum of two numbers",
-  "number X", a weekday). Two runes have published Cyrillic plaintexts, which
-  makes them **cribs**: aligning glyphs against the known text should recover
-  the substitution alphabet, and that alphabet then decodes the parts nobody
-  has read — including whatever "number X" is. Rune 3 is written **mirrored**,
-  so flip it before transcribing. This is worth more than any amount of CPU.
+- **What do runes 1 and 2 encode?** Rune 4 is now settled (section 2) and its
+  "number X" turned out to be a placeholder, so the remaining numeric hope is
+  rune 2's "sum of two numbers". Both runes need a higher-resolution scan
+  before the crib method can reach them; the alphabet recovered from rune 4 is
+  already in `puzzle/runes.py` and ready to apply. Rune 3 is written
+  **mirrored** — flip it before transcribing.
+- **Where does a higher-resolution original live?** This is now the single
+  highest-value thing to find. Three separate leads — runes 1 and 2, the clock
+  hand bearings, and the claimed `breathe` on the Statue's neck — are all
+  blocked on resolution rather than on method. The tooling to exploit a better
+  scan already exists in this repo.
 - **Which numerals do the clock hands point at?** Blocked on resolution and on
   the Great Seal overlapping the dial. A cleaner scan of the original, or the
   artist's source file, would likely settle it immediately.

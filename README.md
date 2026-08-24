@@ -128,8 +128,20 @@ $ ./forensics.py regions puzzle.png -o out/  # every known hiding place
   statue-base    ONLY real Bitcoin
   vertical       PAY FOR THE FUTURE / THIS IS THE FIRST PREDICTION
 
+$ ./forensics.py runes puzzle.png            # verify rune 4 against its crib
+  word lengths from image : [5, 11, 8, 2, 6, 4, 5]
+  word lengths from crib  : [5, 11, 8, 2, 6, 4, 5]  -> MATCH
+  recovered alphabet: ЁАБВДЕЗИЙКМНОРСТФЧШЫЬ (21 letters)
+
 $ ./forensics.py crop puzzle.png 1295,790,1495,1000 -m channel --channel r
 ```
+
+Rune 4 segments into 50 glyphs whose word lengths match the published Russian
+plaintext exactly, and glyphs the crib calls the same letter are far more
+alike (mean distance 27.2) than random pairs (66.7) — so the translation is
+confirmed and a 21-letter cipher alphabet falls out. Its trailing "number X"
+is a **placeholder asterisk, not a digit**, which closes what looked like the
+puzzle's best numeric lead.
 
 The plinth is the find that matters: under the graffiti it carries the
 **13th Amendment, Section 1**, with exactly two things underlined — the word
@@ -145,7 +157,7 @@ bip39 candidate :          278 /sec/core   (PBKDF2-2048 + 4 schemes)
 brain candidate :       18,154 /sec/core
 
 $ ./solve.py selftest
-Ran 44 tests in 1.192s
+Ran 49 tests in 1.326s
 OK
 ```
 
@@ -204,8 +216,9 @@ puzzle/brainwallet.py    free-form passphrase mode
 puzzle/search.py         parallel, checkpointed search engine
 puzzle/feasibility.py    search-space arithmetic and time estimates
 puzzle/candidates.py     curated candidate tiers
+puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    44 tests: published vectors + planted targets
+tests/test_vectors.py    49 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 
