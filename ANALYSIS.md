@@ -328,8 +328,12 @@ effective           :   63,677 orderings/sec/core -> 254,709/s on four cores
 ```
 
 **A twelve-word pool takes 31 minutes in Electrum mode against 3.8 hours in
-BIP-39 mode.** That changes the strategy: word *sets* can be swept, not just
-sampled. Where BIP-39 lets four cores exhaust roughly one set per working day,
+BIP-39 mode** — that is like-for-like, comparing Electrum's two chains against
+BIP-39's *fast path* of one scheme and one address index. Compared at each
+mode's default breadth the gap is wider still (14x), because BIP-39's default
+scans 26 addresses per seed to Electrum's 10.
+
+That changes the strategy: word *sets* can be swept, not just sampled. Where BIP-39 lets four cores exhaust roughly one set per working day,
 Electrum lets them do a dozen.
 
 ## 5. Why the original script could not have worked

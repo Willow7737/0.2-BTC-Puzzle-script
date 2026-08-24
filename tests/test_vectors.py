@@ -257,13 +257,25 @@ class TestFeasibility(unittest.TestCase):
         pinned = feasibility.estimate(14, 12, workers=4, pinned=3)
         self.assertLess(pinned.seconds, loose.seconds / 100)
 
-    def test_electrum_is_roughly_seven_times_cheaper(self):
-        """The claim the strategy rests on: sweep sets, don't sample them."""
+    def test_electrum_is_cheaper_like_for_like(self):
+        """The documented ~7x, comparing modes doing comparable derivation work.
+
+        The headline figure is BIP-44 fast path (one scheme, one index) against
+        Electrum (two chains); both minimal. Compared at each mode's *default*
+        breadth the gap is wider still, because BIP-39's default scans 26
+        addresses per seed to Electrum's 10 - see the next test.
+        """
+        b = feasibility.estimate(12, 12, mode="bip39", workers=4, rate_candidate=554)
+        e = feasibility.estimate(12, 12, mode="electrum", workers=4, rate_candidate=518)
+        self.assertEqual(b.total_candidates, e.total_candidates)
+        ratio = b.seconds / e.seconds
+        self.assertGreater(ratio, 6.0, f"like-for-like ratio {ratio:.1f}")
+        self.assertLess(ratio, 9.0, f"like-for-like ratio {ratio:.1f}")
+
+    def test_electrum_cheaper_at_default_breadth_too(self):
         b = feasibility.estimate(12, 12, mode="bip39", workers=4)
         e = feasibility.estimate(12, 12, mode="electrum", workers=4)
-        self.assertEqual(b.total_candidates, e.total_candidates)
-        self.assertGreater(b.seconds / e.seconds, 5.0)
-        self.assertLess(b.seconds / e.seconds, 10.0)
+        self.assertGreater(b.seconds / e.seconds, 10.0)
 
     def test_electrum_filter_is_one_in_256(self):
         e = feasibility.estimate(12, 12, mode="electrum", workers=1)

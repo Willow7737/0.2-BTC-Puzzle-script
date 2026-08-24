@@ -102,7 +102,7 @@ Useful flags:
 | `--pin 0=moon,11=black` | fix words to positions — divides work by the pool size |
 | `--require brave` | force a word to appear somewhere |
 | `--mode brain` | free-form passphrase, ~65x faster, any vocabulary |
-| `--mode electrum` | Electrum seeds — different checksum and salt, **7x faster** |
+| `--mode electrum` | Electrum seeds — different checksum and salt, **~7x faster** |
 | `--schemes all` | test all six derivation schemes |
 | `--passphrase X` | BIP-39 passphrase (the "13th word") |
 | `--length 15` | non-12-word mnemonics |
@@ -260,7 +260,7 @@ mnemonic, so **a BIP-39-only search will never find an Electrum wallet.**
 
 It is also the *cheapest* mode: the 8-bit seed-version prefix rejects 255 of
 every 256 orderings, so a 12-word pool takes **31 minutes** instead of 3.8
-hours. That is fast enough to sweep word sets rather than sample them.
+hours (like-for-like against the BIP-44 fast path; wider at default breadth). That is fast enough to sweep word sets rather than sample them.
 Verified against Electrum's own test vectors.
 
 ## What has been ruled out
