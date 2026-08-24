@@ -1,137 +1,209 @@
-# 0.2 BTC Puzzle
+# 0.2 BTC Puzzle — solver toolkit
 
 ![0.2 BTC Puzzle](https://privatekeys.pw/images/puzzles/0.2-btc-puzzle.png)
 
-This puzzle was created to challenge the community to identify the correct 12-word seed phrase from an image. The solution will unlock a Bitcoin wallet containing 0.2 BTC. The goal is to analyze the image, identify potential seed words, and test them against the targeted Bitcoin address: **1KfZGvwZxsvSmemoCmEV75uqcNzYBHjkHZ**.
+Tooling for the [0.2 BTC puzzle](https://privatekeys.pw/puzzles/0.2-btc-puzzle):
+a seed phrase hidden in an image, unlocking
 
-## Purpose
-This script helps users by allowing them to test only the words they identify from the image instead of testing against the entire BIP39 word list. This significantly increases the search speed by focusing only on the potential words.
+**`1KfZGvwZxsvSmemoCmEV75uqcNzYBHjkHZ`** — 0.20107284 BTC, posted 2020-05-10, still unsolved.
 
-## Instructions
+> **Read [ANALYSIS.md](ANALYSIS.md) before running anything.** Two of the
+> most-cited hints (`breathe`, `tuesday`) are **not BIP-39 words**, and the
+> 36-word list this repo originally shipped would take **625,757 years** to
+> search. Both facts change what you should actually run.
 
-Follow these steps to run the script:
+---
 
-1. **Clone the repository:**
-    ```bash
-    git clone https://github.com/panchpasha/0.2-BTC-Puzzle-script.git
-    ```
-
-2. **Navigate to the project directory:**
-    ```bash
-    cd 0.2-BTC-Puzzle-script
-    ```
-
-3. **Ensure you have Python and pip installed:**
-
-    Install `bip-utils`:
-    ```bash
-    pip install bip-utils
-    ```
-
-4. **Create a text file named `seedwords.txt` in the project directory and add your identified seed words, separated by commas. For example:**
-    ```txt
-    moon,tower,food,real,black
-    ```
-
-5. **Run the script:**
-    ```bash
-    python3 check_seed_phrases.py
-    ```
-
-## Example Script Output
-
-When you run the script, you will see output like this:
+## Quick start
 
 ```bash
-Starting the seed phrase checks...
-
-Testing seed phrase: moon tower food real black subject time proof only win world face
-Error: Invalid checksum (expected 1111, got 1010) with seed phrase: moon tower food real black subject time proof only win world face
-
-Tested 5000 combinations so far.
-Tested 10000 combinations so far.
-
-Match found! Seed Phrase: moon tower food real black subject time proof only win world face => Address: 1KfZGvwZxsvSmemoCmEV75uqcNzYBHjkHZ
+git clone https://github.com/willow7737/0.2-BTC-Puzzle-script.git
+cd 0.2-BTC-Puzzle-script
+pip install -r requirements.txt     # optional: only speeds things up
+./solve.py selftest                 # prove the crypto is correct
+./solve.py bench                    # measure your machine
+./solve.py estimate --tiers A --extra "brave,world,order,only,find"
 ```
 
-## Script Explanation
+There are no required dependencies — the toolkit runs on the standard library
+alone. Installing `coincurve` makes it roughly 50x faster.
 
-Below is the Python script included in this repository:
+---
 
-```bash
-import itertools
-import random
-from bip_utils import Bip39SeedGenerator, Bip44, Bip44Coins, Bip44Changes
-import time
+## Commands
 
-# Load the seed word list from a text file
-with open("seedwords.txt", "r") as file:
-    seed_words = [word.strip() for word in file.read().split(",")]
+### `validate` — are these real BIP-39 words?
 
-# Target Bitcoin address to check against (Legacy address format)
-target_address = "1KfZGvwZxsvSmemoCmEV75uqcNzYBHjkHZ"
+Run this first, always. A single non-BIP-39 word makes an entire BIP-39 search
+futile, and this is exactly the trap the published hints set.
 
-# Track start time and total combinations tested
-start_time = time.time()
-total_combinations_tested = 0
-last_progress_time = time.time()
-
-def generate_address_from_seed(seed_phrase):
-    try:
-        # Generate the seed from the mnemonic phrase
-        seed_bytes = Bip39SeedGenerator(seed_phrase).Generate()
-        
-        # Generate the BIP44 wallet (Legacy address format)
-        bip44_mst = Bip44.FromSeed(seed_bytes, Bip44Coins.BITCOIN)
-        bip44_acc = bip44_mst.Purpose().Coin().Account(0).Change(Bip44Changes.CHAIN_EXT).AddressIndex(0)
-        
-        # Return the legacy address
-        return bip44_acc.PublicKey().ToAddress()
-    
-    except Exception as e:
-        # Error handling and return None if the seed phrase is invalid
-        print(f"Error: {e} with seed phrase: {seed_phrase}")  # Debugging output
-        return None
-
-# Shuffle the word list for randomness
-random.shuffle(seed_words)
-
-# Initial output to confirm the script is running
-print("Starting the seed phrase checks...")
-
-# Generate all possible unique combinations of 12 seed words
-for combination in itertools.permutations(seed_words, 12):
-    seed_phrase = " ".join(combination)
-    
-    address = generate_address_from_seed(seed_phrase)
-    
-    if address is None:
-        continue  # Skip to the next combination if there was an error
-    
-    total_combinations_tested += 1
-
-    # Check if the generated address matches the target address
-    if address == target_address:
-        print(f"Match found! Seed Phrase: {seed_phrase} => Address: {address}")
-        break
-
-    # Print progress every 10 seconds
-    if time.time() - last_progress_time >= 10:
-        print(f"Tested {total_combinations_tested} combinations so far.")
-        last_progress_time = time.time()
-
-print(f"Finished checking {total_combinations_tested} combinations.")
+```console
+$ ./solve.py validate --words seedwords.txt
+$ ./solve.py validate --extra "breathe,tuesday,moon"
+  INVALID  breathe      suggest: bread, rather, rate, weather, brother
+  INVALID  tuesday      suggest: today, essay, turkey, say, day
+  ok       moon         #1148
 ```
 
-## Hints
-- **'Moon'** and **'Tower'** can be found on the clock's hands.
-- **'Food'** can be found on the Seattle Space Needle.
-- **'Breathe'** can be found on George Floyd's chest as well as the Statue's Neck.
-- Rune 1 (Top Left) is in Russian: **"Я нaдeюcь чтo cюдa бyдyт пpиcылaть мнoгo биткoинoв"** and translates to **"I hope that many bitcoins will be sent here."**
-- Rune 2 (Bottom Left) is in Russian: **"Cyммa двyx чиceл"** and translates to **"Sum of two numbers."**
-- Rune 3 (Above Trump) is in Bill's Cipher and translates to **"Tuesday."**
-- Rune 4 (Long on Right) is in Russian: **"Здecь зaшифpoвaны биткoины нa чёpный дeнь нoмep X"** and translates to **"Here are encrypted bitcoins for a rainy day number X."**
-- **'This'** is likely a seed word, as it's repeated in **"This is the first prediction," "Fuck this shit,"** and **"Find the seed phrase in this picture."**
-- **'Subject'** is underlined on the statue to the right.
-- Using Forensically, or Photoshop, the base of the Statue of Liberty reveals **"Only Bitcoin"** under **"Only real Bitcoin,"** which likely means **'Real'** is a seed word.
-- The Latin to the bottom right refers to **"The Pot Calling The Kettle Black,"** with **'Black'** also being repeated in references to the Black Lives Matter movement, so it's likely another word.
+### `estimate` — how long would that take?
+
+```console
+$ ./solve.py estimate --words seedwords.txt
+  total candidates    599,555,620,984,320,000 (~6e+17)
+  estimated wall time 625,757 years
+  VERDICT: HOPELESS. This will never finish.
+
+How the pool size drives cost:
+   pool              candidates         wall time
+     12             479,001,600         7.5 hours
+     13           6,227,020,800          4.1 days
+     14          43,589,145,600         28.5 days
+     16         871,782,912,000            2 years
+     20      60,339,831,552,000          108 years
+```
+
+**Each extra word multiplies the work by roughly the pool size.** Identifying
+one more word correctly beats any amount of hardware.
+
+### `check` — test one specific phrase
+
+Tests a phrase against every derivation scheme *and* every brainwallet
+rendering at once.
+
+```console
+$ ./solve.py check "moon tower food real black subject this time world only proof find"
+BIP-39 checksum: VALID
+  BIP-39 / BIP-32 derivations:
+                 bip44                    /0  1HK2sUofEXTNHsFBVn1mthP62LYm59DRFN
+                 bip32-legacy             /0  ...
+RESULT: no match
+```
+
+### `search` — run it
+
+```console
+$ ./solve.py search --tiers A --extra "brave,world,order,only,find" \
+      --workers 4 --checkpoint runs/a12.json
+```
+
+Progress is checkpointed; re-run the same command with the same `--checkpoint`
+to resume exactly where it stopped. Ctrl-C is safe.
+
+Useful flags:
+
+| Flag | Effect |
+|---|---|
+| `--tiers A`…`ABCD` | candidate pools by evidence strength (see below) |
+| `--extra w1,w2` | add your own words |
+| `--words FILE` | load a word file (commas/newlines, `#` comments) |
+| `--pin 0=moon,11=black` | fix words to positions — divides work by the pool size |
+| `--require brave` | force a word to appear somewhere |
+| `--mode brain` | free-form passphrase, ~65x faster, any vocabulary |
+| `--schemes all` | test all six derivation schemes |
+| `--passphrase X` | BIP-39 passphrase (the "13th word") |
+| `--length 15` | non-12-word mnemonics |
+| `--max-seconds N` | bounded run, reports coverage |
+| `--checkpoint F` | resumable |
+
+### `bench` / `selftest`
+
+```console
+$ ./solve.py bench
+checksum filter :      657,069 perms/sec/core
+bip39 candidate :          278 /sec/core   (PBKDF2-2048 + 4 schemes)
+brain candidate :       18,154 /sec/core
+
+$ ./solve.py selftest
+Ran 40 tests in 0.499s
+OK
+```
+
+---
+
+## Candidate tiers
+
+Pools are graded by how directly the evidence supports them, because pool size
+is what decides whether a run finishes.
+
+| Tier | Words | Basis |
+|---|---|---|
+| **A** (7) | moon tower food this subject real black | named in the published hints, valid BIP-39 |
+| **B** (8) | brave world order only seed phrase picture find | prominent rendered text in the artwork |
+| **C** (19) | flag mask face camera eye pyramid clock … | objects drawn in the image |
+| **D** (20) | coin digital public private key network trust … | whitepaper text and rune concepts |
+
+`puzzle/candidates.py` also lists `NOT_IN_BIP39` — hint words such as
+`breathe`, `tuesday`, `statue` and `justice` that cannot appear in a mnemonic.
+A test asserts every tier word is genuinely in BIP-39 and every `NOT_IN_BIP39`
+word genuinely is not.
+
+---
+
+## What makes this fast
+
+* **Checksum pre-filter.** Only 1 in 16 orderings of a 12-word set is a valid
+  BIP-39 mnemonic. Rejecting the rest costs one SHA-256 over 16 bytes instead
+  of 2048 rounds of PBKDF2-HMAC-SHA-512 — the difference between 657,000/sec
+  and 278/sec per core.
+* **HASH160 comparison.** The target address is decoded once; the inner loop
+  compares 20-byte hashes and never Base58-encodes.
+* **Cached parent nodes.** Each derivation path's parent is derived once per
+  seed, so scanning five address indices costs barely more than one.
+* **Deterministic work units.** Work is split into units enumerated in a fixed
+  order, so runs are parallel, resumable, and divisible across machines.
+* **Early exit.** A unit that finds the answer stops immediately.
+
+---
+
+## Layout
+
+```
+solve.py                 CLI
+puzzle/wordlist.py       BIP-39 wordlist, integrity check, validation
+puzzle/bip39.py          checksum filter, mnemonic -> seed
+puzzle/keys.py           secp256k1, HASH160, Base58Check
+puzzle/_ripemd160.py     pure-Python RIPEMD-160 (OpenSSL 3 fallback)
+puzzle/derive.py         BIP-32 and the six derivation schemes
+puzzle/brainwallet.py    free-form passphrase mode
+puzzle/search.py         parallel, checkpointed search engine
+puzzle/feasibility.py    search-space arithmetic and time estimates
+puzzle/candidates.py     curated candidate tiers
+data/english.txt         BIP-39 wordlist (SHA-256 pinned)
+tests/test_vectors.py    40 tests: published vectors + planted targets
+legacy/                  the original script, kept for reference
+```
+
+---
+
+## Correctness
+
+Brute force is worthless if the derivation is wrong, so every primitive is
+pinned to a published test vector: RIPEMD-160 reference vectors, BIP-39 Trezor
+vectors, BIP-32 test vector 1, the canonical `abandon abandon … about` BIP-44
+address chain, Base58Check round-trips, and the `correct horse battery staple`
+brainwallet. The search engine is tested end-to-end against planted targets on
+BIP-44, on `m/0/2`, with pinned positions, and in brainwallet mode.
+
+Derivation was additionally cross-checked against two independent
+implementations (Trezor's `mnemonic` and the `bip32` package) over 200 random
+mnemonics with zero disagreements.
+
+---
+
+## Honest expectations
+
+This puzzle has been public and unsolved since May 2020, with many people
+attacking it. **This toolkit does not solve it.** What it does is make the
+search correct, measurable, and resumable, and make clear which searches are
+worth starting — so you spend CPU only where it can pay off.
+
+The best available lead is not more compute. It is decoding what the runes
+mean: three of the four refer to numbers or ordinals, and if they encode word
+*positions*, the search collapses from intractable to trivial. See
+[ANALYSIS.md §5](ANALYSIS.md#5-open-questions).
+
+## Safety
+
+Never type a seed phrase you actually use into any tool, including this one.
+This searches for a published puzzle key; if you find it, the funds are the
+solver's by the puzzle's own terms.
