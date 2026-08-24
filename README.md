@@ -201,6 +201,22 @@ track (a real building feature, not a count); the Statue's tablet — which on
 the real monument bears the date `JULY IV MDCCLXXVI` — has been replaced by a
 BLM phone, so where a number would sit there is a symbol instead.
 
+### If they aren't positions, what are they?
+
+Three alternative readings tested, all refuted:
+
+```bash
+./solve.py extract          # 58 extractions across 15 artwork passages
+```
+
+* **Text indexing** — 0 of 58 attempts produced all-BIP-39 tokens. Decisively:
+  in the Amendment, the one passage carrying both a marked number and a marked
+  word, `subject` is **word 29 of 32**, not word 1.
+* **Wordlist indices** — `WORDS[1,3,13,21]` is `abandon able account action`,
+  the head of the alphabetical list. No signal.
+* **Derivation path** — 568,800 derivations (900 candidate seeds × 632 paths
+  from 1/3/13/21, hardened and soft, both key formats). **Zero matches.**
+
 That gives a **capacity bound**: the bearing mechanism needs the object to
 *be* a clock hand, and there are exactly three. Plus one explicit numeral
 pairing (`Section 1`). Four positions, against 21–24 needed — a shortfall of
@@ -311,9 +327,10 @@ puzzle/search.py         parallel, checkpointed search engine
 puzzle/feasibility.py    search-space arithmetic and time estimates
 puzzle/candidates.py     curated candidate tiers
 puzzle/positions.py      word-plus-number position map and its evidence scale
+puzzle/extraction.py     tests whether the numbers index text instead
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    96 tests: published vectors + planted targets
+tests/test_vectors.py    102 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 
@@ -380,7 +397,7 @@ worth starting — so you spend CPU only where it can pay off.
 The best available lead is not more compute. It is decoding what the runes
 mean: three of the four refer to numbers or ordinals, and if they encode word
 *positions*, the search collapses from intractable to trivial. See
-[ANALYSIS.md §11](ANALYSIS.md#11-open-questions).
+[ANALYSIS.md §12](ANALYSIS.md#12-open-questions).
 
 ## Safety
 

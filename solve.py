@@ -230,6 +230,31 @@ def cmd_selftest(args) -> int:
                             str(here / "tests"), "-t", str(here), "-v"])
 
 
+def cmd_extract(args) -> int:
+    """Test whether the confirmed numbers index text rather than positions."""
+    from puzzle import extraction as ex
+
+    nums = ([int(v) for v in args.numbers.split(",")] if args.numbers
+            else list(ex.CONFIRMED_NUMBERS))
+    print(f"indices: {nums}\ncorpus : {len(ex.CORPUS)} passages read off the artwork\n")
+    res = ex.sweep(nums)
+    print(f"{'passage':20s} {'unit':8s} {'b':>1} {'rev':>5} {'hits':>5} {'null':>6}  extracted")
+    for r in res:
+        if r.bip39_hits == 0 and not args.all:
+            continue
+        null = ex.null_rate(ex.CORPUS[r.passage][0], r.unit, len(r.extracted))
+        print(f"{r.passage:20s} {r.unit:8s} {r.base:>1} {str(r.reverse):>5} "
+              f"{r.bip39_hits}/{len(r.extracted)} {null:6.2f}  {r.extracted}")
+    perfect = sum(1 for r in res if r.bip39_hits == len(r.extracted))
+    print(f"\n{perfect} of {len(res)} attempts extracted all-BIP-39 tokens")
+    for name, rec in ex.REFUTED.items():
+        print(f"\n{name}: {rec['verdict']}")
+        for k, v in rec.items():
+            if k != "verdict":
+                print(f"    {k}: {v}")
+    return 0
+
+
 def cmd_positions(args) -> int:
     """Show or export the word-plus-number position map."""
     import json as _json
@@ -390,6 +415,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = sub.add_parser("selftest", help="run the crypto test vectors")
     sp.set_defaults(func=cmd_selftest)
+
+    sp = sub.add_parser("extract",
+                        help="test whether the numbers index text, not positions")
+    sp.add_argument("--numbers", help="comma-separated, default 1,3,13,21")
+    sp.add_argument("--all", action="store_true", help="show zero-hit attempts too")
+    sp.set_defaults(func=cmd_extract)
 
     sp = sub.add_parser("positions", help="show the word-plus-number position map")
     sp.add_argument("--length", type=int, default=24, choices=(21, 24))

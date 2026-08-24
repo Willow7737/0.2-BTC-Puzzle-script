@@ -592,7 +592,63 @@ starting.
 That is the whole game now. One more decoded clue is worth more than any
 amount of hardware, and no amount of CPU substitutes for it.
 
-## 4. Negative results
+## 4. If the numbers are not positions, what are they?
+
+The capacity bound in section 3 makes the *inference* — that 1, 3, 13 and 21
+are mnemonic positions — the weakest link, so the numbers were tested against
+the obvious alternatives. All three are cheap, bounded and falsifiable, and
+all three failed.
+
+### Text indexing — refuted
+
+Fifteen passages actually read off the artwork (the Amendment, the display
+text, the Great Seal's three replaced inscriptions, the BLM slogans, the
+decoded rune 4, the whitepaper strip, and so on), extracted under every
+combination of unit (word / character / initial), 0- and 1-based indexing, and
+both directions. **58 attempts.** Each scored by how many extracted tokens are
+BIP-39 words, against a null of random indices drawn from the same passage.
+
+```console
+$ ./solve.py extract
+0 of 58 attempts extracted all-BIP-39 tokens
+```
+
+Best result was 2 of 4 against a null of 1 of 4 — and with 58 attempts, the
+best one beating the null is exactly what chance produces. A seed phrase is
+*entirely* BIP-39, so any correct convention should give 4 of 4. None did.
+
+The decisive point needs no statistics. The Amendment is the one passage
+carrying **both** a marked number and a marked word. If the underlined `1`
+indexed that text, `subject` would be word 1. It is **word 29 of 32**.
+
+### Numbers as wordlist indices — no signal
+
+`WORDS[1,3,13,21]` gives `abandon able account action` (1-based) or
+`ability about accuse actor` (0-based) — the head of the alphabetical list,
+not a phrase. Nothing to test further.
+
+### Numbers as a derivation path — refuted
+
+The most promising alternative: if 1/3/13/21 are path components, the seed
+could be simple and the *path* is the secret. Tested exhaustively:
+
+* **900 candidate seeds** — the five marked words (`subject tower moon food
+  real`) in every ordering of length 3, 4 and 5, each as a BIP-39 seed, a
+  BIP-39 seed with the `breathe` passphrase, and an Electrum seed;
+* **632 candidate paths** — every ordering of 1/3/13/21, every
+  hardened/soft combination, and every prefix;
+* both compressed and uncompressed public keys.
+
+**568,800 derivations, zero matches.**
+
+### Where that leaves the numbers
+
+Three readings closed, and the position reading capacity-bounded at four. The
+numbers are real — the clock measurement is ~1 in 2,500 by chance — but what
+they index is now genuinely open. That is a more honest place to stand than a
+24-position table with twenty guesses in it.
+
+## 5. Negative results
 
 Recorded so nobody re-treads them. Each of these looked promising and is now
 closed.
@@ -631,7 +687,7 @@ Both compressed and uncompressed public keys were tested for every candidate.
 **A brainwallet of up to six words from this vocabulary is ruled out.** That is
 a real closure, not a sample: the space was covered completely.
 
-## 5. Electrum seeds: a whole search space nobody had checked
+## 6. Electrum seeds: a whole search space nobody had checked
 
 Everything above assumes BIP-39. **Electrum does not use BIP-39**, and the
 differences are not cosmetic:
@@ -680,7 +736,7 @@ scans 26 addresses per seed to Electrum's 10.
 That changes the strategy: word *sets* can be swept, not just sampled. Where BIP-39 lets four cores exhaust roughly one set per working day,
 Electrum lets them do a dozen.
 
-## 6. Why the original script could not have worked
+## 7. Why the original script could not have worked
 
 The script this repository shipped with did:
 
@@ -738,7 +794,7 @@ words is a tractable search; sixteen is not.
 
 ---
 
-## 7. What this toolkit does instead
+## 8. What this toolkit does instead
 
 | Problem | Fix | Measured effect |
 |---|---|---|
@@ -765,7 +821,7 @@ keeps it off 15 of every 16 candidates.
 
 ---
 
-## 8. Recommended search order
+## 9. Recommended search order
 
 Ranked by probability-per-CPU-hour.
 
@@ -803,7 +859,7 @@ pushes the run past a year.
 
 ---
 
-## 9. Coverage so far
+## 10. Coverage so far
 
 Two runs, both against the target's HASH160, both checkpointed and resumable.
 
@@ -867,7 +923,7 @@ each chain were scanned.
 Runs 2 and 3 sample one derivation path each; runs 4 and 5 close their spaces
 completely. None has found the key.
 
-## 10. The passphrase hypothesis
+## 11. The passphrase hypothesis
 
 BIP-39 and Electrum both support an optional **passphrase** — the "13th word"
 — which is mixed into the PBKDF2 salt. It can be any string, so it is not
@@ -909,7 +965,7 @@ passphrase, and against the same target with the correct passphrase removed
 from the list — the second case guards against the passphrase being silently
 ignored, which would otherwise produce a false negative across an entire run.
 
-## 11. Open questions
+## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
   accepts 15/18/21/24, and brainwallet mode accepts any length. A 24-word
@@ -946,7 +1002,7 @@ ignored, which would otherwise produce a false negative across an entire run.
 
 ---
 
-## 12. Verification
+## 13. Verification
 
 Every cryptographic primitive is pinned to a published test vector, and the
 search engine is tested against planted targets it must find:

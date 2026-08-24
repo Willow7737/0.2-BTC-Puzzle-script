@@ -723,6 +723,51 @@ class TestPositionMap(unittest.TestCase):
                                  positions.Evidence.WEAK, "x")
 
 
+class TestExtractionHypothesis(unittest.TestCase):
+    """Do 1, 3, 13, 21 index text instead of mnemonic positions? No."""
+
+    def test_corpus_is_real_artwork_text(self):
+        from puzzle import extraction as ex
+        self.assertGreaterEqual(len(ex.CORPUS), 12)
+        for name, (text, prov) in ex.CORPUS.items():
+            self.assertTrue(text.strip(), name)
+            self.assertTrue(prov.strip(), f"{name} needs provenance")
+
+    def test_subject_is_not_word_one_of_the_amendment(self):
+        """The decisive case: a number and a word marked in one passage."""
+        from puzzle import extraction as ex
+        words = ex.CORPUS["amendment"][0].split()
+        self.assertEqual(words.index("subject") + 1, 29)
+        self.assertNotEqual(words[0].lower(), "subject")
+
+    def test_no_extraction_yields_all_bip39(self):
+        """A seed phrase is all BIP-39; no convention produces that."""
+        from puzzle import extraction as ex
+        res = ex.sweep()
+        self.assertTrue(res)
+        for r in res:
+            self.assertLess(r.bip39_hits, len(r.extracted),
+                            f"{r.passage}/{r.unit} unexpectedly all-BIP-39")
+
+    def test_null_model_is_nonzero(self):
+        """Without a null the sweep would be meaningless."""
+        from puzzle import extraction as ex
+        n = ex.null_rate(ex.CORPUS["amendment"][0], "word", 4)
+        self.assertGreater(n, 0.0)
+        self.assertLess(n, 1.0)
+
+    def test_extract_rejects_out_of_range(self):
+        from puzzle import extraction as ex
+        self.assertIsNone(ex.extract("two words", (1, 99), "word"))
+
+    def test_refutations_recorded(self):
+        from puzzle import extraction as ex
+        self.assertEqual(sorted(ex.REFUTED),
+                         ["derivation_path", "text_indexing", "wordlist_indices"])
+        self.assertEqual(ex.REFUTED["derivation_path"]["matches"], 0)
+        self.assertEqual(ex.REFUTED["text_indexing"]["four_of_four"], 0)
+
+
 class TestRuneAnalysis(unittest.TestCase):
     """Rune-4 crib verification. Skipped unless the artwork is available."""
 
