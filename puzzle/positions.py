@@ -412,6 +412,51 @@ def build(length: int = 24, include_proposed: bool = False,
 #: Needle's shaft, subject underlined, real inserted into an inscription).
 #: The ray then supplies that object's number - but only three hands exist,
 #: so the clock yields three positions, not twenty-one.
+#: Two words are *marked* the way the confirmed ones are - written on or
+#: inserted into an object - but carry no number. Both neighbourhoods were
+#: searched for an adjacent numeral, the way "Section 1" sits beside
+#: "subject". Neither has one.
+#:
+#: ``food``  (written down the Space Needle's shaft)
+#:   The whole tower was examined. The only linear marking on the shaft is the
+#:   elevator track, drawn as a dashed line - a real feature of the building,
+#:   so its dash count is rendering texture rather than a chosen number. No
+#:   digits anywhere on or beside the Needle.
+#:
+#: ``real``  (inserted into "ONLY real Bitcoin" on the Statue's base)
+#:   The inscription band, every pedestal tier, and the object the Statue
+#:   holds were all examined. The real Statue's tablet bears a date,
+#:   ``JULY IV MDCCLXXVI``, and here it has been replaced by a phone showing
+#:   "BLM" and a raised fist - the one place a number would traditionally sit,
+#:   and the artist put a symbol there instead. No digits.
+MARKED_WITHOUT_NUMBER = {
+    "food": "Space Needle shaft; no adjacent numeral, elevator track is a "
+            "real building feature not a count",
+    "real": "Statue's inscription; no adjacent numeral, and the tablet that "
+            "would carry a date was replaced by a BLM phone",
+}
+
+#: The capacity bound this exposes, and the reason the position model cannot
+#: currently scale.
+#:
+#: The bearing mechanism needs the object to *be* a clock hand, and a clock
+#: has exactly **three** hands. There is no fourth. So that mechanism can
+#: never yield more than three positions, however much of the artwork is
+#: searched. The only other confirmed mechanism - a numeral written beside the
+#: word and underlined - has exactly **one** instance.
+#:
+#: Confirmed mechanisms therefore cap out at **four positions**, and a 21- or
+#: 24-position construction needs seventeen to twenty more from mechanisms
+#: that have not been found. That is a statement about the model, not about
+#: how hard anyone has looked.
+MECHANISM_CAPACITY = {
+    "clock_hands": 3,          # hard limit: a clock has three hands
+    "explicit_adjacent_numeral": 1,   # "Section 1" beside "subject"
+    "total_reachable": 4,
+    "needed_for_24": 24,
+    "note": "the shortfall is missing mechanisms, not missing search effort",
+}
+
 RAY_MATCHING_REFUTED = {
     "objects_surveyed": 32,
     "hit_rate_at_3deg": 0.594,

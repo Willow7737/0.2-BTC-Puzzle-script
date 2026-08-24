@@ -582,6 +582,29 @@ class TestPositionMap(unittest.TestCase):
         self.assertNotIn(9, {a.position for a in positions.CONFIRMED})
         self.assertEqual(positions.PROPOSED_STRONG, [])
 
+    def test_food_and_real_have_no_number(self):
+        """Searched and empty - recorded so the search is not repeated."""
+        self.assertEqual(sorted(positions.MARKED_WITHOUT_NUMBER), ["food", "real"])
+        for word, why in positions.MARKED_WITHOUT_NUMBER.items():
+            self.assertTrue(is_valid(word), f"{word} should still be BIP-39")
+            self.assertIn("no adjacent numeral", why)
+        placed = {w for a in positions.CONFIRMED for w in a.words}
+        for w in positions.MARKED_WITHOUT_NUMBER:
+            self.assertNotIn(w, placed, f"{w} must not be placed without a number")
+
+    def test_mechanism_capacity_is_bounded_at_four(self):
+        """A clock has three hands. That is a hard ceiling, not a search gap."""
+        c = positions.MECHANISM_CAPACITY
+        self.assertEqual(c["clock_hands"], 3)
+        self.assertEqual(c["explicit_adjacent_numeral"], 1)
+        self.assertEqual(c["total_reachable"],
+                         c["clock_hands"] + c["explicit_adjacent_numeral"])
+        self.assertLess(c["total_reachable"], c["needed_for_24"])
+        # and the confirmed map never exceeds that ceiling
+        pm = positions.build(24)
+        self.assertLessEqual(len(pm.slots) + len(positions.ORPHAN_NUMBERS),
+                             c["total_reachable"])
+
     def test_ray_matching_refutation_is_recorded(self):
         """The survey that closed the 'object on a ray names a word' idea."""
         r = positions.RAY_MATCHING_REFUTED

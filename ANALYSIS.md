@@ -394,9 +394,48 @@ are three of them. The mechanism is real and it is narrow: **three positions
 from the clock, one from the plinth, and no established mechanism for the
 other twenty.**
 
-Words that are marked but have no number — `food` on the Needle's shaft,
-`real` inserted into the Statue's inscription — remain unplaced. Finding what
-numbers *those* carry is a better use of effort than tracing more rays.
+### `food` and `real`: searched, and they carry no number
+
+Both are marked the way the confirmed words are — written on or inserted into
+an object — so both should carry a number. Neither does.
+
+**`food`**, written down the Space Needle's shaft. The whole tower was
+examined at 4x and 14x. The only linear marking on the shaft is the elevator
+track, drawn as a dashed line — but that is a real feature of the building, so
+its dash count is rendering texture, not a chosen number. No digits appear
+anywhere on or beside the Needle.
+
+**`real`**, inserted into "ONLY real Bitcoin". The inscription band, every
+pedestal tier, and the object the Statue holds were all examined. The point
+worth noting: the real Statue of Liberty's tablet bears a date,
+`JULY IV MDCCLXXVI` — the one place a number traditionally sits — and here the
+tablet has been **replaced by a phone showing "BLM" and a raised fist**. Where
+a number would be, the artist drew a symbol. No digits.
+
+### The capacity bound
+
+That null result exposes something more useful than either number would have
+been. The two confirmed mechanisms have hard ceilings:
+
+| Mechanism | Instances possible | Why |
+|---|---:|---|
+| word on a clock hand, number from its bearing | **3** | a clock has three hands; there is no fourth |
+| numeral written beside the word and underlined | **1** | only `Section 1` does this |
+| | **4 total** | against 21 or 24 needed |
+
+The bearing mechanism *requires the object to be a clock hand*. However much
+of the artwork is searched, it can never yield a fourth position. So the
+shortfall of twenty positions is **a statement about the model, not about how
+hard anyone has looked** — it needs mechanisms that have not been found, and
+possibly do not exist.
+
+This is the point at which the position-map hypothesis should be held more
+loosely. It is well evidenced for the three clock hands (~1 in 2,500 by
+chance) and the plinth. It has no demonstrated way to reach the other twenty,
+two independent attempts to extend it have failed (ray-matching, and the
+search above), and every clue that *would* extend it has turned out to be an
+incidental count. A construction that needs 24 word-number pairs, of which the
+artwork demonstrably supplies four, may simply be the wrong construction.
 
 ### The unclaimed axes are empty too
 

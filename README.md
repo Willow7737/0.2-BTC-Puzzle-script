@@ -195,6 +195,18 @@ What survives is narrower: the confirmed clues all have the **word written on
 the object** (`moon`/`tower` along the hands, `subject` underlined). The clock
 supplies a number only for things that *are* hands — and there are three.
 
+**`food` and `real` were searched and carry no number.** Both are marked the
+same way, so both should. The Needle's only shaft marking is its elevator
+track (a real building feature, not a count); the Statue's tablet — which on
+the real monument bears the date `JULY IV MDCCLXXVI` — has been replaced by a
+BLM phone, so where a number would sit there is a symbol instead.
+
+That gives a **capacity bound**: the bearing mechanism needs the object to
+*be* a clock hand, and there are exactly three. Plus one explicit numeral
+pairing (`Section 1`). Four positions, against 21–24 needed — a shortfall of
+twenty with **no known mechanism**, which is a statement about the model
+rather than about search effort.
+
 **One rule, two alignments.** Rune 2 says "sum of two numbers" — not
 *adjacent* numbers. Adjacent numerals sum to `2n+1` (odd); numerals two apart
 sum to `2n` (even), and their midpoint falls exactly *on* the numeral between
@@ -301,7 +313,7 @@ puzzle/candidates.py     curated candidate tiers
 puzzle/positions.py      word-plus-number position map and its evidence scale
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    94 tests: published vectors + planted targets
+tests/test_vectors.py    96 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 
