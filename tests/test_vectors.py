@@ -11,7 +11,8 @@ import itertools
 import os
 import unittest
 
-from puzzle import bip39, brainwallet, candidates, derive, electrum, feasibility, keys
+from puzzle import (bip39, brainwallet, candidates, derive, electrum, feasibility,
+                    keys, positions)
 from puzzle._ripemd160 import ripemd160
 from puzzle.search import Checkpoint, SearchConfig, count_units, run_search
 from puzzle.wordlist import (INDEX, WORDS, WORDLIST_SHA256, is_valid, load_wordlist,
@@ -483,6 +484,60 @@ class TestPassphrase(unittest.TestCase):
         b = next(h for h, c, i in electrum.iter_hash160s(seed, "breathe", depth=1)
                  if c == "electrum-receiving" and i == 0)
         self.assertNotEqual(a, b)
+
+
+class TestPositionMap(unittest.TestCase):
+    """The word-plus-number construction (ANALYSIS.md)."""
+
+    def test_confirmed_assignments(self):
+        got = {a.position: sorted(a.words) for a in positions.CONFIRMED}
+        self.assertEqual(got, {1: ["subject"], 3: ["tower"], 13: ["moon"]})
+        for a in positions.CONFIRMED:
+            self.assertEqual(a.evidence, positions.Evidence.CONFIRMED)
+
+    def test_every_assignment_uses_real_words(self):
+        for a in positions.CONFIRMED + positions.PROPOSED:
+            for w in a.words:
+                self.assertTrue(is_valid(w), f"{w} at position {a.position}")
+
+    def test_position_21_forces_a_long_mnemonic(self):
+        """The hour hand gives 21, so 12 words is impossible."""
+        self.assertIn(21, positions.ORPHAN_NUMBERS)
+        self.assertEqual(positions.VIABLE_LENGTHS, (21, 24))
+        for length in positions.VIABLE_LENGTHS:
+            self.assertIn(length, bip39.LENGTHS)
+        self.assertNotIn(12, positions.VIABLE_LENGTHS)
+
+    def test_map_is_not_yet_searchable(self):
+        """Honest bookkeeping: even with every proposed clue, it is hopeless."""
+        for length in (21, 24):
+            for inc in (False, True):
+                pm = positions.build(length, include_proposed=inc)
+                self.assertFalse(pm.searchable())
+                self.assertIn("NOT searchable", pm.verdict())
+
+    def test_searchable_threshold(self):
+        pm = positions.PositionMap(length=24)
+        for i in range(1, 25):
+            pm.slots[i] = frozenset({"moon"})
+        self.assertTrue(pm.searchable())
+        for i in range(1, 5):
+            del pm.slots[i]
+        self.assertFalse(pm.searchable(), "4 unresolved must not be searchable")
+
+    def test_combinations_counts_alternatives(self):
+        pm = positions.PositionMap(length=3)
+        pm.slots[1] = frozenset({"moon"})
+        pm.slots[2] = frozenset({"black", "day"})
+        pm.slots[3] = frozenset({"tower"})
+        self.assertEqual(pm.combinations(), 2)
+        del pm.slots[3]
+        self.assertEqual(pm.combinations(vocabulary=2048), 2 * 2048)
+
+    def test_rejects_non_bip39_word(self):
+        with self.assertRaises(ValueError):
+            positions.Assignment(1, frozenset({"breathe"}),
+                                 positions.Evidence.WEAK, "x")
 
 
 class TestRuneAnalysis(unittest.TestCase):

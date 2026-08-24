@@ -7,8 +7,17 @@ a seed phrase hidden in an image, unlocking
 
 **`1KfZGvwZxsvSmemoCmEV75uqcNzYBHjkHZ`** — 0.20107284 BTC, posted 2020-05-10, still unsolved.
 
-> **Read [ANALYSIS.md](ANALYSIS.md) before running anything.** Three things
-> change what you should actually run:
+> **Read [ANALYSIS.md](ANALYSIS.md) before running anything.**
+>
+> **It is not a 12-word mnemonic.** The clock's three hands each point midway
+> between two numerals, and the two numerals sum to a position: `moon` = 12+1
+> = **13**, `tower` = 1+2 = **3**, and the unlabelled hour hand gives
+> 10+11 = **21**. Position 21 rules out 12 words — the phrase is 21 or 24.
+> Every 12-word search ever run against this puzzle, this repository's
+> included, was structurally unable to succeed.
+> [Details in §3](ANALYSIS.md#3-the-construction-rule-word-plus-number-gives-position).
+>
+> Three further things change what you should run:
 > 1. Two of the most-cited hints (`breathe`, `tuesday`) are **not BIP-39 words**.
 > 2. The 36-word list this repo originally shipped would take **625,757 years**.
 > 3. Nothing is hidden *under* the pixels — no metadata, uniform alpha, clean
@@ -165,6 +174,35 @@ OK
 
 ---
 
+## The construction rule
+
+Each clue supplies a **word and a number**, and the number is the word's
+position. Two mechanisms are confirmed directly against the image:
+
+* **the plinth** — `subject` and `Section 1` carry identical added underlines
+  → `subject → 1`
+* **the clock** — all three hands sit at *midpoints* between numerals, which
+  sum to the position → `tower → 3`, `moon → 13`, and an unlabelled `→ 21`
+
+The test that makes these evidence, and object-counting not, is **deviation
+from the default**. Hands normally point *at* a numeral; underlines are marks
+added to text that did not need them. By contrast the Statue's crown really
+does have 7 rays — but so does the real Statue, so the number is incidental.
+Same for 2 cameras and 4 masked figures. Counting things in an illustration
+always produces numbers; only the deliberate ones carry information.
+
+`puzzle/positions.py` models the map, grades every assignment on that scale,
+and refuses to pretend a search is viable:
+
+```console
+  len 21 confirmed only  : NOT searchable: 18 unresolved, 4.02e+59 phrases
+  len 24 + all proposed  : NOT searchable:  9 unresolved, 1.27e+30 phrases
+```
+
+Enumeration is the wall: three unresolved positions is ~8.6e9 and takes about
+six hours; four is ~1.8e13 and takes three months. **Three is the ceiling.**
+One more decoded clue is worth more than any amount of hardware.
+
 ## Candidate tiers
 
 Pools are graded by how directly the evidence supports them, because pool size
@@ -224,9 +262,10 @@ puzzle/electrum.py       Electrum seed derivation (different checksum and salt)
 puzzle/search.py         parallel, checkpointed search engine
 puzzle/feasibility.py    search-space arithmetic and time estimates
 puzzle/candidates.py     curated candidate tiers
+puzzle/positions.py      word-plus-number position map and its evidence scale
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    69 tests: published vectors + planted targets
+tests/test_vectors.py    76 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 
@@ -293,7 +332,7 @@ worth starting — so you spend CPU only where it can pay off.
 The best available lead is not more compute. It is decoding what the runes
 mean: three of the four refer to numbers or ordinals, and if they encode word
 *positions*, the search collapses from intractable to trivial. See
-[ANALYSIS.md §6](ANALYSIS.md#6-open-questions).
+[ANALYSIS.md §11](ANALYSIS.md#11-open-questions).
 
 ## Safety
 

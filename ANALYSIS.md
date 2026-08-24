@@ -248,7 +248,92 @@ six words above are.
   measured hand bearings land 3–13° off the nearest numeral, which is not
   clean enough to call.
 
-## 3. Negative results
+## 3. The construction rule: word plus number gives position
+
+This is the finding that reframes everything else, and it invalidates most of
+the search work in this repository — including several runs reported below.
+
+The artwork does not hand over an unordered bag of words to permute. **Each
+clue pairs a word with a number, and the number is that word's position in the
+mnemonic.**
+
+### The clock proves it
+
+All three clock hands point *midway between two numerals* rather than at one,
+and the two numerals sum to the position. Numeral bearings measured from the
+artwork sit at exact 30.0 degree steps with 12 at 287.4 degrees, which makes
+the midpoints predictable to a fraction of a degree:
+
+| Hand | Label | Midpoint | Predicted bearing | Measured | Position |
+|---|---|---|---:|---|---:|
+| seconds | `moon` | 12 + 1 | 302.4° | **302–304°** | **13** |
+| minutes | `tower` | 1 + 2 | 332.4° | on-hand | **3** |
+| hours | *(none)* | 10 + 11 | 241.7° | on-hand | **21** |
+
+The seconds hand is measurable in isolation because it is the only red line on
+the dial: 604 red pixels in the annulus around the centre, with a dominant
+bearing of 302–304° against a prediction of 302.4°, and the opposite end at
+122–124° confirming a single line through the centre. The two grey hands
+cannot be separated from grey artwork by ridge detection, but overlaying the
+predicted bearings puts them exactly along the drawn hands — the red overlay
+runs down the hand captioned `MOON`, the green down the one captioned `TOWER`.
+
+Reproduce with `./forensics.py regions puzzle.png --only clock`.
+
+### Why this is evidence and object-counting is not
+
+The test is **deviation from the default**. Hands normally point *at* a
+numeral, so placing all three between numerals is a deliberate choice that
+carries information. Likewise the plinth's underlines are marks added on top
+of text that did not need them.
+
+Counting objects is different. The Statue's crown does have exactly 7 rays —
+verified — but the real Statue has 7 rays, so an accurate drawing yields 7
+whether or not 7 means anything. The same goes for 2 cameras and 4 masked
+figures: both counts are correct, and both are ordinary composition. An
+illustration will always yield numbers if you count things in it.
+
+That criterion is encoded in `puzzle/positions.py` as the `Evidence` scale,
+and it is why the community's proposed assignments stay `WEAK` however cleanly
+they can be counted.
+
+### A correction
+
+Section 2 of this document argued the underlined `1` beside
+`subject` was the *word* `one`, on the grounds that two identical underlines
+were most economically explained by one mechanism. **That reading is
+withdrawn.** With the word-plus-number mechanism now confirmed independently
+on the clock, `Section 1` is a position marker: `subject -> 1`. `one` has been
+removed from the confirmed vocabulary.
+
+### Consequence: it is not a 12-word mnemonic
+
+Position 21 exists. BIP-39 permits 12, 15, 18, 21 and 24 words, so the phrase
+is **21 or 24 words**. Every 12-word search ever run against this puzzle —
+including all of this repository's, and the original script's — was
+structurally incapable of succeeding, no matter how long it ran.
+
+### What it would take to search
+
+`puzzle/positions.py` models the map and refuses to pretend:
+
+```console
+  len 21 confirmed only  : NOT searchable: 18 unresolved, 4.02e+59 phrases
+  len 21 + all proposed  : NOT searchable:  6 unresolved, 1.48e+20 phrases
+  len 24 confirmed only  : NOT searchable: 21 unresolved, 3.45e+69 phrases
+  len 24 + all proposed  : NOT searchable:  9 unresolved, 1.27e+30 phrases
+```
+
+Enumeration, not PBKDF2, is the wall. Three unresolved positions is 2048³ ≈
+8.6e9 — about an hour to enumerate and five to derive. Four is 2048⁴ ≈ 1.8e13,
+roughly three months. **Three unresolved positions is the practical ceiling**,
+so the map needs 18 more verified assignments before any search is worth
+starting.
+
+That is the whole game now. One more decoded clue is worth more than any
+amount of hardware, and no amount of CPU substitutes for it.
+
+## 4. Negative results
 
 Recorded so nobody re-treads them. Each of these looked promising and is now
 closed.
@@ -287,7 +372,7 @@ Both compressed and uncompressed public keys were tested for every candidate.
 **A brainwallet of up to six words from this vocabulary is ruled out.** That is
 a real closure, not a sample: the space was covered completely.
 
-## 4. Electrum seeds: a whole search space nobody had checked
+## 5. Electrum seeds: a whole search space nobody had checked
 
 Everything above assumes BIP-39. **Electrum does not use BIP-39**, and the
 differences are not cosmetic:
@@ -336,7 +421,7 @@ scans 26 addresses per seed to Electrum's 10.
 That changes the strategy: word *sets* can be swept, not just sampled. Where BIP-39 lets four cores exhaust roughly one set per working day,
 Electrum lets them do a dozen.
 
-## 5. Why the original script could not have worked
+## 6. Why the original script could not have worked
 
 The script this repository shipped with did:
 
@@ -394,7 +479,7 @@ words is a tractable search; sixteen is not.
 
 ---
 
-## 6. What this toolkit does instead
+## 7. What this toolkit does instead
 
 | Problem | Fix | Measured effect |
 |---|---|---|
@@ -421,7 +506,7 @@ keeps it off 15 of every 16 candidates.
 
 ---
 
-## 7. Recommended search order
+## 8. Recommended search order
 
 Ranked by probability-per-CPU-hour.
 
@@ -459,7 +544,7 @@ pushes the run past a year.
 
 ---
 
-## 8. Coverage so far
+## 9. Coverage so far
 
 Two runs, both against the target's HASH160, both checkpointed and resumable.
 
@@ -496,6 +581,10 @@ full     ~3.8 hours on four cores; checkpointed
 
 **Run 4 — brainwallet, lengths 3-6.** Exhausted, no match (section 3).
 
+> **All five runs below assume a 12-word phrase, which section 3 shows is
+> wrong.** They are kept as an honest record of what was spent and of the
+> engine's measured throughput, not as progress toward the answer.
+
 **Run 5 — `BEST_12` as an Electrum standard seed. COMPLETE.** The first
 exhaustive closure of a twelve-word set in a seed scheme:
 
@@ -519,7 +608,7 @@ each chain were scanned.
 Runs 2 and 3 sample one derivation path each; runs 4 and 5 close their spaces
 completely. None has found the key.
 
-## 9. The passphrase hypothesis
+## 10. The passphrase hypothesis
 
 BIP-39 and Electrum both support an optional **passphrase** — the "13th word"
 — which is mixed into the PBKDF2 salt. It can be any string, so it is not
@@ -561,7 +650,7 @@ passphrase, and against the same target with the correct passphrase removed
 from the list — the second case guards against the passphrase being silently
 ignored, which would otherwise produce a false negative across an entire run.
 
-## 10. Open questions
+## 11. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
   accepts 15/18/21/24, and brainwallet mode accepts any length. A 24-word
@@ -598,7 +687,7 @@ ignored, which would otherwise produce a false negative across an entire run.
 
 ---
 
-## 11. Verification
+## 12. Verification
 
 Every cryptographic primitive is pinned to a published test vector, and the
 search engine is tested against planted targets it must find:
