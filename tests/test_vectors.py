@@ -14,7 +14,8 @@ import unittest
 from puzzle import bip39, brainwallet, candidates, derive, feasibility, keys
 from puzzle._ripemd160 import ripemd160
 from puzzle.search import Checkpoint, SearchConfig, count_units, run_search
-from puzzle.wordlist import INDEX, WORDS, WORDLIST_SHA256, load_wordlist, parse_words, validate
+from puzzle.wordlist import (INDEX, WORDS, WORDLIST_SHA256, is_valid, load_wordlist,
+                             parse_words, validate)
 
 
 class TestRipemd160(unittest.TestCase):
@@ -269,6 +270,25 @@ class TestCandidates(unittest.TestCase):
     def test_not_in_bip39_really_is_not(self):
         valid, _ = validate(candidates.NOT_IN_BIP39)
         self.assertEqual(valid, [])
+
+    def test_marked_words_are_the_six_with_a_mechanism(self):
+        """The words the artist singled out, not merely drew (ANALYSIS.md s2)."""
+        self.assertEqual(candidates.MARKED,
+                         ["moon", "tower", "food", "real", "subject", "one"])
+        self.assertEqual(validate(candidates.MARKED)[1], [])
+
+    def test_best_12_is_a_single_exhaustible_subset(self):
+        """Exactly twelve words means one subset, so a run is exhaustive."""
+        self.assertEqual(len(candidates.BEST_12), 12)
+        self.assertEqual(len(set(candidates.BEST_12)), 12)
+        self.assertEqual(validate(candidates.BEST_12)[1], [])
+        for w in candidates.MARKED + candidates.FAINT:
+            self.assertIn(w, candidates.BEST_12)
+
+    def test_one_is_a_bip39_word(self):
+        """The reading that the underlined numeral is a word, not an index."""
+        self.assertTrue(is_valid("one"))
+        self.assertIn("one", candidates.TIER_A)
 
     def test_best_13_is_the_documented_pool(self):
         """The 13 words recovered by direct inspection (ANALYSIS.md s2)."""

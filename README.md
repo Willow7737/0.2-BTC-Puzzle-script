@@ -157,7 +157,7 @@ bip39 candidate :          278 /sec/core   (PBKDF2-2048 + 4 schemes)
 brain candidate :       18,154 /sec/core
 
 $ ./solve.py selftest
-Ran 49 tests in 1.326s
+Ran 52 tests in 1.158s
 OK
 ```
 
@@ -170,14 +170,19 @@ is what decides whether a run finishes.
 
 | Tier | Words | Basis |
 |---|---|---|
-| **A** (7) | moon tower food this subject real black | read directly off the artwork |
+| **A** (8) | moon tower food this subject real black one | read directly off the artwork |
 | **B** (10) | brave world order only first future seed phrase picture find | prominent rendered text |
 | **C** (19) | flag mask face camera eye pyramid clock … | objects drawn in the image |
 | **D** (20) | coin digital public private key network trust … | whitepaper text and rune concepts |
 
-`candidates.BEST_13` is tier A plus the six tier-B display words — the pool
-with the strongest evidence, and the one worth exhausting first
-(~2 days on four cores via the BIP-44 fast path).
+`candidates.MARKED` is the six words the artist actually *singled out* rather
+than merely drew — `moon`, `tower`, `food` (written tiny along a thin object),
+`real` (inserted into an inscription), `subject` and `one` (underlined). That
+mechanism is a far stronger signal than display text.
+
+`candidates.BEST_12` is those six plus the three faint ones and three
+display words. Twelve words is a **single subset**, so a run over it is
+exhaustive rather than a sample and finishes in about four hours.
 
 `puzzle/candidates.py` also lists `NOT_IN_BIP39` — hint words such as
 `breathe`, `tuesday`, `statue` and `justice` that cannot appear in a mnemonic.
@@ -218,7 +223,7 @@ puzzle/feasibility.py    search-space arithmetic and time estimates
 puzzle/candidates.py     curated candidate tiers
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    49 tests: published vectors + planted targets
+tests/test_vectors.py    52 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 
@@ -238,6 +243,21 @@ implementations (Trezor's `mnemonic` and the `bip32` package) over 200 random
 mnemonics with zero disagreements.
 
 ---
+
+## What has been ruled out
+
+Negative results, so nobody re-treads them:
+
+* **Steganography** — no metadata, uniform alpha, clean LSB planes.
+* **Rune 4's "number X"** — a placeholder asterisk, not a digit.
+* **`breathe` on the Statue's neck** — no lettering at 16×; it is plain
+  visible text on Floyd's hoodie and nothing more.
+* **Brainwallet phrases of 3–6 words** — *exhausted*, no match, over a
+  16-word vocabulary that deliberately included the non-BIP-39 `breathe` and
+  `tuesday`, across nine joiner/casing renderings and both key formats.
+* **Flag stripes, the whitepaper calligram, and a fine-detail sweep of every
+  unexamined region** — no further hidden text.
+* **Blockchain history** — funded 2020-05-10, never spent, no `OP_RETURN`.
 
 ## Honest expectations
 

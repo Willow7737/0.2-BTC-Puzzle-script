@@ -52,6 +52,13 @@ REGIONS: dict[str, tuple] = {
     "rune3":        (840, 835, 1000, 880, 10, "highpass", 0, "above Trump; mirrored"),
     "rune4":        (1520, 25, 1580, 1020, 3, "highpass", -90,
                      "right edge; '...for a black day number X'"),
+    "seal":         (440, 720, 850, 1120, 3, "highpass", 0,
+                     "Great Seal, text mirrored and all three inscriptions rewritten"),
+    "section-one":  (1352, 806, 1432, 832, 20, "channel", 0,
+                     "'Section 1' - the numeral 1 carries the same underline as 'subject'"),
+    "calligram":    (500, 395, 830, 600, 5, "highpass", 0,
+                     "whitepaper prose forming BRAVE NEW WORLD; nothing marked"),
+    "flag":         (190, 310, 420, 640, 5, "highpass", 0, "checked, no text"),
     "latin":        (1030, 1155, 1300, 1185, 9, "stretch", 0,
                      "Esse quam niger es, sic dixit caccabus ollae"),
 }

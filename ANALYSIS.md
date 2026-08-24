@@ -54,15 +54,25 @@ not a seed word.
 **(c) The hints are simply wrong.** They are community-derived, not authored by
 the puzzle's creator, and no one has verified them against a solution.
 
-Interpretation (b) is the most productive, because it is the only one that
-keeps a BIP-39 search alive while explaining the non-BIP-39 hints. The tooling
-here supports (a) too, via `--mode brain`.
+**Update after the image work in section 2 and the negatives in section 3:**
+interpretation (a) has weakened considerably and (c) has strengthened.
+`breathe` is *plain visible text on Floyd's hoodie* and nothing more — at 16x
+the Statue's neck shows only robe drapery, no lettering, so it is not a
+*marked* word the way `moon`, `tower`, `food`, `real`, `subject` and `one` are.
+And brainwallet phrases of up to six words over a vocabulary that deliberately
+included `breathe` and `tuesday` are now **exhausted** with no match.
+
+So the working position is: the six marked words are real, `breathe` is
+thematic decoration that the hint list over-read, and a 12-word BIP-39
+mnemonic remains the best model. The tooling still supports (a) via
+`--mode brain` for longer phrases.
 
 ### Words the hints support that *are* valid BIP-39
 
 `moon` · `tower` · `food` · `this` · `subject` · `real` · `black`
+— plus `one`, recovered in section 2.
 
-Seven words. A 12-word mnemonic needs five more.
+Eight words. A 12-word mnemonic needs four more.
 
 ---
 
@@ -189,6 +199,42 @@ is a property of the 1600x1200 scan, not of the method — the same code reads
 rune 4 cleanly. A higher-resolution original would very likely let the same
 crib approach verify rune 2's "sum of two numbers" too.
 
+### The plinth's second underline is a word, not an index
+
+Re-examined at 20x with the red channel isolated, the stroke under the numeral
+`1` in "Section 1" is a **deliberate underline** — same hand, same weight, same
+length-past-the-glyph as the one under `subject`. It is not a serif on the
+numeral.
+
+That changes the reading. Two identical marks are most economically explained
+by one mechanism, not two: **underline marks a seed word**. And `one` is a
+BIP-39 word. The earlier reading — that `1` is a positional index for
+`subject` — needs a second, unevidenced mechanism to work.
+
+So the plinth contributes **two** words, `subject` and `one`, and the position
+hypothesis loses its clearest support. `puzzle/candidates.py` now exposes
+`MARKED`, the six words the artist actually singled out:
+
+    moon  tower  food     written tiny along a thin object
+    real                  inserted into an existing inscription
+    subject  one          underlined
+
+### The Great Seal was rewritten
+
+All three of the seal's inscriptions are replaced, which is deliberate but
+appears to be thematic rather than a word source:
+
+| Position | Artwork | Standard seal |
+|---|---|---|
+| top arc | `RERUM COGNOSCERE CAUSAS` | `ANNUIT COEPTIS` |
+| pyramid base | `FIAT JUSTITIA ET PEREAT MUNDUS` | `MDCCLXXVI` |
+| bottom arc | `UBI BENE IBI PATRIA` | `NOVUS ORDO SECLORUM` |
+
+"To know the causes of things" (Virgil), "let justice be done though the world
+perish", "where it is well, there is my homeland". `mundus` = world is a second
+independent pointer at `world`, but none of the three is *marked* the way the
+six words above are.
+
 ### What could not be confirmed
 
 - **`breathe` on the Statue's neck.** It is plainly printed on Floyd's hoodie
@@ -202,7 +248,46 @@ crib approach verify rune 2's "sum of two numbers" too.
   measured hand bearings land 3–13° off the nearest numeral, which is not
   clean enough to call.
 
-## 3. Why the original script could not have worked
+## 3. Negative results
+
+Recorded so nobody re-treads them. Each of these looked promising and is now
+closed.
+
+| Checked | Result |
+|---|---|
+| Steganography (metadata, alpha, LSB) | nothing hidden below the pixels |
+| Rune 4's "number X" | a placeholder asterisk, not a digit |
+| `breathe` on the Statue's neck | **no lettering at 16x** — only robe drapery. It is plain visible text on Floyd's hoodie and nothing more |
+| Flag stripes | clean; no text along any stripe |
+| Whitepaper calligram | uniform whitepaper prose, no word emphasised or altered |
+| Fine-detail sweep of unexamined regions | no further text cache — the marked-word list is likely complete for this scan |
+| **Brainwallet, phrases of 3–6 words** | **exhausted, no match** (see below) |
+| Blockchain history | funded 2020-05-10 08:01 UTC, 0.20000000 BTC, from four P2SH inputs; never spent; no OP_RETURN. Later deposits are third-party dust |
+
+### Brainwallet is exhausted for short phrases
+
+The puzzle says "seed **passphrase**", and a brainwallet — `SHA-256(phrase)`
+used directly as a private key — accepts any vocabulary and any length. It is
+also ~65x cheaper per candidate than BIP-39, which makes short phrases
+*exhaustively* searchable rather than merely sampled. Nobody appears to have
+closed this off, so it was worth doing properly.
+
+Vocabulary: the six marked words plus `this black only first future brave
+world order breathe tuesday` — 16 words, deliberately including the two that
+are **not** BIP-39, since brainwallet mode does not care.
+
+| Length | Orderings | Variants | Result |
+|---:|---:|---|---|
+| 3 | 3,360 | 9 (space/none/dash x lower/upper/title) | no match |
+| 4 | 43,680 | 9 | no match |
+| 5 | 524,160 | 9 | no match |
+| 6 | 5,765,760 | 1 (space + lower) | no match |
+
+Both compressed and uncompressed public keys were tested for every candidate.
+**A brainwallet of up to six words from this vocabulary is ruled out.** That is
+a real closure, not a sample: the space was covered completely.
+
+## 4. Why the original script could not have worked
 
 The script this repository shipped with did:
 
@@ -260,7 +345,7 @@ words is a tractable search; sixteen is not.
 
 ---
 
-## 4. What this toolkit does instead
+## 5. What this toolkit does instead
 
 | Problem | Fix | Measured effect |
 |---|---|---|
@@ -287,7 +372,7 @@ keeps it off 15 of every 16 candidates.
 
 ---
 
-## 5. Recommended search order
+## 6. Recommended search order
 
 Ranked by probability-per-CPU-hour.
 
@@ -325,7 +410,7 @@ pushes the run past a year.
 
 ---
 
-## 6. Coverage so far
+## 7. Coverage so far
 
 Two runs, both against the target's HASH160, both checkpointed and resumable.
 
@@ -338,28 +423,46 @@ result   15,505,408 orderings (968,858 checksum-valid) in 15.0 minutes
          17,228 orderings/sec on four cores
 ```
 
-**Run 2 — depth.** The 13 words recovered in section 2, on the BIP-44 fast
-path (`m/44'/0'/0'/0/0` only). Halving the derivation work doubles throughput,
-which is the right trade when only a small fraction of the space is reachable
-anyway — better to cover more of the single most likely path than less of six:
+**Run 2 — depth.** Thirteen words, BIP-44 fast path (`m/44'/0'/0'/0/0` only).
+Halving the derivation work doubles throughput, which is the right trade when
+only a small fraction of the space is reachable anyway:
 
 ```
 pool     moon tower food subject real this black only first future brave world order
 space    P(13,12) = 6,227,020,800 orderings, 389,188,800 checksum-valid
 rate     ~35,000 orderings/sec on four cores  (2x run 1)
-full     ~2.1 days; resumable via runs/img13.json
+covered  63,665,280 orderings = 1.0%, no match; paused, checkpointed
 ```
 
-Neither run has found the key. To be blunt about what that means: a few
-percent of one candidate pool on one derivation path is a baseline, not a
-result, and it rules almost nothing out.
+**Run 3 — the revised set.** `candidates.BEST_12`, which swaps the display
+words for `one` (section 2) and drops the weakest. Twelve words is a *single*
+subset, so this run is exhaustive rather than a sample and completes in about
+four hours:
 
-## 7. Open questions
+```
+pool     moon tower food real subject one future this first black only world
+space    479,001,600 orderings, 29,937,600 checksum-valid
+full     ~3.8 hours on four cores; checkpointed
+```
+
+**Run 4 — brainwallet, lengths 3-6.** Exhausted, no match (section 3).
+
+None of these has found the key. Runs 2 and 3 cover one derivation path each;
+run 4 is the only one that closes its space completely.
+
+## 8. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
   accepts 15/18/21/24, and brainwallet mode accepts any length. A 24-word
   phrase is unsearchable by permutation and would need the word *order* to be
   determined by the image.
+- **Is the word *set* right at all?** This is now the binding constraint, not
+  the ordering. Six words are securely marked and three more are faint; the
+  remaining three of any twelve are guesswork drawn from display text. A
+  wrong set makes every ordering search worthless, and there is currently no
+  way to test a set except by exhausting its 479M orderings (~4 hours). If the
+  runes or the clock ever yield positions, that cost collapses to a single
+  derivation per set and the whole problem becomes tractable.
 - **What do runes 1 and 2 encode?** Rune 4 is now settled (section 2) and its
   "number X" turned out to be a placeholder, so the remaining numeric hope is
   rune 2's "sum of two numbers". Both runes need a higher-resolution scan
@@ -384,7 +487,7 @@ result, and it rules almost nothing out.
 
 ---
 
-## 8. Verification
+## 9. Verification
 
 Every cryptographic primitive is pinned to a published test vector, and the
 search engine is tested against planted targets it must find:
