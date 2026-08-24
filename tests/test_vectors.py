@@ -257,6 +257,19 @@ class TestFeasibility(unittest.TestCase):
         pinned = feasibility.estimate(14, 12, workers=4, pinned=3)
         self.assertLess(pinned.seconds, loose.seconds / 100)
 
+    def test_electrum_is_roughly_seven_times_cheaper(self):
+        """The claim the strategy rests on: sweep sets, don't sample them."""
+        b = feasibility.estimate(12, 12, mode="bip39", workers=4)
+        e = feasibility.estimate(12, 12, mode="electrum", workers=4)
+        self.assertEqual(b.total_candidates, e.total_candidates)
+        self.assertGreater(b.seconds / e.seconds, 5.0)
+        self.assertLess(b.seconds / e.seconds, 10.0)
+
+    def test_electrum_filter_is_one_in_256(self):
+        e = feasibility.estimate(12, 12, mode="electrum", workers=1)
+        self.assertAlmostEqual(e.checksum_valid / e.total_candidates,
+                               1 / 256, delta=1e-6)
+
     def test_humanize(self):
         self.assertIn("seconds", feasibility.humanize(30))
         self.assertIn("hours", feasibility.humanize(7200))
