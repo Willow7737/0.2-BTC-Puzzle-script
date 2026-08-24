@@ -496,8 +496,28 @@ full     ~3.8 hours on four cores; checkpointed
 
 **Run 4 — brainwallet, lengths 3-6.** Exhausted, no match (section 3).
 
-None of these has found the key. Runs 2 and 3 cover one derivation path each;
-run 4 is the only one that closes its space completely.
+**Run 5 — `BEST_12` as an Electrum standard seed. COMPLETE.** The first
+exhaustive closure of a twelve-word set in a seed scheme:
+
+```
+pool      moon tower food real subject one future this first black only world
+space     479,001,600 orderings - all of them
+addresses m/0/0, m/0/1, m/1/0, m/1/1
+result    11,880 / 11,880 units, 1,869,966 seed-version-valid, no match
+time      32.9 minutes on four cores (model predicted 31.4)
+```
+
+The run checks itself: the observed seed-version pass rate was **0.003904**
+against a predicted **1/256 = 0.003906**. Had units been skipped or the filter
+been wrong, that number would not land within 0.05% of theory. The space
+really was covered.
+
+**So that set is ruled out as an Electrum standard seed** — with two caveats
+worth stating: no passphrase was applied, and only address indices 0 and 1 on
+each chain were scanned.
+
+Runs 2 and 3 sample one derivation path each; runs 4 and 5 close their spaces
+completely. None has found the key.
 
 ## 9. Open questions
 

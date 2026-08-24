@@ -277,6 +277,10 @@ Negative results, so nobody re-treads them:
 * **Flag stripes, the whitepaper calligram, and a fine-detail sweep of every
   unexamined region** — no further hidden text.
 * **Blockchain history** — funded 2020-05-10, never spent, no `OP_RETURN`.
+* **`BEST_12` as an Electrum standard seed** — *exhausted*: all 479,001,600
+  orderings across `m/0/0`, `m/0/1`, `m/1/0`, `m/1/1`, no match. The observed
+  seed-version pass rate (0.003904) matched theory (1/256 = 0.003906) to
+  within 0.05%, which is what confirms nothing was skipped.
 
 ## Honest expectations
 
