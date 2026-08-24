@@ -187,10 +187,30 @@ position. Two mechanisms are confirmed directly against the image:
   measured 61.1° → `eye → 9`. Graded `STRONG`, not confirmed: a lone 1.3° hit
   happens ~9% of the time by chance
 
-Because consecutive numerals sum to `2n+1`, **the clock can only produce odd
-positions** (3, 5, … 23). Every *even* position in the community table
-(`camera = 2`, `mask = 4`, `vote = 12`, `rifle = 16` …) must come from some
-other mechanism — and none has been demonstrated.
+**One rule, two alignments.** Rune 2 says "sum of two numbers" — not
+*adjacent* numbers. Adjacent numerals sum to `2n+1` (odd); numerals two apart
+sum to `2n` (even), and their midpoint falls exactly *on* the numeral between
+them. So a feature **between** numerals gives an odd position and a feature
+**on** one gives an even position.
+
+Together that is **24 rays, 15° apart, covering positions 3–23 with no gaps**.
+Exactly three axes give the same number at both ends — **12, 13, 14**, the
+exact middle — and `moon` sits on the middle one. The clock cannot reach 1, 2
+or 24; the plinth supplies 1, and 2 and 24 are the remaining gap.
+
+The catch: 24 rays at 15° means a random feature lands within 1.3° of one
+**17%** of the time, against 8.7% for 12 rays. Completing the mechanism makes
+any *single* object match weaker, so nothing gets promoted on one alignment
+alone.
+
+```bash
+./solve.py positions --length 24 --out map.json   # provenance-aware map
+```
+
+Every position carries a confidence (`confirmed` / `strong` / `weak` /
+`unresolved`) and the basis for it. `PositionMap.enumerable()` refuses to hand
+a map with unresolved positions to a search: filling them from the 2048-word
+list would test guesses, and a negative from guesses is not a result.
 
 The test that makes these evidence, and object-counting not, is **deviation
 from the default**. Hands normally point *at* a numeral; underlines are marks
@@ -273,7 +293,7 @@ puzzle/candidates.py     curated candidate tiers
 puzzle/positions.py      word-plus-number position map and its evidence scale
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    85 tests: published vectors + planted targets
+tests/test_vectors.py    92 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 

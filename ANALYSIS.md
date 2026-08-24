@@ -385,20 +385,78 @@ hand) are firmer than ones involving an interpolated numeral (the `eye`).
 `positions.position_at(x, y)` implements the test: give it an image
 coordinate, and it returns the position that coordinate encodes, or nothing.
 
-### A hard structural constraint: the clock can only produce odd positions
+### The even mechanism: one rule, two alignments
 
-Consecutive numerals sum to `n + (n+1) = 2n+1`, so **every position this
-mechanism can yield is odd**:
+Rune 2 says *"sum of two numbers"* — it never says *adjacent* numbers.
+
+* two **adjacent** numerals sum to `2n+1`, always **odd**
+* two numerals **two apart** sum to `2n`, always **even** — and their
+  geometric midpoint is exactly *on* the numeral between them
+
+So it is a single rule with two alignments: a feature **between** two numerals
+encodes an odd position; a feature **on** a numeral encodes an even one, by
+summing its two neighbours.
+
+| Alignment | Rays | Positions |
+|---|---:|---|
+| between numerals | 12 | 3, 5, 7 … 23 (odd) |
+| on a numeral | 12 | 4, 6, 8 … 22 (even) |
+| **combined** | **24** | **3 … 23, no gaps** |
+
+Twenty-four rays, 15° apart, covering every position from 3 to 23. Three axes
+double up — and they are exactly the ones whose two ends give the *same*
+number:
+
+| Axis | Both ends give |
+|---|---:|
+| numeral 6 ↔ numeral 12 | **12** |
+| midpoint(6,7) ↔ midpoint(12,1) | **13** |
+| numeral 7 ↔ numeral 1 | **14** |
+
+`12, 13, 14` — consecutive, and the exact middle of a 24-position phrase. Every
+other axis is ambiguous between two positions, resolved only by which end
+carries the word. The `moon` hand sits on the middle one.
+
+**What the clock cannot reach: 1, 2 and 24.** Position 1 is supplied by the
+plinth. Positions 2 and 24 have no known clue, and that is now the precise
+shape of the gap — not "most of the table is missing" but "two positions plus
+the words for twenty rays".
+
+Note this also decides the length question in favour of **24** over 21: a
+21-word phrase would leave the rays for 22 and 23 spurious, whereas 24 uses
+every one of the clock's 21 reachable positions.
+
+### The cost: a worse false-positive rate
+
+Completing the mechanism makes single matches **weaker**, not stronger. Going
+from 12 rays at 30° to 24 rays at 15° doubles the chance of a coincidental
+hit:
+
+| Model | Spacing | P(random bearing within 1.3°) |
+|---|---:|---:|
+| midpoints only | 30° | 8.7% |
+| **both alignments** | **15°** | **17.3%** |
+
+The Seal's eye re-scores from 8.7% to **18.7%**. It stays `STRONG` only
+because it was predicted before being measured. Nothing else should be
+promoted on a single ray match at this rate — a joint alignment of several
+independent features, or a feature the mechanism is intrinsically about, is
+now the minimum bar.
+
+### A hard structural constraint on the odd half
+
+Taking only the midpoint alignment, consecutive numerals sum to `n + (n+1) =
+2n+1`, so every position *that* alignment can yield is odd:
 
 ```
 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23
 ```
 
-That is a real constraint on any proposed table, and it has not been stated
-before. It means the *even* positions — `camera = 2`, `mask = 4`,
-`black = 10`, `vote = 12`, `rifle = 16`, `apple = 20` in the community table —
-**cannot** come from the clock. They require a second, entirely different
-mechanism, and no such mechanism has been demonstrated for any of them.
+This is what forced the search for an even mechanism, and the on-numeral
+alignment above supplies it — except for `camera = 2`, which the clock
+provably cannot reach under either alignment and which therefore still needs
+a standalone clue. Two cameras are in fact drawn, which is the right *shape*
+of clue for it, though a bare count remains weak evidence.
 
 So the table is not one hypothesis of uniform strength. It is:
 

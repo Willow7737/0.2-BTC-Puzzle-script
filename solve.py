@@ -230,6 +230,32 @@ def cmd_selftest(args) -> int:
                             str(here / "tests"), "-t", str(here), "-v"])
 
 
+def cmd_positions(args) -> int:
+    """Show or export the word-plus-number position map."""
+    import json as _json
+    from puzzle import positions as pos
+
+    pm = pos.build(args.length, include_proposed=args.proposed,
+                   include_strong=not args.confirmed_only)
+    print(pm.summary())
+    print()
+    print(pm.verdict())
+    ok, why = pm.enumerable()
+    print(f"enumerable: {ok} - {why}")
+    print()
+    print(f"clock reaches positions {sorted(pos.all_rays())[0]}-"
+          f"{sorted(pos.all_rays())[-1]} with no gaps; "
+          f"it cannot reach {list(pos.CLOCK_CANNOT_REACH)}")
+    print("self-matching axes (same position at both ends): "
+          + ", ".join(f"{k}" for k in sorted(pos.SELF_MATCHING_AXES)))
+    print(f"false-positive rate for a 1.3 deg ray match: "
+          f"{pos.chance_probability(1.3):.1%}")
+    if args.out:
+        Path(args.out).write_text(_json.dumps(pm.to_dict(), indent=2))
+        print(f"\nwritten to {args.out}")
+    return 0
+
+
 def cmd_search(args) -> int:
     pool = _resolve_pool(args)
     if not pool:
@@ -364,6 +390,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = sub.add_parser("selftest", help="run the crypto test vectors")
     sp.set_defaults(func=cmd_selftest)
+
+    sp = sub.add_parser("positions", help="show the word-plus-number position map")
+    sp.add_argument("--length", type=int, default=24, choices=(21, 24))
+    sp.add_argument("--proposed", action="store_true",
+                    help="include the community's weak assignments")
+    sp.add_argument("--confirmed-only", action="store_true",
+                    help="exclude even the strong ones")
+    sp.add_argument("--out", help="write the map as JSON")
+    sp.set_defaults(func=cmd_positions)
 
     sp = sub.add_parser("search", help="run the search")
     pool_args(sp)

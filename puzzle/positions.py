@@ -78,26 +78,77 @@ def midpoint_bearings() -> dict[int, list[tuple[int, int, float]]]:
     return out
 
 
+def numeral_rays() -> dict[int, list[tuple[int, int, float]]]:
+    """Even positions: a feature sitting **on** a numeral, not between two.
+
+    Rune 2 says "sum of two numbers". Two *adjacent* numerals sum to ``2n+1``,
+    always odd - which is why the midpoint mechanism alone can never reach an
+    even position. Numerals **two apart** sum to ``2n``, always even, and
+    their geometric midpoint is exactly *on* the numeral between them.
+
+    So it is one rule with two alignments:
+
+    * between two numerals -> odd position
+    * on a numeral, summing its neighbours -> even position
+
+    Together the 12 midpoints and 12 numerals give 24 rays covering positions
+    **3 to 23 with no gaps**. Position 1 comes from the plinth; 2 and 24 are
+    not reachable from the clock at all and need separate clues.
+    """
+    out: dict[int, list[tuple[int, int, float]]] = {}
+    for n in range(1, 13):
+        lo = 12 if n == 1 else n - 1
+        hi = 1 if n == 12 else n + 1
+        out.setdefault(lo + hi, []).append((lo, hi, NUMERAL_BEARING[n]))
+    return out
+
+
+def all_rays() -> dict[int, list[tuple[int, int, float]]]:
+    """Every clock ray, odd and even, keyed by the position it encodes."""
+    out = {k: list(v) for k, v in midpoint_bearings().items()}
+    for pos, rays in numeral_rays().items():
+        out.setdefault(pos, []).extend(rays)
+    return out
+
+
+#: Positions the clock cannot produce under either alignment. 1 is supplied by
+#: the plinth; 2 and 24 have no known clue and are the gap in the model.
+CLOCK_CANNOT_REACH = (1, 2, 24)
+
+#: The three axes whose two ends give the *same* position. Every other axis is
+#: ambiguous between two, resolved only by which end carries the word. That
+#: these three land on 12, 13, 14 - consecutive, and the exact middle of a
+#: 24-position phrase - is the structure's most distinctive signature, and the
+#: moon hand sits on the middle one.
+SELF_MATCHING_AXES = {12: ("on numeral 6", "on numeral 12"),
+                      13: ("midpoint(6,7)", "midpoint(12,1)"),
+                      14: ("on numeral 7", "on numeral 1")}
+
+
 def bearing_of(x: float, y: float) -> float:
     """Compass bearing of an image point from the clock centre (0 = up)."""
     cx, cy = CLOCK_CENTRE
     return math.degrees(math.atan2(x - cx, -(y - cy))) % 360
 
 
-def chance_probability(error_deg: float, n_rays: int = 12) -> float:
+def chance_probability(error_deg: float, n_rays: int = 24) -> float:
     """Probability a *random* bearing lands this close to some midpoint ray.
 
-    This is the sanity check that keeps ray-matching honest. Twelve rays 30
-    degrees apart means a random feature is within 1.3 degrees of one about
-    **9%** of the time - so a single tight alignment is suggestive, not proof.
-    Only a joint alignment of several independent features, or a feature the
-    mechanism is intrinsically *about* (a clock's own hands), carries weight.
+    This is the sanity check that keeps ray-matching honest, and admitting the
+    even mechanism makes it *stricter*, not looser: 24 rays 15 degrees apart
+    means a random feature is within 1.3 degrees of one about **17%** of the
+    time, against 9% when only the 12 midpoints were in play.
+
+    So the more complete the mechanism becomes, the weaker any single object
+    match is. Only a joint alignment of several independent features, or a
+    feature the mechanism is intrinsically *about* (a clock's own hands),
+    carries real weight.
     """
     spacing = 360.0 / n_rays
     return min(1.0, 2.0 * error_deg / spacing)
 
 
-def position_at(x: float, y: float, tolerance: float = 3.0):
+def position_at(x: float, y: float, tolerance: float = 3.0, include_even: bool = True):
     """Which position, if any, an image feature at (x, y) encodes.
 
     Returns ``(position, n, m, bearing, error_degrees)`` for the nearest
@@ -107,7 +158,8 @@ def position_at(x: float, y: float, tolerance: float = 3.0):
     """
     b = bearing_of(x, y)
     best = None
-    for pos, rays in midpoint_bearings().items():
+    table = all_rays() if include_even else midpoint_bearings()
+    for pos, rays in table.items():
         for n, m, rb in rays:
             err = min(abs(b - rb), 360 - abs(b - rb))
             if best is None or err < best[4]:
@@ -225,11 +277,13 @@ class PositionMap:
 
     length: int = 24
     slots: dict[int, frozenset[str]] = field(default_factory=dict)
+    provenance: dict[int, Assignment] = field(default_factory=dict)
 
     def place(self, a: Assignment) -> "PositionMap":
         if not 1 <= a.position <= self.length:
             raise ValueError(f"position {a.position} outside 1..{self.length}")
         self.slots[a.position] = a.words
+        self.provenance[a.position] = a
         return self
 
     def unresolved(self) -> list[int]:
@@ -266,11 +320,55 @@ class PositionMap:
                 f"Resolve {need} more position(s) first - no amount of CPU "
                 f"substitutes for one more decoded clue.")
 
+    def to_dict(self) -> dict:
+        """Serialise with per-position confidence and provenance.
+
+        Unresolved positions are emitted with an empty candidate list and
+        ``"unresolved"``, so a consumer can tell "no word yet" apart from
+        "any word" and refuse to enumerate the difference.
+        """
+        out = {"phrase_length": self.length, "positions": {}}
+        for i in range(1, self.length + 1):
+            a = self.provenance.get(i)
+            out["positions"][str(i)] = {
+                "candidates": sorted(self.slots.get(i, ())),
+                "confidence": a.evidence.name.lower() if a else "unresolved",
+                "basis": a.basis if a else "",
+            }
+        return out
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "PositionMap":
+        pm = cls(length=int(data["phrase_length"]))
+        for k, v in data.get("positions", {}).items():
+            words = v.get("candidates") or []
+            if not words:
+                continue
+            ev = Evidence[v.get("confidence", "weak").upper()]
+            pm.place(Assignment(int(k), frozenset(words), ev, v.get("basis", "")))
+        return pm
+
+    def enumerable(self) -> tuple[bool, str]:
+        """Whether this map may be handed to a search at all.
+
+        Refuses a map with unresolved positions rather than silently filling
+        them from the 2048-word list. Enumerating a position the image has not
+        supplied tests arbitrary guesses, and a negative from that says
+        nothing about the puzzle - it only looks like a result.
+        """
+        missing = self.unresolved()
+        if missing:
+            return False, (f"positions {missing} have no image-derived candidates. "
+                           "Enumerating them would test guesses, not the puzzle.")
+        return True, f"all {self.length} positions have candidates"
+
     def summary(self) -> str:
         lines = [f"position map, length {self.length}"]
         for i in range(1, self.length + 1):
             words = self.slots.get(i)
-            lines.append(f"  {i:>2}  " + (" | ".join(sorted(words)) if words else "?"))
+            a = self.provenance.get(i)
+            conf = f"  [{a.evidence.name.lower()}]" if a else ""
+            lines.append(f"  {i:>2}  " + (" | ".join(sorted(words)) if words else "?") + conf)
         n = len(self.unresolved())
         lines.append(f"\n  {self.length - n} resolved, {n} unresolved")
         return "\n".join(lines)

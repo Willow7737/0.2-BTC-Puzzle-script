@@ -582,10 +582,57 @@ class TestPositionMap(unittest.TestCase):
         self.assertNotIn(9, {a.position for a in positions.CONFIRMED})
 
     def test_chance_probability(self):
-        """12 rays 30 deg apart: the false-positive rate for ray-matching."""
-        self.assertAlmostEqual(positions.chance_probability(1.3), 2*1.3/30, places=6)
-        self.assertAlmostEqual(positions.chance_probability(15.0), 1.0, places=6)
-        self.assertGreater(positions.chance_probability(1.3), 0.08)
+        """Default is now the full 24-ray model: 15 deg spacing."""
+        self.assertAlmostEqual(positions.chance_probability(1.3), 2*1.3/15, places=6)
+        self.assertAlmostEqual(positions.chance_probability(7.5), 1.0, places=6)
+        self.assertGreater(positions.chance_probability(1.3), 0.17)
+
+    def test_even_positions_come_from_on_numeral_rays(self):
+        even = sorted(positions.numeral_rays())
+        self.assertEqual(even, [4, 6, 8, 10, 12, 14, 16, 18, 20, 22])
+        self.assertTrue(all(p % 2 == 0 for p in even))
+
+    def test_both_alignments_cover_3_to_23_with_no_gaps(self):
+        """One rule, two alignments: between numerals (odd), on one (even)."""
+        got = sorted(positions.all_rays())
+        self.assertEqual(got, list(range(3, 24)))
+
+    def test_clock_cannot_reach_1_2_or_24(self):
+        reach = set(positions.all_rays())
+        for p in positions.CLOCK_CANNOT_REACH:
+            self.assertNotIn(p, reach)
+        self.assertEqual(positions.CLOCK_CANNOT_REACH, (1, 2, 24))
+
+    def test_self_matching_axes_are_the_middle_three(self):
+        self.assertEqual(sorted(positions.SELF_MATCHING_AXES), [12, 13, 14])
+
+    def test_more_rays_means_a_worse_false_positive_rate(self):
+        """Completing the mechanism weakens every single-object match."""
+        self.assertAlmostEqual(positions.chance_probability(1.3, n_rays=12), 2*1.3/30, places=6)
+        self.assertAlmostEqual(positions.chance_probability(1.3, n_rays=24), 2*1.3/15, places=6)
+        self.assertGreater(positions.chance_probability(1.3, n_rays=24),
+                           positions.chance_probability(1.3, n_rays=12))
+
+    def test_map_refuses_to_enumerate_unresolved_positions(self):
+        """A negative from guessed fillers is not a result."""
+        pm = positions.build(24, include_proposed=True)
+        ok, why = pm.enumerable()
+        self.assertFalse(ok)
+        self.assertIn("guesses", why)
+
+    def test_json_round_trip_preserves_confidence(self):
+        pm = positions.build(24, include_strong=True)
+        d = pm.to_dict()
+        self.assertEqual(d["phrase_length"], 24)
+        self.assertEqual(d["positions"]["13"]["candidates"], ["moon"])
+        self.assertEqual(d["positions"]["13"]["confidence"], "confirmed")
+        self.assertEqual(d["positions"]["9"]["confidence"], "strong")
+        self.assertEqual(d["positions"]["2"]["candidates"], [])
+        self.assertEqual(d["positions"]["2"]["confidence"], "unresolved")
+        self.assertTrue(d["positions"]["13"]["basis"])
+        back = positions.PositionMap.from_dict(d)
+        self.assertEqual(back.slots, pm.slots)
+        self.assertEqual(back.length, pm.length)
 
     def test_unclaimed_axes_recorded(self):
         """Traced and found empty - recorded so nobody re-traces them."""
@@ -596,12 +643,22 @@ class TestPositionMap(unittest.TestCase):
             self.assertTrue(note)
 
     def test_position_at_rejects_a_point_off_every_ray(self):
-        cx, cy = positions.CLOCK_CENTRE
-        # numeral 1 itself sits 15 degrees off any midpoint
+        """With both alignments live, only a quarter-step misses everything.
+
+        Numerals are themselves rays now (numeral 1 -> 12+2 = 14), so the
+        genuinely empty bearings sit halfway between a numeral and a midpoint.
+        """
         import math
-        th = math.radians(positions.NUMERAL_BEARING[1])
+        cx, cy = positions.CLOCK_CENTRE
+        gap = (positions.NUMERAL_BEARING[3] + 32.6) / 2  # numeral 3 <-> midpoint(3,4)
+        th = math.radians(gap)
         x, y = cx + math.sin(th) * 150, cy - math.cos(th) * 150
         self.assertIsNone(positions.position_at(x, y))
+        # ...and with the even alignment switched off, a numeral is empty again
+        th1 = math.radians(positions.NUMERAL_BEARING[1])
+        x1, y1 = cx + math.sin(th1) * 150, cy - math.cos(th1) * 150
+        self.assertIsNone(positions.position_at(x1, y1, include_even=False))
+        self.assertIsNotNone(positions.position_at(x1, y1, include_even=True))
 
     def test_bearing_of_is_compass_oriented(self):
         cx, cy = positions.CLOCK_CENTRE
