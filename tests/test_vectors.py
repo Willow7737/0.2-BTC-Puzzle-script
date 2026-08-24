@@ -269,10 +269,42 @@ class TestCandidates(unittest.TestCase):
         valid, _ = validate(candidates.NOT_IN_BIP39)
         self.assertEqual(valid, [])
 
+    def test_best_13_is_the_documented_pool(self):
+        """The 13 words recovered by direct inspection (ANALYSIS.md s2)."""
+        self.assertEqual(len(candidates.BEST_13), 13)
+        self.assertEqual(len(set(candidates.BEST_13)), 13, "no duplicates")
+        valid, invalid = validate(candidates.BEST_13)
+        self.assertEqual(invalid, [])
+        for w in ("moon", "tower", "food", "subject", "real", "this", "black"):
+            self.assertIn(w, candidates.BEST_13)
+
     def test_build_pool_dedupes_and_orders(self):
         pool = candidates.build_pool("AB")
         self.assertEqual(len(pool), len(set(pool)))
         self.assertEqual(pool[:3], ["moon", "tower", "food"])
+
+
+class TestForensicsRegions(unittest.TestCase):
+    """The recorded hiding places must stay inside the 1600x1200 artwork."""
+
+    def test_regions_are_wellformed(self):
+        import forensics
+        for name, spec in forensics.REGIONS.items():
+            x0, y0, x1, y1, scale, mode, rot, note = spec
+            self.assertLess(x0, x1, name)
+            self.assertLess(y0, y1, name)
+            self.assertGreaterEqual(x0, 0, name)
+            self.assertGreaterEqual(y0, 0, name)
+            self.assertLessEqual(x1, 1600, name)
+            self.assertLessEqual(y1, 1200, name)
+            self.assertIn(mode, ("stretch", "highpass", "channel"), name)
+            self.assertIn(rot, (0, 90, -90, 180), name)
+            self.assertTrue(note, f"{name} needs a note saying what is there")
+
+    def test_key_regions_present(self):
+        import forensics
+        for name in ("clock", "plinth", "needle", "statue-base", "vertical"):
+            self.assertIn(name, forensics.REGIONS)
 
 
 class TestSearchEngine(unittest.TestCase):

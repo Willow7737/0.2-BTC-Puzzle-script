@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+"""Image forensics for the 0.2 BTC puzzle.
+
+The seed words are not hidden with steganography - they are *drawn* into the
+artwork at low contrast, on clock hands, tower shafts and monument plinths.
+Recovering them needs tonal work, not bit extraction, so this tool provides
+the three operations that actually paid off:
+
+    stretch   percentile contrast stretch  - faint ink on a light ground
+    highpass  subtract a blurred copy      - faint line work over texture
+    channel   isolate one RGB channel      - read through coloured paint
+
+plus ``probe``, which reports the metadata/alpha/LSB checks that rule
+steganography out.
+
+    ./forensics.py probe puzzle.png
+    ./forensics.py regions puzzle.png -o out/       # every known hiding place
+    ./forensics.py crop puzzle.png 1295,790,1495,1000 -m channel --channel r
+"""
+
+from __future__ import annotations
+
+import argparse
+import struct
+import sys
+from pathlib import Path
+
+try:
+    import numpy as np
+    from PIL import Image, ImageFilter, ImageOps
+except ImportError:  # pragma: no cover
+    sys.exit("forensics needs pillow and numpy:  pip install pillow numpy")
+
+
+#: Places in the 1600x1200 artwork that carry recovered or claimed text.
+#: (x0, y0, x1, y1, scale, mode, rotate, note)
+REGIONS: dict[str, tuple] = {
+    "clock":        (270, 700, 660, 1170, 3, "highpass", 0,
+                     "MOON on the red hand, TOWER on the black hand; face is mirrored"),
+    "clock-hands":  (350, 810, 460, 900, 14, "stretch", 0, "the two hand labels"),
+    "plinth":       (1295, 790, 1495, 1000, 8, "channel", 0,
+                     "13th Amendment; 'Section 1' and 'subject' are underlined"),
+    "statue-base":  (90, 1030, 250, 1075, 9, "stretch", 0, "ONLY real Bitcoin"),
+    "vertical":     (60, 600, 100, 1030, 8, "stretch", -90,
+                     "target address; PAY FOR THE FUTURE / THIS IS THE FIRST PREDICTION"),
+    "needle":       (1185, 630, 1220, 700, 14, "highpass", -90, "FOOD on the tower shaft"),
+    "statue-neck":  (110, 600, 260, 720, 9, "stretch", 0, "claimed BREATHE - unconfirmed"),
+    "floyd-chest":  (960, 340, 1100, 420, 10, "highpass", 0, "I can't BREATHE on the hoodie"),
+    "rune1":        (190, 35, 570, 120, 6, "highpass", 0, "top left, Cyrillic plaintext"),
+    "rune2":        (260, 1008, 570, 1040, 9, "highpass", 0, "'sum of two numbers'"),
+    "rune3":        (840, 835, 1000, 880, 10, "highpass", 0, "above Trump; mirrored"),
+    "rune4":        (1520, 25, 1580, 1020, 3, "highpass", -90,
+                     "right edge; '...for a black day number X'"),
+    "latin":        (1030, 1155, 1300, 1185, 9, "stretch", 0,
+                     "Esse quam niger es, sic dixit caccabus ollae"),
+}
+
+
+def _stretch(im: Image.Image, lo_pct=1.0, hi_pct=99.0) -> Image.Image:
+    a = np.asarray(im.convert("RGB")).astype(np.float32)
+    for c in range(3):
+        lo, hi = np.percentile(a[:, :, c], lo_pct), np.percentile(a[:, :, c], hi_pct)
+        a[:, :, c] = np.clip((a[:, :, c] - lo) * 255.0 / max(hi - lo, 1), 0, 255)
+    return Image.fromarray(a.astype(np.uint8))
+
+
+def _highpass(im: Image.Image, radius=5.0, amp=4.5) -> Image.Image:
+    g = im.convert("L")
+    b = g.filter(ImageFilter.GaussianBlur(radius))
+    d = np.asarray(g).astype(np.float32) - np.asarray(b).astype(np.float32)
+    return Image.fromarray(np.clip(128 - d * amp, 0, 255).astype(np.uint8))
+
+
+def _channel(im: Image.Image, ch="r") -> Image.Image:
+    """Isolate one channel - reads dark ink through translucent paint."""
+    a = np.asarray(im.convert("RGB")).astype(np.float32)
+    v = a[:, :, "rgb".index(ch)]
+    lo, hi = np.percentile(v, 3), np.percentile(v, 88)
+    return Image.fromarray(np.clip((v - lo) * 255 / max(hi - lo, 1), 0, 255).astype(np.uint8))
+
+
+def render(src: Path, box, out: Path, scale=6, mode="stretch", rotate=0,
+           channel="r", mirror=False) -> tuple[int, int]:
+    im = Image.open(src).convert("RGB").crop(box)
+    if rotate:
+        im = im.rotate(rotate, expand=True)
+    im = {"stretch": _stretch, "highpass": _highpass,
+          "channel": lambda x: _channel(x, channel)}[mode](im)
+    if mirror:
+        im = ImageOps.mirror(im)
+    im = im.resize((im.width * scale, im.height * scale), Image.LANCZOS)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    im.save(out)
+    return im.size
+
+
+def cmd_probe(args) -> int:
+    """Report whether anything is hidden below the visible layer."""
+    data = Path(args.image).read_bytes()
+    print(f"file: {args.image}  ({len(data):,} bytes)")
+    off, chunks = 8, {}
+    while off < len(data):
+        ln = struct.unpack(">I", data[off:off + 4])[0]
+        typ = data[off + 4:off + 8].decode("latin1")
+        chunks[typ] = chunks.get(typ, 0) + 1
+        if typ in ("tEXt", "iTXt", "zTXt", "eXIf"):
+            print(f"  METADATA {typ}: {data[off+8:off+8+min(ln,200)]!r}")
+        off += 12 + ln
+        if typ == "IEND":
+            break
+    print("  chunks:", ", ".join(f"{k}x{v}" for k, v in chunks.items()))
+    print(f"  trailing data after IEND: {len(data)-off} bytes")
+
+    a = np.asarray(Image.open(args.image))
+    print(f"  size {a.shape[1]}x{a.shape[0]}, {a.shape[2] if a.ndim>2 else 1} channels")
+    if a.ndim > 2 and a.shape[2] == 4:
+        u = np.unique(a[:, :, 3])
+        print(f"  alpha: {len(u)} distinct value(s)"
+              + ("  -> uniform, nothing hidden" if len(u) == 1 else "  -> VARIES, inspect"))
+    print("  LSB plane means (≈0.50 = ordinary image noise):")
+    for i, ch in enumerate("RGB"):
+        print(f"    {ch}: {(a[:,:,i] & 1).mean():.4f}")
+    return 0
+
+
+def cmd_regions(args) -> int:
+    out = Path(args.out)
+    src = Path(args.image)
+    names = args.only.split(",") if args.only else list(REGIONS)
+    for name in names:
+        if name not in REGIONS:
+            print(f"  unknown region {name!r}; known: {', '.join(REGIONS)}")
+            continue
+        x0, y0, x1, y1, scale, mode, rot, note = REGIONS[name]
+        size = render(src, (x0, y0, x1, y1), out / f"{name}.png", scale, mode, rot,
+                      args.channel, args.mirror)
+        print(f"  {name:<13} {str(size):>13}  {note}")
+    print(f"\nwritten to {out}/")
+    return 0
+
+
+def cmd_crop(args) -> int:
+    box = tuple(int(v) for v in args.box.split(","))
+    size = render(Path(args.image), box, Path(args.out), args.scale, args.mode,
+                  args.rotate, args.channel, args.mirror)
+    print(f"{args.out} {size}")
+    return 0
+
+
+def main(argv=None) -> int:
+    p = argparse.ArgumentParser(description=__doc__,
+                                formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    sp = sub.add_parser("probe", help="metadata / alpha / LSB checks")
+    sp.add_argument("image")
+    sp.set_defaults(func=cmd_probe)
+
+    sp = sub.add_parser("regions", help="render every known hiding place")
+    sp.add_argument("image")
+    sp.add_argument("-o", "--out", default="forensics_out")
+    sp.add_argument("--only", help="comma-separated subset of region names")
+    sp.add_argument("--channel", default="r", choices=list("rgb"))
+    sp.add_argument("--mirror", action="store_true")
+    sp.set_defaults(func=cmd_regions)
+
+    sp = sub.add_parser("crop", help="render an arbitrary box")
+    sp.add_argument("image")
+    sp.add_argument("box", help="x0,y0,x1,y1")
+    sp.add_argument("-o", "--out", default="crop.png")
+    sp.add_argument("-s", "--scale", type=int, default=6)
+    sp.add_argument("-m", "--mode", default="stretch",
+                    choices=("stretch", "highpass", "channel"))
+    sp.add_argument("-r", "--rotate", type=int, default=0)
+    sp.add_argument("--channel", default="r", choices=list("rgb"))
+    sp.add_argument("--mirror", action="store_true")
+    sp.set_defaults(func=cmd_crop)
+    args = p.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

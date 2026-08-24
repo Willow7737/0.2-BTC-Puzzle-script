@@ -10,13 +10,32 @@ from __future__ import annotations
 
 from .wordlist import is_valid
 
-#: Named outright in the puzzle's published hints, and valid BIP-39 words.
+#: Words located by direct inspection of the artwork (see ANALYSIS.md section 2).
+#: Each was read off the image with ``forensics.py``, not taken on trust from
+#: the published hints.
+#:   moon    - written along the red clock hand
+#:   tower   - written along the black clock hand
+#:   food    - written down the Space Needle's shaft
+#:   subject - underlined in the 13th Amendment text on the monument plinth
+#:   real    - inserted into "ONLY real Bitcoin" on the Statue's base
+#:   this    - "IN THE THIS PICTURE", "FUCK THIS SHIT", "THIS IS THE FIRST..."
+#:   black   - rune 4's "chorny den" (black day) plus the BLM text and the Latin
 TIER_A = ["moon", "tower", "food", "this", "subject", "real", "black"]
 
-#: Prominent rendered text in the artwork.
-#: "BRAVE NEW WORLD", "Order and stability", "ONLY real Bitcoin",
-#: "FIND THE SEED PHRASE IN THIS PICTURE".
-TIER_B = ["brave", "world", "order", "only", "seed", "phrase", "picture", "find"]
+#: Prominent rendered text, also read directly off the artwork.
+#:   brave/world - "WELCOME TO THE BRAVE NEW WORLD" (the whitepaper calligram)
+#:   order       - "Order and stability" across the top
+#:   only        - "ONLY real Bitcoin" on the Statue's base
+#:   first/future- "PAY FOR THE FUTURE. THIS IS THE FIRST PREDICTION."
+#:   seed/phrase/picture/find - "FIND THE SEED PHRASE IN THE THIS PICTURE"
+TIER_B = ["brave", "world", "order", "only", "first", "future",
+          "seed", "phrase", "picture", "find"]
+
+#: The 13 words with the strongest direct evidence - tier A plus the six
+#: tier-B words that are rendered as display text rather than instructions.
+#: This is the pool worth exhausting first; P(13,12) is about 4 days on four
+#: cores, or half that on the BIP-44 fast path.
+BEST_13 = TIER_A + ["only", "first", "future", "brave", "world", "order"]
 
 #: Objects drawn in the image, in rough order of visual prominence.
 TIER_C = [
@@ -36,7 +55,8 @@ TIER_D = [
 #: being part of the real answer would rule out a plain BIP-39 mnemonic and
 #: point at a free-form passphrase instead - see ANALYSIS.md.
 NOT_IN_BIP39 = [
-    "breathe",    # "I can't BREATHE" - the single most-cited hint
+    "breathe",    # printed on Floyd's hoodie; claimed on the Statue's neck too,
+                  # which could not be confirmed at 1600x1200
     "tuesday",    # rune 3, Bill Cipher
     "statue", "justice", "lives", "fist", "protest", "monument", "needle",
     "vaccine", "syringe", "money", "chart", "graph", "bitcoin", "new",

@@ -66,7 +66,88 @@ Seven words. A 12-word mnemonic needs five more.
 
 ---
 
-## 2. Why the original script could not have worked
+## 2. What the image actually contains
+
+Everything below was read off the artwork with `forensics.py`, not taken from
+the published hints. Reproduce any of it with:
+
+```console
+$ ./forensics.py regions puzzle.png -o out/
+```
+
+### Steganography is ruled out
+
+```console
+$ ./forensics.py probe puzzle.png
+  chunks: IHDRx1, sRGBx1, sBITx1, IDATx291, IENDx1
+  trailing data after IEND: 0 bytes
+  alpha: 1 distinct value(s)  -> uniform, nothing hidden
+  LSB plane means: R 0.4979  G 0.4995  B 0.5053
+```
+
+No text chunks, no appended archive, a completely uniform alpha channel, and
+LSB planes sitting at ordinary image-noise levels. Nothing is hidden *below*
+the pixels. The words are **drawn into the artwork at low contrast** — so the
+right tools are tonal (contrast stretch, high-pass, channel isolation), not
+bit-level. That is why `forensics.py` offers those three operations.
+
+### Words recovered by direct inspection
+
+| Word | Where it is | How it was read |
+|---|---|---|
+| `moon` | along the **red** clock hand | high-pass, x14 |
+| `tower` | along the **black** clock hand | high-pass, x14 |
+| `food` | down the **Space Needle's shaft**, rotated 90° | high-pass + rotate |
+| `real` | inserted into "ONLY **real** Bitcoin" on the Statue's base | stretch |
+| `only` | same inscription | stretch |
+| `subject` | **underlined** in the monument plinth text | red-channel isolation |
+| `first`, `future` | "PAY FOR THE **FUTURE**. THIS IS THE **FIRST** PREDICTION." | stretch + rotate |
+| `brave`, `world` | "WELCOME TO THE **BRAVE NEW WORLD**" calligram | plainly visible |
+| `order` | "Order and stability" banner | plainly visible |
+| `this` | "IN THE **THIS** PICTURE", "FUCK **THIS** SHIT", "**THIS** IS THE FIRST…" | plainly visible |
+| `black` | rune 4's *chorny den*, the BLM text, and the Latin kettle proverb | hint + text |
+
+### The monument plinth: a word paired with a number
+
+The toppled statue's plinth is not decoration. Under the red graffiti it
+carries the **Thirteenth Amendment, Section 1**, and the red paint is
+translucent — isolating the red channel reads the ink straight through it:
+
+> Section **1**
+> Neither slavery nor involuntary servitude, except as a punishment for crime
+> whereof the party shall have been duly convicted, shall exist within the
+> United States, or any place **subject** to their jurisdiction.
+
+Exactly **two** things in that block are underlined: the word **`subject`**,
+and the numeral **`1`** in "Section 1". Everything else is plain.
+
+That is a seed word deliberately paired with a number — and it is the same
+shape as the rest of the puzzle's structure:
+
+- the clock carries two words **on hands that point at numbers**;
+- rune 2 translates to "**sum of two numbers**";
+- rune 4 ends "…for a black day **number X**".
+
+The most economical reading of the whole puzzle is that **each word is paired
+with an index giving its position in the phrase.** If that is right there is no
+search to run at all — the phrase is assembled, not brute-forced. This is the
+single most valuable thing left to nail down, and it is why decoding the runes
+beats buying CPU.
+
+### What could not be confirmed
+
+- **`breathe` on the Statue's neck.** It is plainly printed on Floyd's hoodie
+  ("I can't BREATHE"), but at 1600x1200 the Statue's neck shows only shading,
+  no legible lettering. A higher-resolution original may settle it. `breathe`
+  is not a BIP-39 word either way — see section 1.
+- **Which numerals the clock hands point at.** The face is *mirrored* and
+  rotated (the numerals run clockwise but 12 sits at bearing 287°), only eight
+  of the twelve numerals are drawn — 4, 5, 6, 7 are covered by the Great Seal —
+  and the Seal's line work contaminates any automated ridge measurement. The
+  measured hand bearings land 3–13° off the nearest numeral, which is not
+  clean enough to call.
+
+## 3. Why the original script could not have worked
 
 The script this repository shipped with did:
 
@@ -124,7 +205,7 @@ words is a tractable search; sixteen is not.
 
 ---
 
-## 3. What this toolkit does instead
+## 4. What this toolkit does instead
 
 | Problem | Fix | Measured effect |
 |---|---|---|
@@ -151,7 +232,7 @@ keeps it off 15 of every 16 candidates.
 
 ---
 
-## 4. Recommended search order
+## 5. Recommended search order
 
 Ranked by probability-per-CPU-hour.
 
@@ -189,33 +270,52 @@ pushes the run past a year.
 
 ---
 
-## 5. Coverage so far
+## 6. Coverage so far
 
-A bounded run against the highest-value pool, to demonstrate the engine and
-establish a baseline:
+Two runs, both against the target's HASH160, both checkpointed and resumable.
+
+**Run 1 — breadth.** Twelve-word pool, four derivation schemes, five address
+indices each (26 addresses per seed):
 
 ```
-pool     moon tower food this subject real black brave world order only find
-mode     bip39, 4 schemes (bip44, bip32-legacy, bip32-root, master)
-result   15,505,408 orderings tested (968,858 checksum-valid) in 15.0 minutes
-         385 of 11,880 work units = 3.2% of this pool
-         no match
+result   15,505,408 orderings (968,858 checksum-valid) in 15.0 minutes
+         385 of 11,880 units = 3.2% of that pool, no match
+         17,228 orderings/sec on four cores
 ```
 
-Sustained 17,228 orderings/sec on four cores. Completing this one pool takes
-about 7.5 hours; the checkpoint means it can be resumed in slices. Nothing is
-ruled out yet - 3.2% of one candidate pool is a baseline, not a result.
+**Run 2 — depth.** The 13 words recovered in section 2, on the BIP-44 fast
+path (`m/44'/0'/0'/0/0` only). Halving the derivation work doubles throughput,
+which is the right trade when only a small fraction of the space is reachable
+anyway — better to cover more of the single most likely path than less of six:
 
-## 6. Open questions
+```
+pool     moon tower food subject real this black only first future brave world order
+space    P(13,12) = 6,227,020,800 orderings, 389,188,800 checksum-valid
+rate     ~35,000 orderings/sec on four cores  (2x run 1)
+full     ~2.1 days; resumable via runs/img13.json
+```
+
+Neither run has found the key. To be blunt about what that means: a few
+percent of one candidate pool on one derivation path is a baseline, not a
+result, and it rules almost nothing out.
+
+## 7. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
   accepts 15/18/21/24, and brainwallet mode accepts any length. A 24-word
   phrase is unsearchable by permutation and would need the word *order* to be
   determined by the image.
-- **What do the runes encode?** The "sum of two numbers" / "Tuesday" /
-  "number X" cluster is the strongest untapped signal in the puzzle. If they
-  give positions, the search collapses from intractable to trivial. Decoding
-  them is worth more than any amount of brute force.
+- **What do the runes encode?** This is now the top priority, not a
+  side-note. Section 2 shows the plinth pairing a word with a number, and
+  three of the four runes talk about numbers ("sum of two numbers",
+  "number X", a weekday). Two runes have published Cyrillic plaintexts, which
+  makes them **cribs**: aligning glyphs against the known text should recover
+  the substitution alphabet, and that alphabet then decodes the parts nobody
+  has read — including whatever "number X" is. Rune 3 is written **mirrored**,
+  so flip it before transcribing. This is worth more than any amount of CPU.
+- **Which numerals do the clock hands point at?** Blocked on resolution and on
+  the Great Seal overlapping the dial. A cleaner scan of the original, or the
+  artist's source file, would likely settle it immediately.
 - **Is there a BIP-39 passphrase?** `--passphrase` is supported. If the image
   hides a 13th-word passphrase, every phrase-only search misses.
 - **Is the wallet even on the first address?** The schemes here scan five
@@ -226,7 +326,7 @@ ruled out yet - 3.2% of one candidate pool is a baseline, not a result.
 
 ---
 
-## 7. Verification
+## 8. Verification
 
 Every cryptographic primitive is pinned to a published test vector, and the
 search engine is tested against planted targets it must find:
