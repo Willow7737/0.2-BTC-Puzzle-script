@@ -8,6 +8,7 @@ itself is exercised end to end against a planted target.
 from __future__ import annotations
 
 import itertools
+import os
 import unittest
 
 from puzzle import bip39, brainwallet, candidates, derive, feasibility, keys
@@ -269,10 +270,93 @@ class TestCandidates(unittest.TestCase):
         valid, _ = validate(candidates.NOT_IN_BIP39)
         self.assertEqual(valid, [])
 
+    def test_best_13_is_the_documented_pool(self):
+        """The 13 words recovered by direct inspection (ANALYSIS.md s2)."""
+        self.assertEqual(len(candidates.BEST_13), 13)
+        self.assertEqual(len(set(candidates.BEST_13)), 13, "no duplicates")
+        valid, invalid = validate(candidates.BEST_13)
+        self.assertEqual(invalid, [])
+        for w in ("moon", "tower", "food", "subject", "real", "this", "black"):
+            self.assertIn(w, candidates.BEST_13)
+
     def test_build_pool_dedupes_and_orders(self):
         pool = candidates.build_pool("AB")
         self.assertEqual(len(pool), len(set(pool)))
         self.assertEqual(pool[:3], ["moon", "tower", "food"])
+
+
+class TestForensicsRegions(unittest.TestCase):
+    """The recorded hiding places must stay inside the 1600x1200 artwork."""
+
+    def test_regions_are_wellformed(self):
+        import forensics
+        for name, spec in forensics.REGIONS.items():
+            x0, y0, x1, y1, scale, mode, rot, note = spec
+            self.assertLess(x0, x1, name)
+            self.assertLess(y0, y1, name)
+            self.assertGreaterEqual(x0, 0, name)
+            self.assertGreaterEqual(y0, 0, name)
+            self.assertLessEqual(x1, 1600, name)
+            self.assertLessEqual(y1, 1200, name)
+            self.assertIn(mode, ("stretch", "highpass", "channel"), name)
+            self.assertIn(rot, (0, 90, -90, 180), name)
+            self.assertTrue(note, f"{name} needs a note saying what is there")
+
+    def test_key_regions_present(self):
+        import forensics
+        for name in ("clock", "plinth", "needle", "statue-base", "vertical"):
+            self.assertIn(name, forensics.REGIONS)
+
+
+class TestRuneAnalysis(unittest.TestCase):
+    """Rune-4 crib verification. Skipped unless the artwork is available."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def setUp(self):
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}; "
+                          "set PUZZLE_IMAGE to run this test")
+
+    def test_crib_word_lengths_match(self):
+        from puzzle.runes import verify_rune4
+        r = verify_rune4(self.IMAGE)
+        n = len(r["crib_word_lengths"])
+        self.assertEqual(r["word_lengths"][:n], r["crib_word_lengths"])
+
+    def test_repeated_letters_look_alike(self):
+        """What makes the alignment more than a coincidence of counts."""
+        from puzzle.runes import verify_rune4
+        r = verify_rune4(self.IMAGE)
+        self.assertLess(r["mean_intra_letter_distance"],
+                        r["mean_all_pairs_distance"] * 0.6)
+
+    def test_trailing_glyph_is_not_a_letter(self):
+        """'number X' is a placeholder symbol, not a recoverable digit."""
+        from puzzle.runes import verify_rune4
+        r = verify_rune4(self.IMAGE)
+        chars = [t for t in r["tail"] if t[2] is not None]
+        self.assertTrue(chars, "expected one non-solid trailing glyph")
+        for _, _, d in chars:
+            self.assertGreater(d, r["mean_intra_letter_distance"])
+
+
+class TestRuneConstants(unittest.TestCase):
+    """Checks that need no image."""
+
+    def test_crib_is_consistent_with_separator_count(self):
+        from puzzle import runes
+        words = runes.RUNE4_CRIB.split()
+        self.assertEqual(len(words), 7)
+        self.assertEqual(sum(len(w) for w in words), 41)
+        # 7 separators: six between the seven crib words, one before "number X"
+        self.assertEqual(len(runes.RUNE4_SEPARATORS), 7)
+
+    def test_box_inside_artwork(self):
+        from puzzle import runes
+        x0, y0, x1, y1 = runes.RUNE4_BOX
+        self.assertTrue(0 <= x0 < x1 <= 1600)
+        self.assertTrue(0 <= y0 < y1 <= 1200)
 
 
 class TestSearchEngine(unittest.TestCase):

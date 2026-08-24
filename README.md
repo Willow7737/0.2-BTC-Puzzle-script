@@ -7,10 +7,13 @@ a seed phrase hidden in an image, unlocking
 
 **`1KfZGvwZxsvSmemoCmEV75uqcNzYBHjkHZ`** — 0.20107284 BTC, posted 2020-05-10, still unsolved.
 
-> **Read [ANALYSIS.md](ANALYSIS.md) before running anything.** Two of the
-> most-cited hints (`breathe`, `tuesday`) are **not BIP-39 words**, and the
-> 36-word list this repo originally shipped would take **625,757 years** to
-> search. Both facts change what you should actually run.
+> **Read [ANALYSIS.md](ANALYSIS.md) before running anything.** Three things
+> change what you should actually run:
+> 1. Two of the most-cited hints (`breathe`, `tuesday`) are **not BIP-39 words**.
+> 2. The 36-word list this repo originally shipped would take **625,757 years**.
+> 3. Nothing is hidden *under* the pixels — no metadata, uniform alpha, clean
+>    LSB planes. The words are **drawn into the artwork at low contrast**, and
+>    `forensics.py` recovers them.
 
 ---
 
@@ -102,8 +105,48 @@ Useful flags:
 | `--schemes all` | test all six derivation schemes |
 | `--passphrase X` | BIP-39 passphrase (the "13th word") |
 | `--length 15` | non-12-word mnemonics |
+| `--depth 1` | scan one address index per scheme — roughly doubles throughput |
 | `--max-seconds N` | bounded run, reports coverage |
 | `--checkpoint F` | resumable |
+
+### `forensics.py` — read the words off the image
+
+The seed words are not steganography; they are drawn at low contrast on clock
+hands, tower shafts and monument plinths. Three tonal operations recover them:
+contrast stretch, high-pass, and single-channel isolation (which reads dark
+ink straight through translucent paint).
+
+```console
+$ ./forensics.py probe puzzle.png            # rules steganography in or out
+  alpha: 1 distinct value(s)  -> uniform, nothing hidden
+  LSB plane means: R 0.4979  G 0.4995  B 0.5053
+
+$ ./forensics.py regions puzzle.png -o out/  # every known hiding place
+  clock          MOON on the red hand, TOWER on the black hand; face is mirrored
+  plinth         13th Amendment; 'Section 1' and 'subject' are underlined
+  needle         FOOD on the tower shaft
+  statue-base    ONLY real Bitcoin
+  vertical       PAY FOR THE FUTURE / THIS IS THE FIRST PREDICTION
+
+$ ./forensics.py runes puzzle.png            # verify rune 4 against its crib
+  word lengths from image : [5, 11, 8, 2, 6, 4, 5]
+  word lengths from crib  : [5, 11, 8, 2, 6, 4, 5]  -> MATCH
+  recovered alphabet: ЁАБВДЕЗИЙКМНОРСТФЧШЫЬ (21 letters)
+
+$ ./forensics.py crop puzzle.png 1295,790,1495,1000 -m channel --channel r
+```
+
+Rune 4 segments into 50 glyphs whose word lengths match the published Russian
+plaintext exactly, and glyphs the crib calls the same letter are far more
+alike (mean distance 27.2) than random pairs (66.7) — so the translation is
+confirmed and a 21-letter cipher alphabet falls out. Its trailing "number X"
+is a **placeholder asterisk, not a digit**, which closes what looked like the
+puzzle's best numeric lead.
+
+The plinth is the find that matters: under the graffiti it carries the
+**13th Amendment, Section 1**, with exactly two things underlined — the word
+**`subject`** and the numeral **`1`**. A seed word paired with a number. See
+[ANALYSIS.md §2](ANALYSIS.md#2-what-the-image-actually-contains).
 
 ### `bench` / `selftest`
 
@@ -114,7 +157,7 @@ bip39 candidate :          278 /sec/core   (PBKDF2-2048 + 4 schemes)
 brain candidate :       18,154 /sec/core
 
 $ ./solve.py selftest
-Ran 41 tests in 0.974s
+Ran 49 tests in 1.326s
 OK
 ```
 
@@ -127,10 +170,14 @@ is what decides whether a run finishes.
 
 | Tier | Words | Basis |
 |---|---|---|
-| **A** (7) | moon tower food this subject real black | named in the published hints, valid BIP-39 |
-| **B** (8) | brave world order only seed phrase picture find | prominent rendered text in the artwork |
+| **A** (7) | moon tower food this subject real black | read directly off the artwork |
+| **B** (10) | brave world order only first future seed phrase picture find | prominent rendered text |
 | **C** (19) | flag mask face camera eye pyramid clock … | objects drawn in the image |
 | **D** (20) | coin digital public private key network trust … | whitepaper text and rune concepts |
+
+`candidates.BEST_13` is tier A plus the six tier-B display words — the pool
+with the strongest evidence, and the one worth exhausting first
+(~2 days on four cores via the BIP-44 fast path).
 
 `puzzle/candidates.py` also lists `NOT_IN_BIP39` — hint words such as
 `breathe`, `tuesday`, `statue` and `justice` that cannot appear in a mnemonic.
@@ -158,7 +205,8 @@ word genuinely is not.
 ## Layout
 
 ```
-solve.py                 CLI
+solve.py                 search CLI
+forensics.py             image forensics CLI
 puzzle/wordlist.py       BIP-39 wordlist, integrity check, validation
 puzzle/bip39.py          checksum filter, mnemonic -> seed
 puzzle/keys.py           secp256k1, HASH160, Base58Check
@@ -168,8 +216,9 @@ puzzle/brainwallet.py    free-form passphrase mode
 puzzle/search.py         parallel, checkpointed search engine
 puzzle/feasibility.py    search-space arithmetic and time estimates
 puzzle/candidates.py     curated candidate tiers
+puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    41 tests: published vectors + planted targets
+tests/test_vectors.py    49 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 

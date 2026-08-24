@@ -9,7 +9,7 @@ answer, so every scheme below is tested for each candidate seed.
 from __future__ import annotations
 
 import hmac
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from hashlib import sha512
 from typing import Iterator, Sequence
 
@@ -115,14 +115,24 @@ def iter_hash160s(seed: bytes, schemes: Sequence[Scheme]) -> Iterator[tuple[byte
             continue
 
 
-def resolve_schemes(names: Sequence[str]) -> list[Scheme]:
-    """Map scheme names (or ``all``) to Scheme objects."""
+def resolve_schemes(names: Sequence[str], depth: int | None = None) -> list[Scheme]:
+    """Map scheme names (or ``all``) to Scheme objects.
+
+    ``depth`` overrides how many address indices each scheme scans. Dropping
+    from 5 to 1 roughly doubles throughput, because the EC work after PBKDF2
+    is comparable in cost to PBKDF2 itself - worth it when trading breadth for
+    coverage of the single most likely path.
+    """
     if not names or "all" in names:
-        return list(SCHEMES)
-    missing = [n for n in names if n not in SCHEMES_BY_NAME]
-    if missing:
-        raise ValueError(
-            f"unknown scheme(s): {', '.join(missing)}; "
-            f"available: {', '.join(SCHEMES_BY_NAME)}, all"
-        )
-    return [SCHEMES_BY_NAME[n] for n in names]
+        chosen = list(SCHEMES)
+    else:
+        missing = [n for n in names if n not in SCHEMES_BY_NAME]
+        if missing:
+            raise ValueError(
+                f"unknown scheme(s): {', '.join(missing)}; "
+                f"available: {', '.join(SCHEMES_BY_NAME)}, all"
+            )
+        chosen = [SCHEMES_BY_NAME[n] for n in names]
+    if depth is not None:
+        chosen = [replace(s, depth=max(1, depth)) for s in chosen]
+    return chosen

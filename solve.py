@@ -251,8 +251,9 @@ def cmd_search(args) -> int:
 
     cfg = SearchConfig(
         pool=pool, target_hash160=target, phrase_len=args.length, mode=args.mode,
-        schemes=tuple(resolve_schemes(args.schemes.split(",")) if args.schemes
-                      else resolve_schemes(list(DEFAULT_SCHEMES))),
+        schemes=tuple(resolve_schemes(
+            args.schemes.split(",") if args.schemes else list(DEFAULT_SCHEMES),
+            depth=args.depth)),
         passphrase=args.passphrase, pinned=pinned, required=required,
         joiners=tuple(args.joiners.split(",")), casings=tuple(args.casings.split(",")),
         workers=args.workers, prefix_len=args.prefix_len, limit=args.limit,
@@ -360,6 +361,9 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--length", type=int, default=12, help="mnemonic length")
     sp.add_argument("--mode", choices=("bip39", "brain"), default="bip39")
     sp.add_argument("--schemes", help=f"comma list or 'all'; default: {','.join(DEFAULT_SCHEMES)}")
+    sp.add_argument("--depth", type=int,
+                    help="address indices to scan per scheme (default 5). "
+                         "--depth 1 roughly doubles throughput")
     sp.add_argument("--passphrase", default="", help="BIP-39 passphrase (13th word)")
     sp.add_argument("--pin", help="fix words to positions, e.g. 0=moon,11=black")
     sp.add_argument("--require", help="words that must appear somewhere")
