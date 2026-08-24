@@ -349,6 +349,24 @@ class TestSearchEngine(unittest.TestCase):
         hits, _ = run_search(cfg, Checkpoint(None))
         self.assertEqual(hits, [])
 
+    def test_truncated_units_are_not_checkpointed(self):
+        """A unit cut short by --limit must be re-searched on resume.
+
+        Marking it done would silently leave a hole in the covered space,
+        which is the worst possible failure mode for a multi-day run.
+        """
+        pool = "moon tower food real black subject this time world only proof find".split()
+        cfg = SearchConfig(pool=pool, target_hash160=bytes(20), workers=2,
+                           prefix_len=1, limit=4_000,
+                           schemes=tuple(derive.resolve_schemes(["bip44"])))
+        ckpt = Checkpoint(None)
+        hits, progress = run_search(cfg, ckpt)
+        self.assertEqual(hits, [])
+        self.assertGreater(progress.units_truncated, 0,
+                           "fixture should truncate at least one unit")
+        self.assertEqual(len(ckpt.done), progress.units_done)
+        self.assertNotIn(0, ckpt.done, "unit 0 was cut short and must not be marked done")
+
     def test_checkpoint_resume_skips_completed_units(self):
         pool = "moon tower food real black subject this world time proof only find".split()
         cfg = SearchConfig(pool=pool, target_hash160=bytes(20), workers=1, prefix_len=1)

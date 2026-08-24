@@ -290,6 +290,9 @@ def cmd_search(args) -> int:
     print(f"\ntested {progress.tested:,} orderings "
           f"({progress.checksum_valid:,} checksum-valid) in {feasibility.humanize(elapsed)}")
     print(f"units completed: {progress.units_done}/{total_units}")
+    if progress.units_truncated:
+        print(f"units cut short : {progress.units_truncated} "
+              f"(not checkpointed; they will be re-searched on resume)")
 
     if hits:
         print("\n" + "=" * 70)

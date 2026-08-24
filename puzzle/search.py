@@ -77,6 +77,7 @@ class Progress:
     tested: int = 0
     checksum_valid: int = 0
     units_done: int = 0
+    units_truncated: int = 0     # stopped early on --limit/--max-seconds
 
 
 # --- unit enumeration -------------------------------------------------------
@@ -140,6 +141,7 @@ def _run_unit_bip39(cfg: SearchConfig, subset, prefix) -> tuple[int, int, list[H
     check = checksum_ok_12 if cfg.phrase_len == 12 else checksum_ok
     unit_limit = cfg.unit_limit
     deadline = cfg.deadline
+    truncated = False
 
     for tail in itertools.permutations(rest, len(rest)):
         order = prefix + tail
@@ -148,8 +150,10 @@ def _run_unit_bip39(cfg: SearchConfig, subset, prefix) -> tuple[int, int, list[H
         # --limit still bites, cheap enough to vanish next to the checksum work.
         if not tested & 0x3FF:
             if unit_limit and tested >= unit_limit:
+                truncated = True
                 break
             if deadline and time.time() >= deadline:
+                truncated = True
                 break
         placed = order if plain else tuple(_positional(order, cfg))
         indices = [idx[w] for w in placed]
@@ -164,7 +168,7 @@ def _run_unit_bip39(cfg: SearchConfig, subset, prefix) -> tuple[int, int, list[H
                                 f"passphrase={passphrase!r}"))
         if hits:
             break  # answer found; the rest of this unit is wasted work
-    return tested, valid, hits
+    return tested, valid, hits, not truncated
 
 
 def _run_unit_brain(cfg: SearchConfig, subset, prefix) -> tuple[int, int, list[Hit]]:
@@ -177,14 +181,17 @@ def _run_unit_brain(cfg: SearchConfig, subset, prefix) -> tuple[int, int, list[H
     hits: list[Hit] = []
     unit_limit = cfg.unit_limit
     deadline = cfg.deadline
+    truncated = False
     for tail in itertools.permutations(rest, len(rest)):
         order = prefix + tail
         placed = order if not cfg.pinned else tuple(_positional(order, cfg))
         tested += 1
         if not tested & 0x3FF:
             if unit_limit and tested >= unit_limit:
+                truncated = True
                 break
             if deadline and time.time() >= deadline:
+                truncated = True
                 break
         for phrase in brainwallet.variants(placed, cfg.joiners, cfg.casings):
             for h160, label in brainwallet.iter_hash160s(phrase):
@@ -192,17 +199,22 @@ def _run_unit_brain(cfg: SearchConfig, subset, prefix) -> tuple[int, int, list[H
                     hits.append(Hit(phrase, f"brainwallet-{label}", 0))
         if hits:
             break  # answer found; the rest of this unit is wasted work
-    return tested, tested, hits
+    return tested, tested, hits, not truncated
 
 
-def _run_unit(args) -> tuple[int, int, int, list[dict]]:
-    """Worker entry point: returns ``(unit_id, tested, valid, hits)``."""
+def _run_unit(args) -> tuple[int, int, int, list[dict], bool]:
+    """Worker entry point: ``(unit_id, tested, valid, hits, complete)``.
+
+    ``complete`` is False when the unit stopped early on --limit or
+    --max-seconds. Only complete units may be checkpointed, otherwise a
+    resumed run would skip the unsearched remainder of that unit.
+    """
     unit_id, subset, prefix = args
     cfg = _WORKER_CFG
     assert cfg is not None
     runner = _run_unit_brain if cfg.mode == "brain" else _run_unit_bip39
-    tested, valid, hits = runner(cfg, subset, prefix)
-    return unit_id, tested, valid, [h.to_dict() for h in hits]
+    tested, valid, hits, complete = runner(cfg, subset, prefix)
+    return unit_id, tested, valid, [h.to_dict() for h in hits], complete
 
 
 # --- checkpointing ----------------------------------------------------------
@@ -261,13 +273,16 @@ def run_search(cfg: SearchConfig, checkpoint: Checkpoint | None = None,
     ctx = mp.get_context("fork" if hasattr(os, "fork") else "spawn")
     with ctx.Pool(workers, initializer=_init_worker, initargs=(cfg,)) as pool:
         try:
-            for unit_id, tested, valid, raw_hits in pool.imap_unordered(
+            for unit_id, tested, valid, raw_hits, complete in pool.imap_unordered(
                 _run_unit, pending, chunksize=1
             ):
                 progress.tested += tested
                 progress.checksum_valid += valid
-                progress.units_done += 1
-                checkpoint.done.add(unit_id)
+                if complete:
+                    progress.units_done += 1
+                    checkpoint.done.add(unit_id)
+                else:
+                    progress.units_truncated += 1
                 for h in raw_hits:
                     hits.append(Hit(**h))
 
