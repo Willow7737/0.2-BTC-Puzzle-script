@@ -1,0 +1,26 @@
+# Candidate seed words for the 0.2 BTC puzzle.
+#
+# Format: comma- or whitespace-separated; '#' starts a comment.
+# Check any list before searching:   ./solve.py validate --words seedwords.txt
+# Size any list before searching:    ./solve.py estimate --words seedwords.txt
+#
+# WARNING: all 36 words below are valid BIP-39, but searching them as one pool
+# is P(36,12) = 6e17 orderings = ~625,757 years on four cores. Use a subset.
+# See ANALYSIS.md section 2. Twelve words is 7.5 hours; sixteen is two years.
+#
+# Tier A - named in the published hints (start here):
+moon, tower, food, this, subject, real, black,
+#
+# Tier B - prominent rendered text in the artwork:
+brave, world, order, only, picture, first, future, time,
+#
+# Tier C - objects drawn in the image:
+flag, mask, face, camera, eye, pyramid, hand, neck, chest, virus, sign, state,
+#
+# Tier D - whitepaper text and rune concepts:
+coin, digital, proof, win, day, major, country, home, weapon, twenty
+#
+# NOT usable in BIP-39 mode - these are NOT in the wordlist:
+#   breathe, tuesday, statue, justice, lives, fist, bitcoin, new, sum
+# If you believe any of them belongs in the answer, the phrase is not a
+# BIP-39 mnemonic; use --mode brain instead.

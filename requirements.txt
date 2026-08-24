@@ -1,0 +1,8 @@
+# All optional. The toolkit runs on the Python standard library alone.
+
+# ~50x faster secp256k1 (libsecp256k1 bindings). Strongly recommended.
+coincurve>=18.0.0
+
+# Only needed to re-run the independent cross-check in ANALYSIS.md section 6.
+# mnemonic>=0.20
+# bip32>=3.4
