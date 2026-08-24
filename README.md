@@ -114,7 +114,7 @@ bip39 candidate :          278 /sec/core   (PBKDF2-2048 + 4 schemes)
 brain candidate :       18,154 /sec/core
 
 $ ./solve.py selftest
-Ran 40 tests in 0.499s
+Ran 41 tests in 0.974s
 OK
 ```
 
@@ -169,7 +169,7 @@ puzzle/search.py         parallel, checkpointed search engine
 puzzle/feasibility.py    search-space arithmetic and time estimates
 puzzle/candidates.py     curated candidate tiers
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    40 tests: published vectors + planted targets
+tests/test_vectors.py    41 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 
@@ -200,7 +200,7 @@ worth starting — so you spend CPU only where it can pay off.
 The best available lead is not more compute. It is decoding what the runes
 mean: three of the four refer to numbers or ordinals, and if they encode word
 *positions*, the search collapses from intractable to trivial. See
-[ANALYSIS.md §5](ANALYSIS.md#5-open-questions).
+[ANALYSIS.md §6](ANALYSIS.md#6-open-questions).
 
 ## Safety
 

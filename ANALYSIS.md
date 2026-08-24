@@ -189,7 +189,24 @@ pushes the run past a year.
 
 ---
 
-## 5. Open questions
+## 5. Coverage so far
+
+A bounded run against the highest-value pool, to demonstrate the engine and
+establish a baseline:
+
+```
+pool     moon tower food this subject real black brave world order only find
+mode     bip39, 4 schemes (bip44, bip32-legacy, bip32-root, master)
+result   15,505,408 orderings tested (968,858 checksum-valid) in 15.0 minutes
+         385 of 11,880 work units = 3.2% of this pool
+         no match
+```
+
+Sustained 17,228 orderings/sec on four cores. Completing this one pool takes
+about 7.5 hours; the checkpoint means it can be resumed in slices. Nothing is
+ruled out yet - 3.2% of one candidate pool is a baseline, not a result.
+
+## 6. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
   accepts 15/18/21/24, and brainwallet mode accepts any length. A 24-word
@@ -209,14 +226,14 @@ pushes the run past a year.
 
 ---
 
-## 6. Verification
+## 7. Verification
 
 Every cryptographic primitive is pinned to a published test vector, and the
 search engine is tested against planted targets it must find:
 
 ```console
 $ ./solve.py selftest
-Ran 40 tests in 0.499s
+Ran 41 tests in 0.974s
 OK
 ```
 
