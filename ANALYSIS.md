@@ -689,9 +689,26 @@ brainwallet to six words; `BEST_12` as an Electrum seed.
 
 **What would change the picture,** in descending order of value:
 
-1. **A higher-resolution original.** Runes 1 and 2, the clock hand bearings
-   and the claimed neck text are all blocked on resolution, not on method —
-   the same code reads rune 4 cleanly.
+1. ~~**A higher-resolution original.**~~ **Closed — no better file exists.**
+   Three independent sources serve byte-identical content
+   (`d0b04378…`, 2,383,395 bytes, 1600×1200): privatekeys.pw,
+   **`i.redd.it/n1x7g8ceaur51.png`**, and the `HomelessPhD/BLM_0.2BTC`
+   repository. The middle one settles it — Reddit serves the *original upload*
+   from i.redd.it and puts downscaled variants on preview.redd.it, so
+   byte-identical content there means 1600×1200 is what was published. The
+   BitcoinTalk thread links only to that repository, which holds the same
+   bytes again.
+
+   And the file is **not** a downscale of something larger: edge runs average
+   1.61 px with **54.5% single-pixel edges** (downscaling smears every edge
+   across two or more), and spectral energy persists to Nyquist with a
+   tail/mid ratio of **0.526** (a downscale collapses well below ~0.3). The
+   published raster is at or near native rendering resolution.
+
+   This is worse news than it sounds. Runes 1 and 2, the clock bearings and
+   the claimed neck text are limited by **the artwork as published**, not by a
+   poor scan — so no amount of hunting for a better copy will unblock them.
+   Only the artist's own source file could.
 2. **A fourth number-bearing mechanism.** The capacity bound says one *must*
    exist if the position reading is right. Three attempts to find one have
    failed.

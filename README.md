@@ -229,10 +229,20 @@ non-BIP-39 members — so this is discriminating, not merely unlucky.
 The honest classification is that the puzzle is **underdetermined by its
 artwork** — what can be recovered does not determine a phrase. Three positions
 are established, the mechanism caps at four, and twenty-four are needed. What
-would change that is a **higher-resolution original** (runes 1–2, the hand
-bearings and the claimed neck text are all blocked on resolution, not method),
-or a fourth number-bearing mechanism. **More CPU will not**: the engine
-exhausted 479M orderings in 33 minutes and has never been the constraint.
+would change that is a fourth number-bearing mechanism, which the capacity
+bound says must exist if the position reading is right.
+
+**A higher-resolution original does not exist.** privatekeys.pw,
+`i.redd.it/n1x7g8ceaur51.png` and the `HomelessPhD/BLM_0.2BTC` repository all
+serve byte-identical content (`d0b04378…`, 1600×1200) — and i.redd.it is
+Reddit's *original-upload* endpoint, so that is the published file. Forensics
+say it is near-native, not a downscale: 54.5% single-pixel edges and spectral
+energy persisting to Nyquist (tail/mid 0.526). So runes 1–2, the clock
+bearings and the claimed neck text are limited by the artwork itself; only the
+artist's source file could unblock them.
+
+**More CPU will not help either**: the engine exhausted 479M orderings in 33
+minutes and has never been the constraint.
 
 That gives a **capacity bound**: the bearing mechanism needs the object to
 *be* a clock hand, and there are exactly three. Plus one explicit numeral

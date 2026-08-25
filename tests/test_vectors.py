@@ -348,6 +348,35 @@ class TestForensicsRegions(unittest.TestCase):
             self.assertIn(rot, (0, 90, -90, 180), name)
             self.assertTrue(note, f"{name} needs a note saying what is there")
 
+    def test_provenance_records_a_single_original(self):
+        """Three sources, byte-identical - there is no better file."""
+        import forensics
+        p = forensics.PROVENANCE
+        self.assertEqual(p["size"], (1600, 1200))
+        self.assertEqual(len(p["sha256"]), 64)
+        self.assertGreaterEqual(len(p["identical_sources"]), 3)
+        self.assertIn("i.redd.it/n1x7g8ceaur51.png", p["identical_sources"])
+
+    def test_artwork_is_not_a_downscale(self):
+        """Sharp edges and energy to Nyquist: near-native resolution."""
+        import forensics
+        p = forensics.PROVENANCE
+        self.assertFalse(p["downscaled_from_larger"])
+        self.assertLess(p["edge_run_mean_px"], 2.0)
+        self.assertGreater(p["single_pixel_edge_share"], 0.5)
+        self.assertGreater(p["spectral_tail_mid_ratio"], 0.3)
+
+    def test_provenance_matches_the_artwork_when_present(self):
+        """If the file is here, its hash must match the recorded one."""
+        import hashlib, os
+        import forensics
+        img = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+        if not os.path.exists(img):
+            self.skipTest("artwork not present")
+        got = hashlib.sha256(open(img, "rb").read()).hexdigest()
+        self.assertEqual(got, forensics.PROVENANCE["sha256"])
+        self.assertEqual(os.path.getsize(img), forensics.PROVENANCE["bytes"])
+
     def test_key_regions_present(self):
         import forensics
         for name in ("clock", "plinth", "needle", "statue-base", "vertical"):
