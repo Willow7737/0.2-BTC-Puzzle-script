@@ -88,6 +88,67 @@ CORPUS: dict[str, tuple[str, str]] = {
 }
 
 
+#: Source texts the artwork **quotes or references verbatim**. Nothing here
+#: was chosen after seeing a result: the artwork prints the Amendment on the
+#: plinth, renders whitepaper prose twice (the calligram and the bottom
+#: strip), and replaces the Great Seal's three inscriptions with three
+#: specific Latin quotations. Arbitrary passages are deliberately excluded -
+#: with enough source texts something always fits.
+SOURCE_TEXTS: dict[str, tuple[str, str]] = {
+    "amendment_s1": (
+        "Neither slavery nor involuntary servitude except as a punishment for "
+        "crime whereof the party shall have been duly convicted shall exist "
+        "within the United States or any place subject to their jurisdiction",
+        "13th Amendment Section 1, printed verbatim on the plinth "
+        "(text from the US National Archives)",
+    ),
+    "amendment_full": (
+        "Neither slavery nor involuntary servitude except as a punishment for "
+        "crime whereof the party shall have been duly convicted shall exist "
+        "within the United States or any place subject to their jurisdiction "
+        "Congress shall have power to enforce this article by appropriate "
+        "legislation",
+        "13th Amendment, both sections",
+    ),
+    "whitepaper_abstract": (
+        "A purely peer-to-peer version of electronic cash would allow online "
+        "payments to be sent directly from one party to another without going "
+        "through a financial institution Digital signatures provide part of "
+        "the solution but the main benefits are lost if a trusted third party "
+        "is still required to prevent double-spending We propose a solution to "
+        "the double-spending problem using a peer-to-peer network The network "
+        "timestamps transactions by hashing them into an ongoing chain of "
+        "hash-based proof-of-work forming a record that cannot be changed "
+        "without redoing the proof-of-work",
+        "Bitcoin whitepaper abstract (bitcoin.org/bitcoin.pdf); the artwork "
+        "renders whitepaper prose in the calligram and the bottom strip",
+    ),
+    "whitepaper_transactions": (
+        "We define an electronic coin as a chain of digital signatures Each "
+        "owner transfers the coin by digitally signing a hash of the previous "
+        "transaction and the public key of the next owner and adding these to "
+        "the end of the coin A payee can verify the signatures to verify the "
+        "chain of ownership",
+        "whitepaper section 2, the text the BRAVE NEW WORLD calligram is "
+        "built from",
+    ),
+    "seal_latin": (
+        "RERUM COGNOSCERE CAUSAS FIAT JUSTITIA ET PEREAT MUNDUS "
+        "UBI BENE IBI PATRIA",
+        "the Great Seal's three inscriptions, all replaced by the artist",
+    ),
+}
+
+#: Selection conventions, fixed before running. A correct one must map every
+#: number to a BIP-39 word - a seed phrase has no non-BIP-39 members - so the
+#: bar is 4 of 4, not "better than the null".
+SOURCE_CONVENTIONS = (
+    ("word", 1, False), ("word", 0, False),
+    ("word", 1, True), ("word", 0, True),
+    ("initial", 1, False), ("char", 1, False),
+)
+
+
 def tokens(text: str, unit: str) -> list[str]:
     """Split a passage into indexable units."""
     if unit == "word":
@@ -148,6 +209,18 @@ def sweep(indices=CONFIRMED_NUMBERS, corpus=None) -> list[Result]:
     return sorted(out, key=lambda r: (-r.bip39_hits, r.passage))
 
 
+def source_sweep(indices=CONFIRMED_NUMBERS) -> list[Result]:
+    """Test the pre-registered sources under the pre-registered conventions."""
+    out = []
+    for name, (text, _) in SOURCE_TEXTS.items():
+        for unit, base, rev in SOURCE_CONVENTIONS:
+            got = extract(text, indices, unit, base, rev)
+            if got is None:
+                continue
+            out.append(Result(name, unit, base, rev, got, score_tokens(got)))
+    return sorted(out, key=lambda r: (-r.bip39_hits, r.passage))
+
+
 def null_rate(passage: str, unit: str, n_indices: int, trials: int = 4000,
               seed: int = 0) -> float:
     """Expected BIP-39 hit rate for *random* indices into the same passage.
@@ -190,6 +263,18 @@ REFUTED = {
                   "alphabetical list, not a phrase",
         "verdict": "no signal",
     },
+    "source_text_indexing": {
+        "tested": "25 attempts - 5 pre-registered source texts (13th Amendment "
+                  "Section 1 and full, the whitepaper abstract and its "
+                  "Transactions section, the Great Seal's three Latin "
+                  "inscriptions) x 6 pre-registered conventions",
+        "sources_chosen": "only texts the artwork quotes or references "
+                          "verbatim; arbitrary passages excluded, because with "
+                          "enough source texts something always fits",
+        "four_of_four": 0,
+        "best": "2 of 4, against nulls of 0.24-0.30 - i.e. at the noise floor",
+        "verdict": "refuted",
+    },
     "derivation_path": {
         "tested": "568,800 derivations - 900 candidate seeds (the marked "
                   "words in every order of 3-5, as BIP-39, BIP-39 with the "
@@ -199,4 +284,50 @@ REFUTED = {
         "matches": 0,
         "verdict": "refuted",
     },
+}
+
+
+#: The responsible stopping point.
+#:
+#: Across **83 pre-registered attempts** - 58 over text rendered in the
+#: artwork, 25 over the source texts it quotes - under every reasonable
+#: indexing convention, **not one produced a complete BIP-39 set**. That is
+#: the discriminating test: a seed phrase has no non-BIP-39 members, so a
+#: correct convention yields 4 of 4 by construction, not merely a good score.
+#:
+#: Combined with the capacity bound in ``positions.MECHANISM_CAPACITY``, the
+#: honest classification of this puzzle is **underdetermined**: the artwork
+#: does not supply enough recoverable structure to determine a phrase.
+#:
+#: What is established, and is not in doubt:
+#:   * three clock hands encode 3, 13 and 21 by the midpoint rule (~1 in 2,500
+#:     by chance), captioned by rune 2's "sum of two numbers" inside the dial;
+#:   * the plinth pairs an underlined ``subject`` with an underlined ``1``;
+#:   * five words are deliberately marked - moon, tower, food, subject, real.
+#:
+#: What is closed:
+#:   * ray-matching cannot name words (5 of 9 positions carry >1 object);
+#:   * text indexing, wordlist indices, derivation paths, source-text indexing;
+#:   * steganography; brainwallet to 6 words; BEST_12 as an Electrum seed.
+#:
+#: What would change the picture, in descending order of value:
+#:   1. a higher-resolution original - runes 1 and 2, the clock bearings and
+#:      the claimed neck text are all blocked on resolution, not on method;
+#:   2. a fourth number-bearing mechanism, which the capacity bound says must
+#:      exist if the position reading is right;
+#:   3. the puzzle author's own confirmation of the construction.
+#:
+#: What will **not** help: more CPU. Every remaining search is unbounded
+#: because the word set is unknown, and a negative from guessed fillers is not
+#: a result. The engine has never been the constraint.
+UNDERDETERMINED = {
+    "attempts_total": 83,
+    "attempts_artwork_text": 58,
+    "attempts_source_text": 25,
+    "all_bip39_results": 0,
+    "confirmed_positions": 3,
+    "mechanism_capacity": 4,
+    "positions_needed": 24,
+    "verdict": "underdetermined - insufficient recoverable structure, "
+               "not insufficient compute",
 }

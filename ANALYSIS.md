@@ -641,6 +641,67 @@ could be simple and the *path* is the secret. Tested exhaustively:
 
 **568,800 derivations, zero matches.**
 
+### Source-text indexing — refuted
+
+The last reading standing: the numbers select from a text the artwork
+*references* rather than one it renders. Bounded deliberately — only sources
+the artwork quotes or references verbatim, chosen and written down before the
+run, because with enough source texts something always fits.
+
+| Source | Why it qualifies |
+|---|---|
+| 13th Amendment, Section 1 and full | printed verbatim on the plinth |
+| Bitcoin whitepaper abstract | whitepaper prose is rendered twice in the artwork |
+| Whitepaper §2 (Transactions) | the text the `BRAVE NEW WORLD` calligram is built from |
+| The Great Seal's three Latin inscriptions | all three replaced by the artist |
+
+Six pre-registered conventions × 5 sources = **25 attempts. Zero produced a
+complete BIP-39 set.** Best was 2 of 4, against nulls of 0.24–0.30 — the noise
+floor.
+
+## The responsible stopping point: underdetermined
+
+Across **83 pre-registered attempts** — 58 over text rendered in the artwork,
+25 over the sources it quotes — under every reasonable indexing convention,
+**not one produced a complete BIP-39 set.**
+
+That is the discriminating test, and it is worth being precise about why. A
+seed phrase has no non-BIP-39 members, so a *correct* convention yields 4 of 4
+by construction. It does not merely score well against a null; it is perfect.
+None was. So either the convention lies outside a fairly exhaustive tested
+set, or the numbers do not index text at all.
+
+Combined with the capacity bound, the honest classification is that this
+puzzle is **underdetermined by its artwork**: what can be recovered does not
+determine a phrase.
+
+**What is established, and is not in doubt:**
+
+* three clock hands encode 3, 13 and 21 by the midpoint rule — about 1 in
+  2,500 by chance, and captioned by rune 2's "sum of two numbers" drawn inside
+  the dial;
+* the plinth pairs an underlined `subject` with an underlined `1`;
+* five words are deliberately marked: `moon`, `tower`, `food`, `subject`, `real`.
+
+**What is closed:** ray-matching as a way to name words; text indexing;
+wordlist indices; derivation paths; source-text indexing; steganography;
+brainwallet to six words; `BEST_12` as an Electrum seed.
+
+**What would change the picture,** in descending order of value:
+
+1. **A higher-resolution original.** Runes 1 and 2, the clock hand bearings
+   and the claimed neck text are all blocked on resolution, not on method —
+   the same code reads rune 4 cleanly.
+2. **A fourth number-bearing mechanism.** The capacity bound says one *must*
+   exist if the position reading is right. Three attempts to find one have
+   failed.
+3. **The author's own account** of the construction.
+
+**What will not help: more CPU.** Every remaining search is unbounded because
+the word set is unknown, and a negative from guessed fillers is not a result.
+The engine has never been the constraint — it exhausted 479M orderings of a
+12-word pool in 33 minutes.
+
 ### Where that leaves the numbers
 
 Three readings closed, and the position reading capacity-bounded at four. The

@@ -216,6 +216,23 @@ Three alternative readings tested, all refuted:
   the head of the alphabetical list. No signal.
 * **Derivation path** — 568,800 derivations (900 candidate seeds × 632 paths
   from 1/3/13/21, hardened and soft, both key formats). **Zero matches.**
+* **Source-text indexing** — 25 attempts over 5 pre-registered sources the
+  artwork quotes verbatim (the Amendment, the whitepaper abstract and §2, the
+  Seal's Latin). Zero all-BIP-39.
+
+**83 pre-registered attempts in total, zero producing a complete BIP-39 set.**
+A correct convention gives 4 of 4 by construction — a seed phrase has no
+non-BIP-39 members — so this is discriminating, not merely unlucky.
+
+### Verdict: underdetermined
+
+The honest classification is that the puzzle is **underdetermined by its
+artwork** — what can be recovered does not determine a phrase. Three positions
+are established, the mechanism caps at four, and twenty-four are needed. What
+would change that is a **higher-resolution original** (runes 1–2, the hand
+bearings and the claimed neck text are all blocked on resolution, not method),
+or a fourth number-bearing mechanism. **More CPU will not**: the engine
+exhausted 479M orderings in 33 minutes and has never been the constraint.
 
 That gives a **capacity bound**: the bearing mechanism needs the object to
 *be* a clock hand, and there are exactly three. Plus one explicit numeral
@@ -330,7 +347,7 @@ puzzle/positions.py      word-plus-number position map and its evidence scale
 puzzle/extraction.py     tests whether the numbers index text instead
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    102 tests: published vectors + planted targets
+tests/test_vectors.py    105 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 

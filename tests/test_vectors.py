@@ -760,10 +760,42 @@ class TestExtractionHypothesis(unittest.TestCase):
         from puzzle import extraction as ex
         self.assertIsNone(ex.extract("two words", (1, 99), "word"))
 
+    def test_source_texts_are_quoted_by_the_artwork(self):
+        """Pre-registered: only texts the artwork actually references."""
+        from puzzle import extraction as ex
+        self.assertGreaterEqual(len(ex.SOURCE_TEXTS), 5)
+        for name, (text, prov) in ex.SOURCE_TEXTS.items():
+            self.assertTrue(text.strip(), name)
+            self.assertTrue(prov.strip(), f"{name} needs provenance")
+
+    def test_no_source_convention_yields_all_bip39(self):
+        from puzzle import extraction as ex
+        res = ex.source_sweep()
+        self.assertTrue(res)
+        for r in res:
+            self.assertLess(r.bip39_hits, len(r.extracted),
+                            f"{r.passage}/{r.unit} unexpectedly all-BIP-39")
+
+    def test_underdetermined_classification(self):
+        """The honest stopping point, with its arithmetic pinned."""
+        from puzzle import extraction as ex, positions
+        u = ex.UNDERDETERMINED
+        self.assertEqual(u["all_bip39_results"], 0)
+        self.assertEqual(u["attempts_total"],
+                         u["attempts_artwork_text"] + u["attempts_source_text"])
+        self.assertEqual(u["attempts_artwork_text"], len(ex.sweep()))
+        self.assertEqual(u["attempts_source_text"], len(ex.source_sweep()))
+        self.assertEqual(u["confirmed_positions"], len(positions.CONFIRMED))
+        self.assertEqual(u["mechanism_capacity"],
+                         positions.MECHANISM_CAPACITY["total_reachable"])
+        self.assertLess(u["mechanism_capacity"], u["positions_needed"])
+
     def test_refutations_recorded(self):
         from puzzle import extraction as ex
         self.assertEqual(sorted(ex.REFUTED),
-                         ["derivation_path", "text_indexing", "wordlist_indices"])
+                         ["derivation_path", "source_text_indexing",
+                          "text_indexing", "wordlist_indices"])
+        self.assertEqual(ex.REFUTED["source_text_indexing"]["four_of_four"], 0)
         self.assertEqual(ex.REFUTED["derivation_path"]["matches"], 0)
         self.assertEqual(ex.REFUTED["text_indexing"]["four_of_four"], 0)
 
