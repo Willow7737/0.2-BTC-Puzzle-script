@@ -665,3 +665,86 @@ def _midpoint_bearing(a: int, c: int) -> float:
     """Bearing of the midpoint between two adjacent numerals."""
     delta = (NUMERAL_BEARING[c] - NUMERAL_BEARING[a] + 540) % 360 - 180
     return (NUMERAL_BEARING[a] + delta / 2) % 360
+
+
+# ---------------------------------------------------------------------------
+# Systematic sweep for further marked words
+# ---------------------------------------------------------------------------
+
+#: The real bottleneck was never the numbers - it is the **word set**. Five
+#: marked words cannot seed any search, and the five were found ad hoc by the
+#: community rather than by a sweep. So the artwork was swept properly.
+#:
+#: **The automated attempt failed, and that is recorded because it is useful.**
+#: A glyph-and-line detector was calibrated on the five known words, then run
+#: over the whole image, then re-run at every 10 degrees of rotation to catch
+#: text following an object's axis. It recovered **1 of 5** positive controls.
+#: The diagnosis is instructive: MOON and TOWER ride diagonal clock hands and
+#: FOOD runs down the needle shaft, so a horizontal-line detector cannot see
+#: them by construction - and even rotated, the letters are 3-6 px tall in
+#: line art, smaller and fainter than the objects' own edges. A detector that
+#: cannot recover its own controls proves nothing about what it fails to find,
+#: so its negatives were discarded rather than reported.
+DETECTOR_FAILED = {
+    "approach": "connected-component glyph detection, line grouping, swept "
+                "over 18 rotations x 12 channel/radius/threshold variants",
+    "positive_controls_recovered": 1,
+    "positive_controls_total": 5,
+    "why": "marked words follow the object's axis, and the letters are 3-6 px "
+           "tall - smaller and fainter than the line art around them",
+    "verdict": "discarded - a detector that misses its own controls cannot "
+               "support a negative",
+}
+
+#: What was done instead: a **visual sweep of every object surface that could
+#: carry a word**, at the enhancement that renders the known ones legibly.
+#: The pipeline was validated on the way past - it reads ``ONLY real BITCOIN``
+#: off the Statue's base clearly.
+#:
+#: Nineteen surfaces examined, none carrying a word that was not already
+#: catalogued:
+SURFACE_SWEEP = {
+    "surfaces_examined": (
+        "Statue torch and flame", "Statue crown and head",
+        "BLM phone screen", "Statue books and base",
+        "flag", "STOP fist sign", "vaccine vial", "gloved hand",
+        "camera 1", "camera 2", "camera junction box",
+        "toppled bust head", "wreath on the bust's plinth",
+        "Great Seal pyramid", "Great Seal eye and rays",
+        "clock hub", "Trump face and suit", "Trump lapel",
+        "Biden face and suit", "Biden lapel", "map of China",
+    ),
+    "new_words_found": 0,
+    "incidental_text_confirmed": (
+        "BLM and a fist icon on the phone screen",
+        "COVID19 on the vaccine vial",
+        "a plain dark lapel pin on Biden, no device or text",
+        "a three-bar emblem inside the wreath on the bust's plinth",
+    ),
+    "pipeline_validated_by": "the same enhancement reads 'ONLY real BITCOIN' "
+                             "off the Statue's base",
+    "verdict": "no sixth marked word on any object surface",
+}
+
+#: What the sweep changes.
+#:
+#: Before it, "there might be more marked words nobody has spotted" was a live
+#: hope, and it was the only thing that could have made a search tractable:
+#: five words seed nothing. After it, that hope is closed by method rather
+#: than by assumption - the marking conventions the artwork actually uses
+#: (a word written along an object's axis; a word underlined or inserted in
+#: running text) have been swept across every surface that carries either.
+#:
+#: This does not make the puzzle harder. It makes the existing verdict firmer:
+#: **underdetermined** is now supported from the word side as well as the
+#: number side. The shortfall is 19 or 22 words and 20 positions, and neither
+#: gap has a mechanism behind it.
+WORD_SUPPLY = {
+    "marked_words": 5,
+    "words_needed_min": 12,
+    "words_needed_max": 24,
+    "surfaces_swept": 21,
+    "new_words": 0,
+    "consequence": "the word set cannot be completed from the artwork by any "
+                   "convention it demonstrably uses; search remains unseedable",
+}

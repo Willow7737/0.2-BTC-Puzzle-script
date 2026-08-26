@@ -947,6 +947,196 @@ class TestRune2Verification(unittest.TestCase):
         self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
 
 
+class TestAuthorship(unittest.TestCase):
+    """Provenance: who signed the artwork, who published it, what is unproven."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def test_attribution_is_recorded_as_unsupported(self):
+        """The community names Charly Palmer. The record must not adopt it."""
+        import forensics
+        a = forensics.ATTRIBUTION
+        self.assertTrue(a["verdict"].startswith("unsupported"))
+        self.assertGreaterEqual(len(a["evidence_against"]), 3)
+        self.assertNotEqual(a["signature"], a["community_guess"],
+                            "a signature is not an identification")
+
+    def test_signature_boxes_lie_inside_the_artwork(self):
+        import forensics
+        w, h = forensics.PROVENANCE["size"]
+        for name, sig in forensics.SIGNATURES.items():
+            x0, y0, x1, y1 = sig["box"]
+            self.assertTrue(0 <= x0 < x1 <= w, name)
+            self.assertTrue(0 <= y0 < y1 <= h, name)
+
+    def test_signature_regions_carry_ink(self):
+        """Both signatures must be real drawn content, not a claim."""
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        import numpy as np
+        import forensics
+        from PIL import Image, ImageOps, ImageChops, ImageFilter
+        im = Image.open(self.IMAGE).convert("RGB")
+        for name, sig in forensics.SIGNATURES.items():
+            g = ImageOps.grayscale(im.crop(sig["box"]))
+            hp = ImageChops.subtract(g.filter(ImageFilter.GaussianBlur(3)), g)
+            a = np.asarray(hp, dtype=float)
+            self.assertGreater(a.max(), 12,
+                               f"{name}: no ink found where a signature is recorded")
+
+    def test_publication_predates_nothing_impossible(self):
+        """The wallet must be funded before the puzzle was published."""
+        import forensics
+        p = forensics.PUBLICATION
+        self.assertLess(p["wallet_created"], p["wallet_funded"])
+        self.assertLess(p["wallet_funded"], p["posted"])
+
+    def test_no_sibling_puzzle_found(self):
+        import forensics
+        self.assertEqual(forensics.NO_SIBLING_PUZZLE["found"], 0)
+        self.assertGreaterEqual(len(forensics.NO_SIBLING_PUZZLE["searched"]), 4)
+
+    def test_idiom_note_does_not_refute_or_endorse_black(self):
+        """The phrase is idiomatic; the record must claim neither more nor less."""
+        import forensics
+        from puzzle import positions
+        note = forensics.IDIOM_NOTE
+        self.assertIn("rainy day", note["idiomatic"])
+        self.assertIn("pun", note["assessment"])
+        weak = {w for a in positions.PROPOSED for w in a.words
+                if a.evidence is positions.Evidence.WEAK}
+        self.assertIn("black", weak, "'black' must stay unpromoted")
+
+
+class TestWordSupplySweep(unittest.TestCase):
+    """The sweep for a sixth marked word, and the honesty of its record."""
+
+    def test_surface_count_is_recomputed_not_asserted(self):
+        from puzzle import positions
+        self.assertEqual(len(positions.SURFACE_SWEEP["surfaces_examined"]),
+                         positions.WORD_SUPPLY["surfaces_swept"])
+
+    def test_failed_detector_is_recorded_as_discarded(self):
+        """A detector missing its controls must not be cited as a negative."""
+        from puzzle import positions
+        d = positions.DETECTOR_FAILED
+        self.assertLess(d["positive_controls_recovered"],
+                        d["positive_controls_total"])
+        self.assertTrue(d["verdict"].startswith("discarded"))
+
+    def test_sweep_found_nothing_and_says_so(self):
+        from puzzle import positions
+        self.assertEqual(positions.SURFACE_SWEEP["new_words_found"], 0)
+        self.assertEqual(positions.WORD_SUPPLY["new_words"], 0)
+        self.assertEqual(positions.WORD_SUPPLY["marked_words"],
+                         len(positions.MARKED_WITHOUT_NUMBER) + len(positions.CONFIRMED))
+
+    def test_word_supply_still_cannot_seed_a_search(self):
+        """The point of the sweep: five words is short of any phrase length."""
+        from puzzle import positions
+        w = positions.WORD_SUPPLY
+        self.assertLess(w["marked_words"], w["words_needed_min"])
+
+
+class TestRune3Alphabet(unittest.TestCase):
+    """Which alphabet does rune 3 use? Four candidates, each with a control."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def setUp(self):
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        from PIL import ImageOps
+        from puzzle import runes
+        from puzzle.runes import load_rune4, RUNE4_SEPARATORS, signature
+        self.runes = runes
+        self.sigs3 = runes.strip_signatures(
+            self.IMAGE, runes.RUNE3_BOX, runes.RUNE3_THRESHOLD,
+            transform=ImageOps.mirror)
+        mask, glyphs, _ = load_rune4(self.IMAGE)
+        self.control = [signature(mask, glyphs[i]) for i in range(48)
+                        if i not in RUNE4_SEPARATORS]
+
+    def test_segmentation_is_seven_glyphs(self):
+        self.assertEqual(len(self.sigs3), 7)
+        self.assertEqual(len(self.runes.RUNE3_INVENTORY), 7)
+
+    def test_segmentation_is_stable_across_thresholds(self):
+        """A count that moves with the threshold is not a glyph count."""
+        from PIL import ImageOps
+        for t in (80, 90, 100):
+            got = self.runes.strip_signatures(
+                self.IMAGE, self.runes.RUNE3_BOX, t, transform=ImageOps.mirror)
+            self.assertEqual(len(got), 7, f"threshold {t} gave {len(got)}")
+
+    def test_not_the_artwork_own_alphabet(self):
+        """Rune 2, a verified true match, scores far better by the same pipeline."""
+        alphabet = self.runes.rune4_alphabet(self.IMAGE)
+        r3 = self.runes.compare_to_reference(self.sigs3, alphabet, self.control)
+        s2 = self.runes.strip_signatures(
+            self.IMAGE, self.runes.RUNE2_BOX, self.runes.RUNE2_THRESHOLD)
+        r2 = self.runes.compare_to_reference(s2, alphabet, self.control)
+        self.assertGreater(r3["mean"], r2["mean"] + 8,
+                           "rune 3 must be clearly worse than a true match")
+        self.assertGreater(r3["mean"], 40)
+
+    def test_control_is_what_makes_a_score_readable(self):
+        """A mean distance with no control is uninterpretable; assert we have one."""
+        alphabet = self.runes.rune4_alphabet(self.IMAGE)
+        r = self.runes.compare_to_reference(self.sigs3, alphabet, self.control)
+        self.assertIn("control_mean", r)
+        self.assertIn("control_min", r)
+        self.assertLess(r["control_min"], 30,
+                        "accidental close matches happen; the record must show it")
+
+    def test_record_reports_no_identification(self):
+        rec = self.runes.RUNE3_ALPHABET_SEARCH
+        self.assertTrue(rec["verdict"].startswith("unidentified"))
+        self.assertEqual(len(rec["tested"]), 4)
+        for name, entry in rec["tested"].items():
+            self.assertIn("control", entry, f"{name} recorded without a control")
+
+    def test_aurebesh_and_sga_are_refuted_by_their_controls(self):
+        """Recomputed from vendored fingerprints, not trusted as constants."""
+        from PIL import ImageOps
+        R = self.runes
+        s2 = R.strip_signatures(self.IMAGE, R.RUNE2_BOX, R.RUNE2_THRESHOLD)
+        for name in ("aurebesh", "sga"):
+            ref = R.load_reference_alphabet(name)
+            best = min(
+                R.compare_to_reference(
+                    R.strip_signatures(self.IMAGE, R.RUNE3_BOX,
+                                       R.RUNE3_THRESHOLD, transform=tf),
+                    ref, self.control)["mean"]
+                for tf in (None, ImageOps.mirror,
+                           lambda x: x.rotate(180), ImageOps.flip))
+            ctrl = R.compare_to_reference([], ref, self.control)["control_mean"]
+            r2 = R.compare_to_reference(s2, ref, self.control)["mean"]
+            self.assertGreater(best, ctrl * 0.95,
+                               f"{name}: rune 3 must not beat its control")
+            self.assertLess(abs(best - r2), 8,
+                            f"{name}: rune 3 must sit in the same noise band "
+                            "as an unrelated strip")
+
+    def test_reference_alphabets_are_internally_discriminable(self):
+        """A reference that cannot tell its own letters apart proves nothing."""
+        from puzzle.runes import distance
+        for name, expected in (("aurebesh", 34), ("sga", 26)):
+            ref = self.runes.load_reference_alphabet(name)
+            self.assertEqual(len(ref), expected)
+            keys = sorted(ref)
+            ds = [distance(ref[a], ref[b])
+                  for i, a in enumerate(keys) for b in keys[i+1:]]
+            self.assertGreater(sum(ds) / len(ds), 50,
+                               f"{name} letters are not well separated")
+
+    def test_weak_positive_is_recorded_with_its_caveats(self):
+        """The N/E match is thin and post-hoc; the record must say so."""
+        wp = self.runes.RUNE3_ALPHABET_SEARCH["weak_positive"]
+        self.assertGreater(wp["p_value"], 0.01, "not strong enough to claim")
+        self.assertIn("post-hoc", wp["caveats"])
+
+
 class TestDscriptHypothesis(unittest.TestCase):
     """Are the rune strips Dscript? If so its base-100 numerals would read
     out rune 4's trailing 'number X'."""

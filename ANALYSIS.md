@@ -823,21 +823,71 @@ saying "sum of two numbers". That is no longer an assumption carried from
 elsewhere — it is verified against pixels with an independent key. The three
 confirmed positions stand on firmer ground than they did.
 
-#### Rune 3 does not decode in this alphabet
+#### Rune 3: which alphabet?
 
-Mirrored, rune 3 resolves into seven legible glyphs: a triad of dots joined
-into a `<`, an oval beneath a smaller oval, a hooked stroke with a dot, an
-outline `▽`, an `N`, an `E`, and two stacked triangles.
+Rune 3 floats free above Trump, drawn mirrored in a pale wash, attached to no
+object — so it is meant to be read. Its segmentation is **seven glyphs, stable
+across thresholds 80–100**:
 
-Matched against the rune-4 alphabet they average **44.8** — between the
-same-letter band (27.2) and the different-letter band (66.4) — with incoherent
-assignments and no word emerging. Unmirrored is worse, 48.6. Its inventory
-contains shapes rune 4 never uses, and it is drawn in thin precise outlines
-where rune 4 is thick and hand-drawn.
+| # | Glyph |
+|---|---|
+| 1 | three small circles joined by two lines into a `<` |
+| 2 | a small oval above a larger oval |
+| 3 | a hooked stroke with two dots |
+| 4 | an outline `▽` with a dot |
+| 5 | `N` |
+| 6 | `E` |
+| 7 | a small triangle above a larger triangle |
 
-So rune 3 is not a mechanism caption in the script the other runes use. It is
-either a different sign system or not text, and is recorded as open rather
-than forced into a reading.
+Two structural regularities constrain what kind of system this is:
+**small-shape-above-large-shape occurs twice** (glyphs 2 and 7 — ovals, then
+triangles), and **three of the seven carry dots**. A plain letter alphabet
+rarely does either.
+
+**Six candidates tested, each against a control.** The control is the part
+that matters: a 12×12 fingerprint always finds *some* nearest neighbour, so a
+mean distance means nothing until you know what an unrelated strip scores —
+and that a control glyph's best *accidental* Latin match is 14.
+
+| Candidate | Rune 3 | Control | Verdict |
+|---|---|---|---|
+| The artwork's own rune alphabet | **46.3** | rune 2 scores **32.7** by the same pipeline, and is a verified true match (baseline 27.2) | excluded |
+| Dscript | 44.4 (best of four orientations) | rune 4, known *not* Dscript, scores **46.3** | excluded — no signal whatever |
+| Latin | 40.1 | rune 4 scores 42.8 | no aggregate signal |
+| Cyrillic | 41.0 | rune 4 scores 44.0 | no signal |
+
+**Two named candidates, tested on request.** Aurebesh (Star Wars) and the
+Standard Galactic Alphabet (Commander Keen / Minecraft), both from
+freely-licensed Wikimedia Commons reference charts, all four orientations:
+
+| Candidate | Rune 3 (best) | Rune 4 (control) | Rune 2 (control) | Verdict |
+|---|---|---|---|---|
+| Aurebesh | 45.4 | 44.7 | 45.7 | **refuted — worse than control** |
+| Standard Galactic | 48.4 | 47.2 | 45.6 | **refuted — worse than control** |
+
+Rune 3 scores *worse than the control* against both. Three unrelated strips —
+rune 3, rune 4 and rune 2, the last two known to be a Cyrillic substitution —
+all land in the same 44–49 band. That band **is** the noise floor for
+geometric glyphs against an unrelated geometric alphabet, and rune 3 sits in
+it with nothing to distinguish it.
+
+A structural check agrees and needs no statistics: **both alphabets are
+entirely straight-edged and contain no circle.** Rune 3 opens with three
+joined circles and a pair of stacked ovals. Whatever it is, it is not written
+in an alphabet with no round forms.
+
+**One thing does stand out, and it is thin.** Glyphs 5 and 6 match Latin `N`
+at **24** and `E` at **21** — inside the same-letter band of 27.2 — while the
+other five sit at 44–52. But 2 of 7 glyphs landing that low carries
+**p ≈ 0.042** against the control's own rate; the Latin hypothesis was chosen
+*after* seeing those two shapes; and the control's best accidental match is
+14. Suggestive, not established, and recorded that way.
+
+So **rune 3's alphabet is unidentified.** Six candidates are closed with
+method; no positive identification. What would settle it is a specific
+candidate to test — `runes.compare_to_reference()` makes that cheap, and
+`RUNE3_INVENTORY` describes the glyphs for matching by eye.
+
 
 #### The runes as a source of mechanisms
 
