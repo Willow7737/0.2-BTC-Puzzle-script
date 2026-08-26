@@ -993,3 +993,107 @@ class TestSearchEngine(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TestReferenceReadings(unittest.TestCase):
+    """The date and numbered-source readings of 1, 3, 13, 21."""
+
+    @classmethod
+    def setUpClass(cls):
+        from puzzle import references
+        cls.ref = references
+
+    def test_anchor_indices_match_the_wordlist(self):
+        """Guards the whole module: every sweep is measured against these."""
+        self.assertEqual(self.ref.ANCHOR_INDICES, {1: 1727, 3: 1841, 13: 1148})
+        for n, w in self.ref.ANCHORS.items():
+            self.assertEqual(self.ref._W[self.ref.ANCHOR_INDICES[n]], w)
+
+    def test_affine_sweep_is_complete_and_refutes(self):
+        sweep = self.ref.affine_sweep()
+        self.assertEqual(sweep.tested, 2048, "must cover the whole affine family")
+        self.assertEqual(sweep.hits, [])
+        self.assertTrue(sweep.refuted)
+
+    def test_affine_sweep_finds_a_fit_when_one_exists(self):
+        """Positive control. A test that can only ever refute proves nothing."""
+        ref = self.ref
+        a, b = 37, 900
+        planted = {n: (a * n + b) % 2048 for n in (1, 3, 13)}
+        real = ref.ANCHOR_INDICES
+        try:
+            ref.ANCHOR_INDICES = planted
+            sweep = ref.affine_sweep()
+            self.assertIn((a, b), sweep.hits,
+                          "the sweep must recover a scheme that really is there")
+        finally:
+            ref.ANCHOR_INDICES = real
+        self.assertEqual(ref.affine_sweep().hits, [], "anchors must be restored")
+
+    def test_affine_near_miss_is_exactly_two_schemes_naming_coin(self):
+        """Pin the seductive wrong answer so it stays refuted in writing."""
+        near = self.ref.affine_near_miss()
+        self.assertEqual(len(near), 2)
+        self.assertEqual({got for _, _, got in near}, {"coin"})
+
+    def test_date_sweep_refutes_over_the_recorded_space(self):
+        sweep = self.ref.date_sweep()
+        self.assertEqual(sweep.hits, [])
+        recorded = int(self.ref.REFUTED["date_reference"]["tested"]
+                       .split()[0].replace(",", ""))
+        self.assertEqual(sweep.tested, recorded,
+                         "recompute the count; do not trust the constant")
+
+    def test_date_sweep_finds_a_planted_date_scheme(self):
+        """Positive control for the date family."""
+        ref = self.ref
+        y, m, how, base = 1900, 6, "MMDD", 0
+        planted = {n: ref.date_index(y, m, n, how) - base for n in (1, 3, 13)}
+        real = ref.ANCHOR_INDICES
+        try:
+            ref.ANCHOR_INDICES = planted
+            sweep = ref.date_sweep(years=range(1899, 1902))
+            self.assertIn(("day=n", y, m, how, base), sweep.hits)
+        finally:
+            ref.ANCHOR_INDICES = real
+
+    def test_combined_date_names_no_marked_word(self):
+        sweep = self.ref.combined_date_sweep()
+        self.assertEqual(sweep.hits, [])
+        self.assertGreater(sweep.tested, 500, "the reading space must be real")
+
+    def test_chance_floor_is_reported_and_nonzero_for_the_big_sweep(self):
+        """A sweep big enough to find something by luck must say so."""
+        big = self.ref.date_sweep()
+        self.assertGreater(big.expected_by_chance, 0.1,
+                           "this sweep is at the noise floor; the module must "
+                           "record that a single hit would not be evidence")
+        self.assertLess(self.ref.affine_sweep().expected_by_chance, 0.001)
+
+    def test_amendment_vocabulary_claim_holds_on_the_vendored_text(self):
+        """Offline slice of the primary-source check: the 13th Amendment."""
+        from puzzle import extraction
+        text = extraction.SOURCE_TEXTS["amendment_full"][0].lower()
+        self.assertIn("subject", text)
+        self.assertNotIn("tower", text)
+        self.assertNotIn("moon", text)
+        recorded = self.ref.SOURCE_VOCABULARY["us_amendments"]
+        self.assertIn(13, recorded["subject_appears_in"])
+        self.assertNotIn(1, recorded["subject_appears_in"],
+                         "f(1)=subject is what the Amendment reading needs")
+
+    def test_recorded_total_matches_the_sweeps(self):
+        """extraction.UNDERDETERMINED must be recomputed, not trusted."""
+        from puzzle import extraction
+        total = sum(s.tested for s in self.ref.run_all().values())
+        self.assertEqual(
+            total, extraction.UNDERDETERMINED["reference_schemes_tested"])
+        self.assertEqual(
+            0, extraction.UNDERDETERMINED["reference_schemes_fitting_anchors"])
+
+    def test_word_at_rejects_out_of_range(self):
+        self.assertIsNone(self.ref.word_at(2048))
+        self.assertIsNone(self.ref.word_at(-1))
+        self.assertEqual(self.ref.word_at(0), "abandon")
+
+

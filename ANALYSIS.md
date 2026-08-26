@@ -659,6 +659,64 @@ Six pre-registered conventions × 5 sources = **25 attempts. Zero produced a
 complete BIP-39 set.** Best was 2 of 4, against nulls of 0.24–0.30 — the noise
 floor.
 
+### Date and numbered-source references — refuted
+
+The two readings people reach for once text indexing is gone: each number
+**references a date** (1/3 for the genesis block, 13 for the Amendment), or
+**references a numbered source** (Amendment 13, whitepaper §3, BIP-21), with
+the reference then naming a word.
+
+**These need a different test, and the reason matters.** Every earlier sweep
+scored a hypothesis by "are all four extracted tokens BIP-39 words?" That works
+when tokens are pulled from English prose, where landing on a wordlist entry is
+informative. It is *vacuous* for any scheme that resolves a number to a
+wordlist index: such a scheme returns a BIP-39 word for every input, always. A
+forward sweep of "what word does 13 give?" therefore passes everything and
+proves nothing, however good the word looks.
+
+**The test that discriminates runs backwards, off the anchors.** The artwork
+pairs three numbers with three words. The position model reads that as "this
+word sits at that position"; the reference model reads the same evidence as
+"this number names that word." So any reference scheme `f` is pinned by three
+simultaneous constraints:
+
+    f(1) = subject      f(3) = tower      f(13) = moon
+
+| Family | Schemes tested | Fitting all three anchors |
+|---|---|---|
+| Affine — `f(n) = WORDS[(a·n + b) mod 2048]` | 2,048 (**complete**, not sampled) | **0** |
+| Date — number as day-of-month, or as year offset | 1,164,504 | **0** |
+| Combined — all four numbers as one date | 1,056 | **0** |
+
+The affine sweep is complete over its family: fixing `a` and the `f(1)` anchor
+determines `b`. It subsumes every linear number-to-index reading in one pass.
+
+**The near-miss is worth writing down.** Exactly two affine schemes fit anchors
+1 and 3. Both send 13 to `coin` — thematically perfect for a Bitcoin puzzle,
+and contradicted by the artwork, which puts `moon` there. Anyone re-deriving
+this will hit the same seductive wrong answer.
+
+**Numbered sources collapse to a vocabulary question.** A source-reference
+scheme must select its word *from the referenced text*, so a word absent from
+that text is unreachable under any selection rule:
+
+| Source | Verdict |
+|---|---|
+| All 27 US Amendments (archives.gov) | `tower` and `moon` occur in **none** of them. `subject` does occur — in Amendments 5, 13, 14 and 21, **never the 1st**. So `f(1) = subject` fails too. |
+| Whitepaper sections | 12 sections; 13 and 21 out of range |
+| BIP-1 / 3 / 13 / 21 | **BIP-3 was never published**, so `f(3)` has no text; BIP-13 and BIP-21 contain none of the anchor words |
+| Great Seal inscriptions | three of them; 13 and 21 out of range |
+| "the n-th datable reference in the artwork" | eight exist; 13 and 21 overrun them |
+
+**A fit found by sweeping would not have been evidence.** Fitting on one anchor
+and checking two leaves a chance pass rate of 1/2048² per scheme, so the date
+sweep *expects* 0.28 accidental fits. Zero is the informative outcome, and only
+because the schemes were fixed before running. The test suite carries positive
+controls — a planted affine scheme and a planted date scheme, both recovered —
+so the refutations are not an artefact of machinery that can never pass.
+
+Reproduce with `./solve.py references`.
+
 ## The responsible stopping point: underdetermined
 
 Across **83 pre-registered attempts** — 58 over text rendered in the artwork,
@@ -684,8 +742,9 @@ determine a phrase.
 * five words are deliberately marked: `moon`, `tower`, `food`, `subject`, `real`.
 
 **What is closed:** ray-matching as a way to name words; text indexing;
-wordlist indices; derivation paths; source-text indexing; steganography;
-brainwallet to six words; `BEST_12` as an Electrum seed.
+wordlist indices; derivation paths; source-text indexing; date references
+and numbered-source references; steganography; brainwallet to six words;
+`BEST_12` as an Electrum seed.
 
 **What would change the picture,** in descending order of value:
 

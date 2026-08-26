@@ -308,6 +308,8 @@ REFUTED = {
 #: What is closed:
 #:   * ray-matching cannot name words (5 of 9 positions carry >1 object);
 #:   * text indexing, wordlist indices, derivation paths, source-text indexing;
+#:   * date references and numbered-source references, refuted against the
+#:     three anchors the artwork supplies - see ``puzzle.references``;
 #:   * steganography; brainwallet to 6 words; BEST_12 as an Electrum seed.
 #:
 #: What would change the picture, in descending order of value:
@@ -328,6 +330,8 @@ UNDERDETERMINED = {
     "confirmed_positions": 3,
     "mechanism_capacity": 4,
     "positions_needed": 24,
+    "reference_schemes_tested": 1_167_608,
+    "reference_schemes_fitting_anchors": 0,
     "verdict": "underdetermined - insufficient recoverable structure, "
                "not insufficient compute",
 }

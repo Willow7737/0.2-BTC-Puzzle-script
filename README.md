@@ -203,10 +203,11 @@ BLM phone, so where a number would sit there is a symbol instead.
 
 ### If they aren't positions, what are they?
 
-Three alternative readings tested, all refuted:
+Five alternative readings tested, all refuted:
 
 ```bash
 ./solve.py extract          # 58 extractions across 15 artwork passages
+./solve.py references       # 1.17M date and source-reference schemes
 ```
 
 * **Text indexing** — 0 of 58 attempts produced all-BIP-39 tokens. Decisively:
@@ -223,6 +224,22 @@ Three alternative readings tested, all refuted:
 **83 pre-registered attempts in total, zero producing a complete BIP-39 set.**
 A correct convention gives 4 of 4 by construction — a seed phrase has no
 non-BIP-39 members — so this is discriminating, not merely unlucky.
+
+Two more readings, which need a *different* test:
+
+* **Date references** — 1,167,608 schemes (affine, number-as-day-of-month,
+  number-as-year-offset, and all four numbers read as one date). **Zero fit.**
+* **Numbered-source references** — Amendments, whitepaper sections, BIPs, the
+  Great Seal. `tower` and `moon` appear in **no** US Amendment; `subject`
+  appears in the 5th, 13th, 14th and 21st but **never the 1st**; BIP-3 was
+  never published. Refuted.
+
+Why a different test: resolving a number to a *wordlist index* returns a BIP-39
+word for every input, so the all-BIP-39 bar is vacuous there. Instead these are
+measured backwards against the three pairings the artwork actually shows —
+`f(1)=subject`, `f(3)=tower`, `f(13)=moon`. A scheme missing any anchor is
+refuted however good its answer for 21 looks. Two affine schemes fit 1 and 3
+and send 13 to `coin` — perfect for a Bitcoin puzzle, and wrong.
 
 ### Verdict: underdetermined
 
