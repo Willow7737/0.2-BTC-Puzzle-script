@@ -947,6 +947,67 @@ class TestRune2Verification(unittest.TestCase):
         self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
 
 
+class TestAuthorship(unittest.TestCase):
+    """Provenance: who signed the artwork, who published it, what is unproven."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def test_attribution_is_recorded_as_unsupported(self):
+        """The community names Charly Palmer. The record must not adopt it."""
+        import forensics
+        a = forensics.ATTRIBUTION
+        self.assertTrue(a["verdict"].startswith("unsupported"))
+        self.assertGreaterEqual(len(a["evidence_against"]), 3)
+        self.assertNotEqual(a["signature"], a["community_guess"],
+                            "a signature is not an identification")
+
+    def test_signature_boxes_lie_inside_the_artwork(self):
+        import forensics
+        w, h = forensics.PROVENANCE["size"]
+        for name, sig in forensics.SIGNATURES.items():
+            x0, y0, x1, y1 = sig["box"]
+            self.assertTrue(0 <= x0 < x1 <= w, name)
+            self.assertTrue(0 <= y0 < y1 <= h, name)
+
+    def test_signature_regions_carry_ink(self):
+        """Both signatures must be real drawn content, not a claim."""
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        import numpy as np
+        import forensics
+        from PIL import Image, ImageOps, ImageChops, ImageFilter
+        im = Image.open(self.IMAGE).convert("RGB")
+        for name, sig in forensics.SIGNATURES.items():
+            g = ImageOps.grayscale(im.crop(sig["box"]))
+            hp = ImageChops.subtract(g.filter(ImageFilter.GaussianBlur(3)), g)
+            a = np.asarray(hp, dtype=float)
+            self.assertGreater(a.max(), 12,
+                               f"{name}: no ink found where a signature is recorded")
+
+    def test_publication_predates_nothing_impossible(self):
+        """The wallet must be funded before the puzzle was published."""
+        import forensics
+        p = forensics.PUBLICATION
+        self.assertLess(p["wallet_created"], p["wallet_funded"])
+        self.assertLess(p["wallet_funded"], p["posted"])
+
+    def test_no_sibling_puzzle_found(self):
+        import forensics
+        self.assertEqual(forensics.NO_SIBLING_PUZZLE["found"], 0)
+        self.assertGreaterEqual(len(forensics.NO_SIBLING_PUZZLE["searched"]), 4)
+
+    def test_idiom_note_does_not_refute_or_endorse_black(self):
+        """The phrase is idiomatic; the record must claim neither more nor less."""
+        import forensics
+        from puzzle import positions
+        note = forensics.IDIOM_NOTE
+        self.assertIn("rainy day", note["idiomatic"])
+        self.assertIn("pun", note["assessment"])
+        weak = {w for a in positions.PROPOSED for w in a.words
+                if a.evidence is positions.Evidence.WEAK}
+        self.assertIn("black", weak, "'black' must stay unpromoted")
+
+
 class TestWordSupplySweep(unittest.TestCase):
     """The sweep for a sixth marked word, and the honesty of its record."""
 

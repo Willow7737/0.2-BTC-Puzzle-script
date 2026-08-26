@@ -258,3 +258,107 @@ def main(argv=None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+#: Authorship and publication, established from primary sources.
+#:
+#: The artwork is **signed twice**, and both signatures were verified against
+#: pixels rather than taken from the community write-up:
+#:
+#:   * **top-left, a wordmark.** At (46,36)-(76,92), written vertically. Rotate
+#:     -90 and it reads ``CHaRLy`` - mixed case exactly so, underlined, with a
+#:     line of sub-pixel text beneath the rule. Legible in plain grayscale and
+#:     in high-pass alike.
+#:   * **bottom-right, a monogram.** At about (1533,1131)-(1554,1151), roughly
+#:     20x20 px: interlocking ``C`` ``H`` ``R`` in a rounded frame, ruled above
+#:     and below, with tiny illegible marks flanking. Consistent across the
+#:     grayscale, red and blue channels and under high-pass, so it is drawn
+#:     content and not a compression artefact.
+SIGNATURES = {
+    "wordmark": {"box": (46, 36, 76, 92), "reads": "CHaRLy",
+                 "orientation": "vertical; legible rotated -90",
+                 "verified": "grayscale and high-pass, multiple channels"},
+    "monogram": {"box": (1533, 1131, 1554, 1151), "reads": "CHR",
+                 "form": "interlocking letters in a rounded frame, ruled "
+                         "above and below",
+                 "verified": "consistent in grayscale, red and blue channels"},
+}
+
+#: How the puzzle entered the world.
+PUBLICATION = {
+    "reddit_user": "stsh_n",
+    "posted": "2020-10-08",
+    "title": "Bitcoin puzzle (2000$)",
+    "wallet_created": "2020-05-05",
+    "wallet_funded": "2020-05-10",
+    "funding_tx": "fcee21d44ee94c09869947c74b61669bf928358e9c2d1699fb075bb6ebf5d043",
+    "note": "funded five months before publication, and two weeks before the "
+            "death the artwork depicts and dates (05.25.20)",
+    "bitcointalk": "topic 5404767, opened by Minase on 2022-07-01 - a finder, "
+                   "not the author; the thread carries no statement by the "
+                   "creator and no mention of a sibling puzzle",
+}
+
+#: The community attributes the art to Charly Palmer. **That is unsupported.**
+#:
+#: The attribution rests on one coincidence - an Instagram post of his dated
+#: the same day - and on the signature reading ``CHaRLy``. Against it:
+#:
+#:   * no Palmer work matching this composition could be found;
+#:   * his medium is painting and painterly collage; this is digital
+#:     illustration;
+#:   * he is American, and the artwork's four cipher strips are **Russian**;
+#:   * no evidence he signs ``CHaRLy`` or uses a ``CHR`` monogram.
+#:
+#: The likelier reading is **two hands**: a signed base artwork, and a cipher
+#: layer added by the person who published it. That matters for method, not
+#: just credit - if the signature belongs to the base art, then finding the
+#: signer's other work cannot reveal the construction, because the
+#: construction is not theirs.
+ATTRIBUTION = {
+    "signature": "CHaRLy",
+    "community_guess": "Charly Palmer",
+    "evidence_for": "an Instagram post dated the same day; the name matches",
+    "evidence_against": ("no matching composition in his catalogue",
+                         "medium mismatch - painting vs digital illustration",
+                         "the cipher strips are Russian; he is American",
+                         "no evidence he uses this wordmark or monogram"),
+    "verdict": "unsupported - recorded as an open attribution, not a fact",
+    "likelier": "two hands - a signed base artwork plus a cipher layer added "
+                "by the publisher",
+}
+
+#: Searched for, and not found: a second puzzle by the same hand.
+#:
+#: Rune 4 ends "...НА ЧЁРНЫЙ ДЕНЬ НОМЕР X" and that trailing "number" is the
+#: natural place a series would announce itself. Nothing surfaced: no sibling
+#: puzzle, no other artwork carrying either signature, no statement by the
+#: author anywhere in the public record.
+NO_SIBLING_PUZZLE = {
+    "searched": ("the publisher's other posts", "the BitcoinTalk thread",
+                 "the two community analysis repositories",
+                 "general web search for a second puzzle with these ciphers"),
+    "found": 0,
+    "consequence": "no solved sibling exists to reveal the construction",
+}
+
+#: A translation correction that costs the community a proposed seed word.
+#:
+#: ``НА ЧЁРНЫЙ ДЕНЬ`` is a **fixed Russian idiom** - literally "for a black
+#: day", idiomatically "for a rainy day", i.e. money put by for hard times.
+#: Rune 4 is therefore saying "here are bitcoins put by for hard times,
+#: number X" - flavour text, not a word clue.
+#:
+#: The community reads it literally as "black day" and derives the seed word
+#: ``black`` at position 10 from it. That literalises an idiom. The BLM
+#: subject matter does make a deliberate pun on ЧЁРНЫЙ possible, so this is
+#: not a refutation - but an idiom cannot carry the weight of a position
+#: assignment, and ``black`` should not be treated as evidenced.
+IDIOM_NOTE = {
+    "phrase": "НА ЧЁРНЫЙ ДЕНЬ",
+    "literal": "for a black day",
+    "idiomatic": "for a rainy day - savings against hard times",
+    "community_reading": "'black day number X', yielding the seed word 'black'",
+    "assessment": "literalises a fixed idiom; a pun on ЧЁРНЫЙ is possible "
+                  "given the subject, but the phrase evidences no seed word",
+}
