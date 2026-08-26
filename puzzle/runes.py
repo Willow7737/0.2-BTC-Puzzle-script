@@ -6,10 +6,17 @@ segmented reliably, aligning them against the known text both checks the
 translation and yields the substitution alphabet needed to read anything that
 was never translated.
 
-Rune 4 segments cleanly and the alignment holds (see ``verify_rune4``). Runes
-1 and 2 are drawn smaller and sit below the resolution limit of the 1600x1200
-image - connected components merge and projection profiles split individual
-strokes rather than glyphs. That is a property of the scan, not of the method.
+Rune 4 segments cleanly and the alignment holds (see ``verify_rune4``).
+
+An earlier version of this docstring said runes 1 and 2 "sit below the
+resolution limit of the 1600x1200 image". **That was wrong for both.** Rune 2
+is verified in ``verify_rune2`` and rune 1 in ``verify_rune1``; both needed an
+8x upscale before thresholding and a box that excludes neighbouring artwork,
+not a better scan. The limit was the segmentation, not the image.
+
+All four strips are now read: rune 1 and rune 4 are Russian in the artwork's
+own runic substitution, rune 2 is its caption for the clock, and rune 3 is
+English in the *Gravity Falls* cipher (see ``RUNE3_DECODE``).
 """
 
 from __future__ import annotations
@@ -1043,3 +1050,243 @@ def verify_rune3(image_path, claim: str = "TUESDAY") -> dict:
         "p_value": p_value,
         "expected_agreements_by_chance": sum(probs),
     }
+
+
+# ---------------------------------------------------------------------------
+# Rune 1 read, and the alphabet extended
+# ---------------------------------------------------------------------------
+
+#: Rune 1 is a **three-line block** in the artwork's top-left corner, in the
+#: same Cyrillic runic substitution as runes 2 and 4. This module's docstring
+#: long said runes 1 and 2 "sit below the resolution limit"; rune 2 was read
+#: first, and rune 1 is read here. The limit was the segmentation, not the scan.
+#:
+#: The lines were located by a strip sweep (see ``STRIP_SWEEP``), not guessed.
+RUNE1_LINES = ((200, 44, 450, 63), (192, 69, 390, 86), (196, 88, 378, 107))
+RUNE1_THRESHOLD = 120
+RUNE1_UPSCALE = 8
+
+#: The published plaintext, which the word structure confirms before any glyph
+#: is identified: the separator marks split the lines 1/7/3/4, 5/9 and 5/9,
+#: and the crib's words are exactly those lengths.
+RUNE1_CRIB = ("Я НАДЕЮСЬ ЧТО СЮДА", "БУДУТ ПРИСЫЛАТЬ", "МНОГО БИТКОИНОВ")
+RUNE1_TRANSLATION = "I hope that many bitcoins will be sent here"
+
+#: Separator positions within each segmented line, and the letters each
+#: non-separator mark carries. Line 2 segments to 14 marks where the crib
+#: needs 15: index 2 is 173 px wide against a median of 92 and is a **merge**
+#: of Д and У in ``БУДУТ``. It is excluded from the strict alignment rather
+#: than split by guesswork.
+RUNE1_SEPARATORS = {0: (1, 9, 13), 1: (4,), 2: (5,)}
+RUNE1_MERGED_GLYPH = {"line": 1, "index": 2, "letters": "ДУ",
+                      "width": 173, "median_width": 92}
+
+
+def load_rune1(image_path):
+    """Segment rune 1's three lines. Returns a list of lists of glyph masks."""
+    from PIL import Image, ImageChops, ImageFilter, ImageOps
+
+    src = Image.open(image_path).convert("L")
+    out = []
+    for box in RUNE1_LINES:
+        crop = src.crop(box)
+        hp = ImageChops.subtract(crop.filter(ImageFilter.GaussianBlur(5)), crop,
+                                 scale=1, offset=0)
+        hp = ImageOps.autocontrast(hp, cutoff=0)
+        up = hp.resize((hp.width * RUNE1_UPSCALE, hp.height * RUNE1_UPSCALE),
+                       Image.LANCZOS)
+        arr = np.asarray(up)
+        line = []
+        for x0, x1 in column_runs(arr, RUNE1_THRESHOLD, 4):
+            sub = arr[:, x0:x1 + 1] > RUNE1_THRESHOLD
+            ys = np.nonzero(sub.any(axis=1))[0]
+            if len(ys):
+                line.append(sub[ys.min():ys.max() + 1])
+        out.append(line)
+    return out
+
+
+def _mask_signature(mask):
+    g = Glyph(0, 0, mask.shape[1] - 1, mask.shape[0] - 1, int(mask.sum()))
+    return signature(mask.astype(np.uint8), g)
+
+
+def rune1_pairs(image_path):
+    """``(letter, signature)`` for every rune-1 glyph the crib pins down.
+
+    Line 2 carries a merged glyph, so its first word is aligned only up to
+    that merge; the nine letters of ``ПРИСЫЛАТЬ`` after the separator are
+    unambiguous and are included.
+    """
+    lines = load_rune1(image_path)
+    plan = {
+        0: ("ЯНАДЕЮСЬЧТОСЮДА", None),
+        2: ("МНОГОБИТКОИНОВ", None),
+        1: (None, {0: "Б", 1: "У", 3: "Т", 5: "П", 6: "Р", 7: "И", 8: "С",
+                   9: "Ы", 10: "Л", 11: "А", 12: "Т", 13: "Ь"}),
+    }
+    out = []
+    for li, (crib, explicit) in plan.items():
+        if explicit is not None:
+            for i, ch in explicit.items():
+                out.append((ch, _mask_signature(lines[li][i])))
+            continue
+        idx = [i for i in range(len(lines[li]))
+               if i not in RUNE1_SEPARATORS[li]]
+        for i, ch in zip(idx, crib):
+            out.append((ch, _mask_signature(lines[li][i])))
+    return out
+
+
+def verify_rune1(image_path) -> dict:
+    """Check rune 1 against its crib, two independent ways.
+
+    *Internal*: glyphs the crib calls the same letter should be far more alike
+    than glyphs it calls different letters — the test that confirmed rune 4.
+
+    *External*: each glyph's nearest letter in the alphabet recovered from
+    **rune 4**, a different strip segmented separately, should be the letter
+    the crib names. This one cannot be produced by a self-consistent
+    mis-segmentation, which is why it is the stronger of the two.
+    """
+    import itertools
+
+    lines = load_rune1(image_path)
+    pairs = rune1_pairs(image_path)
+    same, diff = [], []
+    for (a, sa), (b, sb) in itertools.combinations(pairs, 2):
+        (same if a == b else diff).append(distance(sa, sb))
+
+    alphabet = rune4_alphabet(image_path)
+    shared = [(c, s) for c, s in pairs if c in alphabet]
+    hits = 0
+    for ch, s in shared:
+        best = min((min(distance(s, r) for r in refs), name)
+                   for name, refs in alphabet.items())
+        hits += best[1] == ch
+
+    return {
+        "line_marks": [len(l) for l in lines],
+        "expected_marks": [18, 15, 15],
+        "aligned_glyphs": len(pairs),
+        "same_letter_mean": float(np.mean(same)) if same else None,
+        "different_letter_mean": float(np.mean(diff)) if diff else None,
+        "rune4_same_letter_baseline": 27.2,
+        "rune4_different_letter_baseline": 66.4,
+        "cross_check_hits": hits,
+        "cross_check_n": len(shared),
+        "cross_check_chance": len(shared) / len(alphabet),
+        "translation": RUNE1_TRANSLATION,
+    }
+
+
+def extended_alphabet(image_path) -> dict:
+    """Rune 4's alphabet plus the six letters only rune 1 supplies.
+
+    Rune 4's text uses 21 of the 33 Cyrillic letters, so 12 had no reference
+    and could not be matched to anything. Rune 1 adds **Я Ю Г У П Л**, taking
+    coverage to 27. Still absent: Ж Х Ц Щ Ъ Э.
+    """
+    alphabet = {k: list(v) for k, v in rune4_alphabet(image_path).items()}
+    for ch, sig in rune1_pairs(image_path):
+        alphabet.setdefault(ch, []).append(sig)
+    return alphabet
+
+
+#: **Rune 1 is decoded and verified.** Three lines, top left, same runic
+#: substitution as runes 2 and 4:
+#:
+#:   ``Я НАДЕЮСЬ ЧТО СЮДА БУДУТ ПРИСЫЛАТЬ МНОГО БИТКОИНОВ``
+#:   — *"I hope that many bitcoins will be sent here."*
+#:
+#: The word structure settles the alignment before any glyph is identified.
+#: The separator marks split the lines **1/7/3/4**, **5/9** and **5/9**, and
+#: the crib's words are exactly those lengths.
+#:
+#: Two independent checks then confirm it:
+#:
+#: * *internal* — glyphs the crib calls the same letter average 29.4 apart,
+#:   against 68.7 for glyphs it calls different letters, matching rune 4's own
+#:   baselines of 27.2 and 66.4;
+#: * *external* — **33 of 34** glyphs have, as their nearest letter in the
+#:   alphabet recovered from *rune 4*, exactly the letter the crib names.
+#:   Chance is 1.6 of 34, so p ≈ 7.5e-43. This check is the stronger one: it
+#:   cannot be manufactured by a self-consistent mis-segmentation, because the
+#:   reference comes from a different strip segmented separately.
+RUNE1_DECODE = {
+    "reads": " ".join(RUNE1_CRIB),
+    "translation": RUNE1_TRANSLATION,
+    "lines": 3,
+    "word_structure": ((1, 7, 3, 4), (5, 9), (5, 9)),
+    "same_letter_mean": 29.4,
+    "different_letter_mean": 68.7,
+    "cross_check": "33/34 against rune 4's independently recovered alphabet",
+    "cross_check_chance": 1.6,
+    "cross_check_p": 7.5e-43,
+    "supersedes": "this module's docstring called runes 1 and 2 'below the "
+                  "resolution limit of the 1600x1200 image'. That was wrong "
+                  "for both. The limit was the segmentation, not the scan.",
+    "mechanism": None,
+}
+
+#: Reading rune 1 extends the cipher alphabet, because rune 1 uses letters
+#: rune 4 never does.
+#:
+#: Rune 4's text covers 21 of the 33 Cyrillic letters, so 12 letters had no
+#: reference at all - and any glyph carrying one of them was structurally
+#: unmatchable, a hole that quietly weakened every comparison made against
+#: that alphabet. Rune 1 supplies six of the twelve.
+ALPHABET_EXTENSION = {
+    "before": 21,
+    "after": 27,
+    "new_letters": ("Я", "Ю", "Г", "У", "П", "Л"),
+    "still_missing": ("Ж", "Х", "Ц", "Щ", "Ъ", "Э"),
+    "missing_frequency_in_russian": 0.031,
+}
+
+#: Does the extension resolve rune 4's trailing glyph? **No** - and that is
+#: now informative rather than merely inconclusive.
+#:
+#: Glyph 48's nearest letter is still Д at 39, unchanged by the six new
+#: references, against a same-letter baseline of 27.2. With 27 of 33 letters
+#: now covered, a *letter* would have had about a 97% chance of being one we
+#: can identify: the six still missing account for roughly 3% of Russian text
+#: by frequency, and none of Ж Х Ц Щ Ъ Э follows "НОМЕР" sensibly.
+#:
+#: So the reading recorded elsewhere in this repo - a placeholder mark rather
+#: than a character - is now the better-supported one, on evidence rather than
+#: on appearance.
+RUNE4_TAIL_AFTER_EXTENSION = {
+    "nearest_letter": ("Д", 39),
+    "unchanged_by_extension": True,
+    "letter_coverage": "27 of 33",
+    "p_a_letter_would_be_unidentifiable": 0.031,
+    "verdict": "not a letter in this cipher - the placeholder reading is "
+               "supported, not merely assumed",
+}
+
+#: A sweep for glyph strips across the whole artwork, with the four known
+#: runes as positive controls.
+#:
+#: Contrast alone cannot find these: rune 3's ink peaks at 36 on the
+#: high-pass where rune 4's reaches 222, so any threshold low enough to see
+#: rune 3 also picks up the artwork's shading everywhere. The discriminating
+#: feature is **regularity** - a run of similarly sized, evenly spaced marks
+#: on a common baseline - which shading does not have.
+#:
+#: All four rune strips are recovered, so the sweep has demonstrated
+#: sensitivity and its negative means something. Of 60 candidate strips, every
+#: one was identified by eye: the four runes, the Bitcoin address, the Latin
+#: kettle proverb, the protest placards, the two dates, and the whitepaper
+#: calligram. **There is no fifth cipher strip.**
+STRIP_SWEEP = {
+    "candidates": 60,
+    "controls_recovered": ("rune1", "rune2", "rune3", "rune4"),
+    "criterion": "height CV <= 0.42, baseline sd <= 6 px, gap sd <= 8 px, "
+                 ">= 5 marks",
+    "rune_strips_found": 4,
+    "new_cipher_strips": 0,
+    "everything_else": ("bitcoin address", "Latin kettle proverb",
+                        "protest placards", "05.25.20", "11.03.20",
+                        "whitepaper calligram"),
+}

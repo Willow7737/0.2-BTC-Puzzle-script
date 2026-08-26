@@ -830,6 +830,90 @@ saying "sum of two numbers". That is no longer an assumption carried from
 elsewhere — it is verified against pixels with an independent key. The three
 confirmed positions stand on firmer ground than they did.
 
+#### Rune 1 read — and the cipher alphabet extended
+
+This document and `puzzle/runes.py` both said runes 1 and 2 "sit below the
+resolution limit of the 1600×1200 image". **That was wrong for both.** Rune 2
+was read earlier; rune 1 is read here. What it needed was an 8× upscale before
+thresholding and a box that excludes the neighbouring artwork — not a better
+scan. The limit was the segmentation, not the image.
+
+Rune 1 is a **three-line block** in the top-left corner, in the same runic
+substitution as runes 2 and 4:
+
+> `Я НАДЕЮСЬ ЧТО СЮДА БУДУТ ПРИСЫЛАТЬ МНОГО БИТКОИНОВ`
+> — *"I hope that many bitcoins will be sent here."*
+
+**The word structure settles the alignment before any glyph is identified.**
+The separator marks split the lines `1/7/3/4`, `5/9` and `5/9` — and the crib's
+words are exactly those lengths. That is eight independent length constraints
+satisfied at once.
+
+Two further checks confirm it:
+
+| Check | Result | Baseline |
+|---|---|---|
+| glyphs the crib calls the **same** letter | mean **29.4** apart | rune 4's own same-letter baseline is 27.2 |
+| glyphs the crib calls **different** letters | mean **68.7** apart | rune 4's is 66.4 |
+| nearest letter in **rune 4's** alphabet is the crib's letter | **33 of 34** | chance is 1.6 of 34 → **p ≈ 7.5×10⁻⁴³** |
+
+The third check is the strong one. Its reference alphabet comes from a
+*different strip, segmented separately*, so it cannot be manufactured by a
+self-consistent mis-segmentation of rune 1 — the failure mode that a
+same-source test cannot rule out.
+
+One honest wrinkle: line 2 segments to 14 marks where the crib needs 15. Index
+2 is 173 px wide against a median of 92 — a **merge** of `Д` and `У` in
+`БУДУТ`. It is excluded from the strict alignment rather than split by
+guesswork, and the other nine letters of that line still score 9/9.
+
+##### The alphabet goes from 21 letters to 27
+
+This is the part that matters beyond rune 1 itself. Rune 4's text uses only 21
+of the 33 Cyrillic letters, so **12 letters had no reference at all** — any
+glyph carrying one was structurally unmatchable. That hole quietly weakened
+every comparison ever made against that alphabet.
+
+Rune 1 supplies six of the twelve: **`Я Ю Г У П Л`**. Coverage is now 27 of 33;
+still absent are `Ж Х Ц Щ Ъ Э`.
+
+##### What that does to rune 4's trailing glyph
+
+Nothing — and the nothing is now informative. Glyph 48's nearest letter is
+still `Д` at 39, unchanged by the six new references, against a same-letter
+baseline of 27.2.
+
+With 27 of 33 letters covered, a *letter* would have had roughly a 97% chance
+of being one we can now identify: the six still missing account for about 3% of
+Russian text by frequency, and none of `Ж Х Ц Щ Ъ Э` follows "НОМЕР" sensibly.
+So the placeholder reading recorded elsewhere in this repo is now supported by
+evidence rather than by appearance.
+
+#### A sweep for a fifth cipher strip — there is none
+
+Knowing a second cipher was in play made it worth asking whether any strip had
+been missed. Contrast alone cannot answer it: **rune 3's ink peaks at 36 on the
+high-pass where rune 4's reaches 222**, so any threshold low enough to see rune
+3 also picks up the artwork's shading everywhere.
+
+The discriminating feature is **regularity** — a run of similarly sized, evenly
+spaced marks on a common baseline, which shading does not have. The criterion
+was height CV ≤ 0.42, baseline sd ≤ 6 px, gap sd ≤ 8 px, ≥ 5 marks.
+
+**All four rune strips come back as positive controls**, so the sweep has
+demonstrated sensitivity and its negative is worth something. Two earlier
+attempts did not: a native-resolution sweep missed runes 2 and 3 entirely, and
+a tiled sweep with per-tile normalisation recovered 1 of 14 and 5 of 7 of their
+glyphs. Neither could have supported a negative, and neither is reported as one.
+
+Of **60 candidate strips, every one was identified**: the four runes, the
+Bitcoin address, the Latin kettle proverb, the protest placards, the dates
+`05.25.20` and `11.03.20`, and the whitepaper calligram. **There is no fifth
+cipher strip.**
+
+Rune 1 is a wish. It names no rule and contains no number, so the capacity
+bound stays at four — but the artwork's runic text is now completely read.
+
 #### Rune 3 decoded: `TUESDAY`, in the Gravity Falls cipher
 
 Rune 3 floats free above Trump, attached to no object, beside a large question
@@ -942,7 +1026,7 @@ It is unresolvable from internal evidence.
 
 | Strip | Content | Mechanism? |
 |---|---|---|
-| Rune 1 | "I hope many bitcoins will be sent here" | no — a wish |
+| Rune 1 | **read and verified**: "I hope that many bitcoins will be sent here" | no — a wish |
 | Rune 2 | **"sum of two numbers"**, inside the dial | **yes — the clock, already counted** |
 | Rune 3 | **`TUESDAY`**, in the Gravity Falls cipher | no — names no rule, and not a BIP-39 word |
 | Rune 4 | the framing statement, ending `НОМЕР` + one glyph | no — that glyph encodes a letter appearing nowhere else in the strip, so the crib gives it no reference |

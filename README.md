@@ -147,6 +147,15 @@ $ ./forensics.py runes puzzle.png            # verify rune 4 against its crib
 $ ./forensics.py crop puzzle.png 1295,790,1495,1000 -m channel --channel r
 ```
 
+All four rune strips are now read. **Rune 1** — three lines, top left, long
+recorded here as "below the resolution limit" — is verified against its crib
+two ways: same-letter glyphs average 29.4 apart against 68.7 for different
+letters, and **33 of 34** glyphs name the crib's letter when matched against
+the alphabet recovered from *rune 4*, a different strip (chance 1.6, p ≈
+7.5e-43). Reading it extends the cipher alphabet from **21 letters to 27**,
+adding `Я Ю Г У П Л`. A regularity-based strip sweep that recovers all four
+runes as positive controls finds **no fifth cipher strip** among 60 candidates.
+
 Rune 4 segments into 50 glyphs whose word lengths match the published Russian
 plaintext exactly, and glyphs the crib calls the same letter are far more
 alike (mean distance 27.2) than random pairs (66.7) — so the translation is

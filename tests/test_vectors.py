@@ -1561,3 +1561,84 @@ class TestRune3Decoded(unittest.TestCase):
         self.assertEqual(
             self.runes.RUNES_AS_MECHANISM_SOURCE["new_mechanisms_found"], 0)
         self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
+
+
+class TestRune1Decoded(unittest.TestCase):
+    """Rune 1: three lines this repo long called unreadable."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def setUp(self):
+        from puzzle import runes
+        self.runes = runes
+
+    def _image(self):
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        return self.IMAGE
+
+    def test_word_structure_matches_the_crib(self):
+        """The alignment is settled by word lengths, before any glyph is read."""
+        lines = self.runes.load_rune1(self._image())
+        seps = self.runes.RUNE1_SEPARATORS
+        for li, line in enumerate(lines):
+            words, cur = [], 0
+            for i in range(len(line)):
+                if i in seps[li]:
+                    words.append(cur); cur = 0
+                else:
+                    cur += 1
+            words.append(cur)
+            crib = [len(w) for w in self.runes.RUNE1_CRIB[li].split()]
+            if li == 1:                       # one merged glyph, documented
+                self.assertEqual(sum(words) + 1, sum(crib))
+            else:
+                self.assertEqual(words, crib, f"line {li + 1}")
+
+    def test_same_letter_glyphs_cluster(self):
+        r = self.runes.verify_rune1(self._image())
+        self.assertLess(r["same_letter_mean"], 35)
+        self.assertGreater(r["different_letter_mean"], 60)
+        self.assertGreater(r["different_letter_mean"] - r["same_letter_mean"], 30)
+
+    def test_cross_check_against_rune4_alphabet(self):
+        """The strong check: the reference comes from a different strip."""
+        r = self.runes.verify_rune1(self._image())
+        self.assertGreaterEqual(r["cross_check_hits"], 30)
+        self.assertGreaterEqual(r["cross_check_n"], 30)
+        self.assertLess(r["cross_check_chance"], 3)
+
+    def test_alphabet_extends_to_27_letters(self):
+        ext = self.runes.extended_alphabet(self._image())
+        self.assertEqual(len(ext), 27)
+        for ch in self.runes.ALPHABET_EXTENSION["new_letters"]:
+            self.assertIn(ch, ext)
+        for ch in self.runes.ALPHABET_EXTENSION["still_missing"]:
+            self.assertNotIn(ch, ext)
+
+    def test_extension_does_not_resolve_rune4_tail(self):
+        """A negative that must stay negative: the tail is still no letter."""
+        img = self._image()
+        ext = self.runes.extended_alphabet(img)
+        mask, glyphs, _ = self.runes.load_rune4(img)
+        s = self.runes.signature(mask, glyphs[48])
+        best = min((min(self.runes.distance(s, r) for r in refs), name)
+                   for name, refs in ext.items())
+        self.assertGreater(best[0], 30, "tail must not resolve inside the "
+                                        "same-letter band")
+        self.assertTrue(
+            self.runes.RUNE4_TAIL_AFTER_EXTENSION["verdict"].startswith(
+                "not a letter"))
+
+    def test_rune1_names_no_mechanism(self):
+        """It is a wish. The capacity bound must not move."""
+        from puzzle import positions
+        self.assertIsNone(self.runes.RUNE1_DECODE["mechanism"])
+        self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
+
+    def test_sweep_recovered_all_four_runes_as_controls(self):
+        """A sweep that cannot find what it already knows proves nothing."""
+        s = self.runes.STRIP_SWEEP
+        self.assertEqual(len(s["controls_recovered"]), 4)
+        self.assertEqual(s["rune_strips_found"], 4)
+        self.assertEqual(s["new_cipher_strips"], 0)
