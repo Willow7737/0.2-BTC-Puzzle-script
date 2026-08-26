@@ -769,14 +769,70 @@ and numbered-source references; steganography; brainwallet to six words;
    poor scan — so no amount of hunting for a better copy will unblock them.
    Only the artist's own source file could.
 2. **A fourth number-bearing mechanism.** The capacity bound says one *must*
-   exist if the position reading is right. Three attempts to find one have
-   failed.
+   exist if the position reading is right. Four attempts to find one have
+   failed. The most recent re-examined the artwork directly: the clock is
+   measured to have exactly three hands, the plinth carries only Section 1,
+   and the three previously uncatalogued numerals are event captions that meet
+   neither marking convention. If a fourth mechanism exists it is not in the
+   places it could most easily have hidden.
 3. **The author's own account** of the construction.
 
 **What will not help: more CPU.** Every remaining search is unbounded because
 the word set is unknown, and a negative from guessed fillers is not a result.
 The engine has never been the constraint — it exhausted 479M orderings of a
 12-word pool in 33 minutes.
+
+### Re-examining the artwork for a fourth number-bearing object
+
+The capacity bound rested on an argument — "a clock has three hands" — and on
+having looked at the two marked words that lack numbers. Both deserved to be
+checked against pixels rather than reasoning.
+
+**The clock, measured.** High-pass the artwork, sweep a ray from the hub at
+every whole degree, and take mean ink between radius 40 and 150 (skipping the
+hub, where all hands overlap). A hand is a sustained radial ink ridge.
+
+Twelve bearings exceed 1.7× the mean. **Exactly three are hands:**
+
+| Bearing | Nearest midpoint | Off by | Hand |
+|---|---|---|---|
+| 332.0° | midpoint(1,2) = **3** | 0.4° | `TOWER` |
+| 304.0° | midpoint(12,1) = **13** | 1.6° | `MOON` |
+| 240.0° | midpoint(10,11) = **21** | 1.7° | unlabelled hour hand |
+
+The other nine sit 3.7–13.7° off, and every one falls inside the arc covered
+by the Great Seal coin, which overlaps the dial and hides numerals 4–7. They
+are its rim, rays and pyramid courses. **The clock is exhausted — there is no
+fourth hand**, and the ceiling of three is now a measurement.
+
+**The plinth, re-read.** The 13th Amendment has two sections, so a second
+underlined pair was possible in principle. Isolating the blue channel lifts
+the ink out from under the translucent red graffiti: the stone carries
+**Section 1 only**, ending at "their jurisdiction". One pairing, no second.
+
+**Three numerals nobody had catalogued.** A full numeral census turned up
+three date inscriptions absent from every record in this repository:
+
+| Numeral | Where | Reading |
+|---|---|---|
+| `05.25.20` | on George Floyd's hoodie, directly above `I can't BREATHE` | the date of the death depicted |
+| `11.03.20` | beneath the red `·VS·` between Trump and Biden | the 2020 election, drawn before the result was known |
+| `1865 - 202…?` | beside the Statue; ellipsis and `?` in red | emancipation to an unfinished present |
+
+Finding them was worth the pass. Promoting them is not warranted, on three
+counts. **Neither convention:** none is underlined and paired with an
+underlined word, and none rides a pointer — the only two marking conventions
+the artwork has ever established. **Range:** read as positions they overflow a
+24-word phrase, since `05.25.20` yields 25 and `1865 - 202…?` yields 1865 and
+2020; only `11.03.20` stays in range, and one in three is what chance looks
+like. **They are already explained:** each captions a real event the artwork
+depicts, and the red `?` appears on exactly the two open questions — when the
+struggle ends, and who wins — matching the artwork's own vertical caption,
+`THIS IS THE FIRST PREDICTION`. Nothing is left over for a puzzle role.
+
+So the fourth mechanism was not overlooked in the places it could most easily
+have hidden. The capacity bound stands at four, now measured rather than
+argued. Reproduce the hand scan with `positions.scan_hands(image)`.
 
 ### Where that leaves the numbers
 

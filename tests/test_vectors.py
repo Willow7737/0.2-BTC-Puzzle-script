@@ -829,6 +829,67 @@ class TestExtractionHypothesis(unittest.TestCase):
         self.assertEqual(ex.REFUTED["text_indexing"]["four_of_four"], 0)
 
 
+class TestFourthMechanismSearch(unittest.TestCase):
+    """Re-examination of the artwork for an overlooked number-bearing object."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def test_census_covers_the_three_newly_found_numerals(self):
+        from puzzle import positions
+        new = [k for k, v in positions.NUMERAL_CENSUS.items() if v.get("new")]
+        self.assertEqual(sorted(new),
+                         ["election_date", "emancipation_range", "hoodie_date"])
+        for entry in positions.NUMERAL_CENSUS.values():
+            self.assertIn("role", entry, "every numeral needs a stated role")
+
+    def test_new_numerals_are_not_promoted_to_assignments(self):
+        """Catalogued is not confirmed. Nothing here may reach CONFIRMED."""
+        from puzzle import positions
+        confirmed = {w for a in positions.CONFIRMED for w in a.words}
+        self.assertEqual(confirmed, {"subject", "tower", "moon"})
+        self.assertEqual(positions.DATES_NOT_A_MECHANISM["underlined"], 0)
+        self.assertEqual(positions.DATES_NOT_A_MECHANISM["on_a_pointer"], 0)
+
+    def test_dates_overflow_a_24_position_phrase(self):
+        """The hard check on the date reading, recomputed not asserted."""
+        from puzzle import positions
+        for spec in ("05.25.20", "11.03.20"):
+            parts = [int(x) for x in spec.split(".")]
+            over = [n for n in parts if not 1 <= n <= 24]
+            recorded_in_range = any(
+                spec in s for s in positions.DATES_NOT_A_MECHANISM["in_range"])
+            self.assertEqual(not over, recorded_in_range,
+                             f"{spec}: range check disagrees with the record")
+        self.assertNotIn(25, range(1, 25))
+
+    def test_capacity_bound_is_unchanged_by_the_re_examination(self):
+        from puzzle import positions
+        cap = positions.MECHANISM_CAPACITY
+        self.assertEqual(cap["clock_hands"], 3)
+        self.assertEqual(cap["explicit_adjacent_numeral"], 1)
+        self.assertEqual(cap["total_reachable"], 4)
+
+    def test_clock_has_exactly_three_hands(self):
+        """Measured from the image, not argued from 'clocks have three hands'."""
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        from puzzle import positions
+        got = positions.scan_hands(self.IMAGE)
+        self.assertEqual(len(got["hands"]), 3,
+                         "a fourth hand would break the capacity bound")
+        bearings = sorted(round(h["bearing"], 1) for h in got["hands"])
+        self.assertEqual(bearings, sorted(positions.CLOCK_HAND_CENSUS["hands"]))
+        self.assertEqual(len(got["peaks"]),
+                         positions.CLOCK_HAND_CENSUS["peaks_above_1_7x_mean"])
+
+    def test_the_three_hands_land_on_the_recorded_positions(self):
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        from puzzle import positions
+        got = positions.scan_hands(self.IMAGE)
+        self.assertEqual({h["position"] for h in got["hands"]}, {3, 13, 21})
+
+
 class TestRuneAnalysis(unittest.TestCase):
     """Rune-4 crib verification. Skipped unless the artwork is available."""
 
