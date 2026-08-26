@@ -890,6 +890,67 @@ class TestFourthMechanismSearch(unittest.TestCase):
         self.assertEqual({h["position"] for h in got["hands"]}, {3, 13, 21})
 
 
+class TestDscriptHypothesis(unittest.TestCase):
+    """Are the rune strips Dscript? If so its base-100 numerals would read
+    out rune 4's trailing 'number X'."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def test_alphabet_carries_cyrillic_only_letters(self):
+        """Dscript would transliterate; a transliteration has no soft sign."""
+        from puzzle.runes import DSCRIPT_COMPARISON, RUNE4_CRIB
+        recorded = set(DSCRIPT_COMPARISON["cyrillic_only_letters"])
+        present = {c for c in recorded if c in RUNE4_CRIB}
+        self.assertGreaterEqual(len(present), 5,
+                                "the crib must actually contain the letters "
+                                "the record claims Dscript cannot write")
+        self.assertTrue(recorded >= {"Ь", "Ы", "Ё"})
+        self.assertTrue(DSCRIPT_COMPARISON["verdict"].startswith("refuted"))
+
+    def test_marked_letter_sits_inside_its_base_letters_spread(self):
+        """Y-breve corroboration: measured, not asserted.
+
+        The crib alignment never used diacritics, so this is a prediction it
+        could not have fitted.
+        """
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        from puzzle.runes import diacritic_pairs
+        d = diacritic_pairs(self.IMAGE)
+        pair = d["И_Й"]
+        self.assertLessEqual(pair["de_dotted"], max(pair["base_intra"]),
+                             "Й must fall inside И's own instance spread")
+        self.assertLess(pair["de_dotted"], d["baseline"] * 0.6)
+
+    def test_de_dotting_does_not_move_the_uninformative_pair(self):
+        """Recorded honestly: one pair corroborates, one does not."""
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        from puzzle.runes import diacritic_pairs, DIACRITIC_EVIDENCE
+        d = diacritic_pairs(self.IMAGE)
+        self.assertEqual(d["Е_Ё"]["as_drawn"],
+                         DIACRITIC_EVIDENCE["Е_vs_Ё"]["as_drawn"])
+        self.assertGreater(d["Е_Ё"]["de_dotted"], d["baseline"] * 0.9,
+                           "the record must not overstate this pair")
+
+    def test_trailing_glyph_has_no_core_circle(self):
+        """A Dscript base-100 numeral is a circle plus directional strokes."""
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        from puzzle.runes import load_rune4, _components
+        mask, glyphs, _ = load_rune4(self.IMAGE)
+        g = glyphs[48]
+        comps = _components(mask[g.y0:g.y1 + 1, g.x0:g.x1 + 1])
+        self.assertEqual(len(comps), 1,
+                         "a base-100 numeral would not be one bare stroke group")
+
+    def test_dscript_finding_does_not_add_a_position(self):
+        """The hypothesis was a route to a fourth number. It did not supply one."""
+        from puzzle import positions
+        self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
+        self.assertEqual(len(positions.CONFIRMED), 3)
+
+
 class TestRuneAnalysis(unittest.TestCase):
     """Rune-4 crib verification. Skipped unless the artwork is available."""
 

@@ -782,6 +782,65 @@ the word set is unknown, and a negative from guessed fillers is not a result.
 The engine has never been the constraint — it exhausted 479M orderings of a
 12-word pool in 33 minutes.
 
+### Is the rune script Dscript? — refuted
+
+Dscript ("Dimensional Script", dscript.org) is a constructed 2D writing system
+built from simple geometric pen strokes. The resemblance to these runes is real
+enough to be worth testing — both alphabets are triangles, circles, bars and
+crosses — and Dscript defines a **base-100 numeral**: a core circle with
+directional strokes, nine for units and nine for tens, two decimal digits per
+glyph.
+
+That is why this mattered. Rune 4 reads "…НОМЕР" — *number* — and then one
+unresolved glyph. If that glyph were a Dscript base-100 numeral it would read
+out a two-digit number, and **that would be the fourth number-bearing mechanism
+the capacity bound says must exist.**
+
+It is not Dscript. Four checks, none depending on the others:
+
+1. **Cyrillic-only letters have their own glyphs.** The recovered alphabet
+   contains `Ь` (soft sign), `Ы`, `Ё`, `Й`, `Ч`, `Ш`, `Ф`. Dscript is optimised
+   for English, and writing Russian in it means transliterating — its digraph
+   set (`CH SH ST TH TS QU NG`) is exactly what a transliteration needs. A
+   transliteration has no soft sign and no `Ы`.
+2. **A Cyrillic diacritic relationship survives in the shapes** (below).
+   Dscript has no device by which one letter is another plus a diacritic.
+3. **The letter-to-shape assignments do not match.** Rune `О` is a chevron
+   where Dscript `O` is a circle; rune `С` is a diamond where Dscript `S` is
+   `C`; rune `И` is φ, which in Dscript is `M`. The visual vocabulary overlaps;
+   the mapping does not.
+4. **The trailing glyph is not a base-100 numeral.** It is one connected
+   component — a vertical stem crossed by two diagonals — with no core circle.
+   Every Dscript base-100 number is a circle plus strokes.
+
+#### What the comparison did produce
+
+The rune-4 alignment was fitted on two things only: word lengths between
+separator glyphs, and the similarity of glyphs the crib says are the same
+letter. **It never looked at diacritics.** So it makes a prediction it could not
+have engineered — the glyph it lands on for `Й` should be the glyph it lands on
+for `И`, plus a mark.
+
+| Pair | As drawn | De-dotted | Base letter's own spread | Baseline |
+|---|---|---|---|---|
+| `И` → `Й` | 27 | **24** | 25, 30, 33 | 66.4 |
+| `Е` → `Ё` | 71 | 71 | 20, 51, 59 | 66.4 |
+
+`Й` sits **inside `И`'s own instance-to-instance spread** — it is as close to
+`И` as `И` is to itself. That is independent corroboration of the decode, from
+a direction the crib cannot reach.
+
+`Е`/`Ё` does not corroborate. Reported anyway: at 71 it is at the baseline. But
+`Е` is drawn inconsistently — its own three instances differ by as much as 59 —
+so this is a weak negative, not a contradiction. One pair confirms, one is
+uninformative, and the record says so.
+
+**The trailing glyph stays unresolved.** Its nearest letter is `Д` at distance
+39 — above the mean intra-letter distance of 27 but below the maximum of 59, so
+the measurement neither identifies it nor excludes it. What can now be said is
+narrower and firmer: it is *not* a Dscript numeral, so no reading of it is
+available from that direction.
+
 ### Re-examining the artwork for a fourth number-bearing object
 
 The capacity bound rested on an argument — "a clock has three hands" — and on
