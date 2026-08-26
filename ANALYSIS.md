@@ -1004,10 +1004,41 @@ Russian by letter frequency, so ~5×10⁻⁶.
 ##### What it is worth
 
 `tuesday` is **not a BIP-39 word**, so it is not a seed word. It names no
-mechanism, so the capacity bound stays at four. What it establishes is
-narrower and still worth having: **a second cipher is in play in this
-artwork**, drawn from a source the artwork separately signposts, and the one
-strip that floats free of every object is the one that carries it.
+mechanism, so the capacity bound stays at four. What the decode establishes is
+that **a second cipher is in play**, from a source the artwork separately
+signposts by drawing the Great Seal's pyramid as Bill Cipher.
+
+**Every reading of `TUESDAY` gives the number 2:**
+
+| Reading | Value |
+|---|---:|
+| ISO-8601 weekday (Monday = 1) | **2** |
+| Russian *вторник*, from *второй* — "second" — and the artist writes Russian | **2** |
+| The wallet was created on Tuesday 5 May 2020 | **2** |
+| The election the artwork draws as `11.03.20` was Tuesday 3 November 2020 | **2** |
+
+The last is nearly vacuous — US elections are always Tuesdays — but the others
+are independent, and they converge.
+
+Where 2 would fit is the interesting part. The clock reaches positions 3–23 and
+nothing else; the plinth supplies 1; **positions 2 and 24 are the only ones
+with no mechanism at all.** A standalone clue is exactly what position 2
+requires — and rune 3 is the one strip deliberately set apart: floating free of
+every object, in English, in a different cipher, beside a question mark.
+
+**It is not promoted, for two reasons.**
+
+1. **It supplies a number but no word.** Every confirmed position pairs a word
+   *with* a number — `subject`+1, `tower`+3, `moon`+13. Rune 3 gives a bare
+   ordinal attached to nothing. It cannot complete position 2 on its own; at
+   most it says position 2 is in play.
+2. **The mapping was chosen after the decode.** That position 2 was a gap was
+   established first, which helps — but "Tuesday means 2" was picked knowing
+   the answer needed to be 2.
+
+What it does do is give position 2 a *second, independent* pointer. It had
+rested solely on `camera`, from counting the two cameras drawn — an incidental
+count, recorded at the weakest evidence level.
 
 ##### Rune 4's trailing glyph
 

@@ -1290,3 +1290,55 @@ STRIP_SWEEP = {
                         "protest placards", "05.25.20", "11.03.20",
                         "whitepaper calligram"),
 }
+
+
+#: What is ``TUESDAY`` for? It is not a BIP-39 word, so it is not a seed word.
+#:
+#: **Every reading of it gives the number 2.**
+#:
+#: * ISO-8601 makes Tuesday weekday **2** (Monday is 1);
+#: * the Russian for Tuesday, *вторник*, derives transparently from *второй*,
+#:   "second" - and the artist writes Russian;
+#: * the wallet was created on **Tuesday 5 May 2020**;
+#: * the US election the artwork draws as ``11.03.20`` was **Tuesday 3
+#:   November 2020** - though US elections are always Tuesdays, so that one
+#:   is nearly vacuous as a coincidence.
+#:
+#: Where 2 would fit is the interesting part. Section 3 of ANALYSIS.md shows
+#: the clock can reach positions 3 to 23 and nothing else; position 1 comes
+#: from the plinth; **positions 2 and 24 are the only ones with no mechanism
+#: at all**. So a standalone clue is exactly what position 2 requires, and
+#: rune 3 is the one strip deliberately set apart - floating free of every
+#: object, in English, in a different cipher, beside a question mark.
+#:
+#: **It is not promoted, for two reasons.**
+#:
+#: 1. *It supplies a number but no word.* Every confirmed position pairs a
+#:    word **with** a number - ``subject``+1, ``tower``+3, ``moon``+13. Rune 3
+#:    gives a bare ordinal attached to nothing, so it cannot complete position
+#:    2 on its own; at best it says position 2 is in play.
+#: 2. *The mapping was chosen after the decode.* That position 2 was a gap
+#:    was established first, which helps - but "Tuesday means 2" was picked
+#:    knowing the answer needed to be 2.
+#:
+#: What it does do is give position 2 a second, independent pointer. It had
+#: rested on ``camera``, from counting the two cameras drawn - an incidental
+#: count, recorded at the weakest evidence level.
+TUESDAY_AS_A_NUMBER = {
+    "readings": {
+        "iso_weekday": 2,
+        "russian_etymology": "вторник from второй, 'second'",
+        "wallet_created": "Tuesday 5 May 2020",
+        "election_drawn_in_artwork": "Tuesday 3 November 2020",
+    },
+    "all_readings_agree_on": 2,
+    "why_2_is_interesting": "the clock reaches 3..23; the plinth gives 1; "
+                            "positions 2 and 24 are the only ones with no "
+                            "mechanism, so 2 is exactly where a standalone "
+                            "clue is required",
+    "promoted": False,
+    "blockers": ("supplies a number but no word, unlike every confirmed pair",
+                 "the Tuesday->2 mapping was chosen after the decode"),
+    "existing_proposal_for_2": "camera, from an incidental count of two "
+                               "cameras drawn",
+}

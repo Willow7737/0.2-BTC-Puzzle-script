@@ -1642,3 +1642,32 @@ class TestRune1Decoded(unittest.TestCase):
         self.assertEqual(len(s["controls_recovered"]), 4)
         self.assertEqual(s["rune_strips_found"], 4)
         self.assertEqual(s["new_cipher_strips"], 0)
+
+
+class TestTuesdayAsANumber(unittest.TestCase):
+    """TUESDAY points at 2 under every reading. It stays unpromoted."""
+
+    def test_all_readings_agree_on_two(self):
+        from puzzle import runes
+        self.assertEqual(runes.TUESDAY_AS_A_NUMBER["all_readings_agree_on"], 2)
+
+    def test_the_dates_really_were_tuesdays(self):
+        """Recomputed, not asserted."""
+        import datetime as dt
+        self.assertEqual(dt.date(2020, 5, 5).isoweekday(), 2)    # wallet created
+        self.assertEqual(dt.date(2020, 11, 3).isoweekday(), 2)   # election
+        self.assertNotEqual(dt.date(2020, 5, 10).isoweekday(), 2)  # funding
+
+    def test_it_is_not_promoted(self):
+        """A bare ordinal with no word cannot complete a position."""
+        from puzzle import runes, positions
+        rec = runes.TUESDAY_AS_A_NUMBER
+        self.assertFalse(rec["promoted"])
+        self.assertEqual(len(rec["blockers"]), 2)
+        confirmed = {a.position for a in positions.CONFIRMED}
+        self.assertNotIn(2, confirmed, "position 2 must not be confirmed")
+
+    def test_position_2_is_still_unreachable_by_the_clock(self):
+        """The gap that makes the reading interesting must remain a gap."""
+        from puzzle import positions
+        self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
