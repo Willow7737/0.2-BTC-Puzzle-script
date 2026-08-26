@@ -1967,3 +1967,32 @@ class TestMarkingDevices(unittest.TestCase):
 
     def test_underline_used_once(self):
         self.assertEqual(self.p.UNDERLINE_SWEEP["genuine_outside_the_plinth"], 0)
+
+
+class TestCountsMustBeReadable(unittest.TestCase):
+    """A count a solver cannot recover cannot be the intended clue."""
+
+    def setUp(self):
+        from puzzle import positions
+        self.p = positions
+        self.rec = positions.COUNTS_MUST_BE_READABLE
+
+    def test_flag_star_count_is_unreadable_not_deviant(self):
+        r = self.rec
+        self.assertNotEqual(r["flag_stars_detected"], r["flag_stars_canonical"])
+        self.assertTrue(r["verdict"].endswith("unreadable count"))
+        # rows of a real 50-star canton alternate 6 and 5; these do not
+        self.assertNotIn(set(r["flag_star_rows"]), [{5, 6}])
+
+    def test_it_is_a_separate_filter_from_chosen_versus_inherited(self):
+        chosen = set(self.p.CHOSEN_VERSUS_INHERITED["chosen"])
+        inherited = set(self.p.CHOSEN_VERSUS_INHERITED["inherited"])
+        self.assertTrue(chosen and inherited)
+        self.assertIn("cannot be the intended clue", self.rec["principle"])
+
+    def test_creator_posts_recorded_as_environment_blocked(self):
+        rec = self.p.CREATOR_POSTS_UNREACHABLE
+        self.assertIn("reddit.com", rec["routes_tried"])
+        self.assertIn("web.archive.org", rec["routes_tried"])
+        self.assertTrue(rec["snapshot_exists"])
+        self.assertIn("open to any browser", rec["verdict"])

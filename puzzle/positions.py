@@ -1072,3 +1072,83 @@ MARKING_DEVICES = {
     "what_would_overturn_it": "one further word paired with a number by a "
                               "device that survives a control",
 }
+
+
+#: **A clue must be readable to be a clue.** A second filter on count-based
+#: proposals, independent of the chosen/inherited split.
+#:
+#: Even a *chosen* count is useless if a solver cannot recover it from the
+#: published image. The artist cannot have relied on a number nobody can read
+#: back, whatever they intended when drawing it.
+#:
+#: The flag is the clear case. A US flag canonically carries 50 stars and 13
+#: stripes, so a **deviation** would be chosen and would carry real
+#: information - which makes it worth counting. But the flag is drawn waving,
+#: rotated and partly folded, freehand. Isolating the salmon-red star colour
+#: and taking connected components returns **45** star-sized blobs, arranged in
+#: rows of 3, 5, 8, 8, 8, 7, 4, 1, 1 - not a grid at all, because the canton is
+#: tilted and the folds occlude stars.
+#:
+#: 45 against a canonical 50 is not evidence of a deviation; it is evidence
+#: that the count is **unreadable**. Any solver would get a different number.
+#:
+#: So count-based proposals split three ways, not two:
+#:
+#: ==================  ==========================================
+#: readable + chosen    evidence
+#: readable + inherited carries nothing (CHOSEN_VERSUS_INHERITED)
+#: unreadable           cannot be a clue at all
+#: ==================  ==========================================
+#:
+#: Unreadable by this test: the flag's stars and stripes, the Great Seal
+#: pyramid's courses in dense line art, and "17 years of gold prices" - which
+#: needs data the image does not contain.
+COUNTS_MUST_BE_READABLE = {
+    "principle": "a count a solver cannot recover from the image cannot be "
+                 "the intended clue, whatever the artist intended",
+    "flag_stars_detected": 45,
+    "flag_stars_canonical": 50,
+    "flag_star_rows": (3, 5, 8, 8, 8, 7, 4, 1, 1),
+    "why_unreadable": "drawn waving, rotated and folded, freehand - the canton "
+                      "has no readable grid and folds occlude stars",
+    "unreadable_examples": ("flag stars", "flag stripes",
+                            "Great Seal pyramid courses",
+                            "17 years of gold prices"),
+    "verdict": "45 vs 50 is not a deviation, it is an unreadable count",
+}
+
+#: The one external lead, and why it is closed **from here**.
+#:
+#: u/stsh_n's other posts are the highest-value thing nobody has read: the
+#: creator's own words, if any exist. Every route available in this environment
+#: has been tried and failed.
+#:
+#: ===============================  ==========================================
+#: route                             result
+#: ===============================  ==========================================
+#: reddit.com / old.reddit / api     403 - Reddit's own block page, not the
+#:                                   proxy; Reddit refuses datacenter IPs
+#: web.archive.org                   blocked by the environment's egress
+#:                                   policy, though archive.org's availability
+#:                                   API is reachable and confirms a snapshot
+#:                                   of the profile exists (2025-03-27)
+#: timetravel.mementoweb.org         CONNECT tunnel refused
+#: web search                        nothing indexed for the username
+#: ===============================  ==========================================
+#:
+#: **A snapshot of the profile exists and is simply out of reach from here.**
+#: Anyone with an ordinary browser can open it in a minute. That is the single
+#: highest-value action available to a human on this puzzle, and it is not
+#: something more compute or more image analysis can substitute for.
+CREATOR_POSTS_UNREACHABLE = {
+    "target": "https://www.reddit.com/user/stsh_n/",
+    "snapshot_exists": "web.archive.org/web/20250327170626/",
+    "routes_tried": ("reddit.com", "old.reddit.com", "api.reddit.com",
+                     "web.archive.org", "timetravel.mementoweb.org",
+                     "web search"),
+    "blocked_by": {"reddit": "403, Reddit blocks datacenter IPs",
+                   "web.archive.org": "environment egress policy",
+                   "timetravel": "CONNECT tunnel refused",
+                   "search": "nothing indexed"},
+    "verdict": "closed from this environment, open to any browser",
+}

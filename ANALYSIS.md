@@ -1924,6 +1924,63 @@ way to reach the rest. The repository this artwork is archived in is titled
 that survives a control. Not a candidate word, and not compute — one verified
 pairing. That is the entire bar, and nothing has cleared it since the plinth.
 
+## 11h. Two more filters, and the one lead that is out of reach
+
+### A clue must be readable to be a clue
+
+A second filter on count-based proposals, independent of the chosen/inherited
+split in §11d. Even a *chosen* count is useless if a solver cannot recover it
+from the published image — the artist cannot have relied on a number nobody can
+read back.
+
+The flag is the clean case, and it looked genuinely promising: a US flag
+canonically carries 50 stars and 13 stripes, so a **deviation** would be a
+chosen number carrying real information. Worth counting.
+
+Isolating the salmon-red star colour and taking connected components returns
+**45** star-sized blobs, in rows of `3, 5, 8, 8, 8, 7, 4, 1, 1`. That is not a
+grid — the flag is drawn waving, rotated and folded, freehand, so the canton has
+no readable rows and the folds occlude stars.
+
+**45 against 50 is not a deviation. It is an unreadable count.** Any solver
+would get a different number.
+
+So count proposals split three ways rather than two:
+
+| | |
+|---|---|
+| readable + chosen | evidence |
+| readable + inherited | carries nothing (§11d) |
+| **unreadable** | **cannot be a clue at all** |
+
+Unreadable by this test: the flag's stars and stripes, the Great Seal pyramid's
+courses in dense line art, and "17 years of gold prices" — which needs data the
+image does not contain.
+
+### The foundation re-checked
+
+Everything rests on three CONFIRMED assignments, so the two clock ones were
+re-verified against pixels rather than notes: **`TOWER` and `MOON` are both
+plainly written along their hands**, mirrored with the clock face. The
+foundation holds.
+
+### u/stsh_n's other posts: closed from here, open to any browser
+
+The creator's own words, if any exist, remain the highest-value unread thing.
+Every route available in this environment has been tried:
+
+| Route | Result |
+|---|---|
+| `reddit.com` / `old.reddit.com` / `api.reddit.com` | **403** — Reddit's own block page, not the proxy; Reddit refuses datacenter IPs |
+| `web.archive.org` | **blocked by the environment's egress policy** — though `archive.org`'s availability API *is* reachable and confirms a profile snapshot exists, dated 2025-03-27 |
+| `timetravel.mementoweb.org` | CONNECT tunnel refused |
+| web search | nothing indexed for the username |
+
+**A snapshot of that profile exists and is simply out of reach from this
+container.** Anyone with an ordinary browser opens it in a minute. That is the
+single highest-value action available on this puzzle, and no amount of compute
+or further image analysis substitutes for it.
+
 ## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
