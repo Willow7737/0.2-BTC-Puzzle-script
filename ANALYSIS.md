@@ -1558,25 +1558,35 @@ on 2020-05-10.
 This sits well with the authorship finding in section 10 — a signed base
 artwork plus a cipher layer, plausibly two hands and certainly two dates.
 
-### The constraint makes a prediction, and it holds
+### What the constraint does and does not exclude
 
-If the seed predates 2020-05-10, seed words should refer to things older than
-that. They do — and the two candidates that don't are exactly the two that had
-already failed on independent grounds:
+**It excludes the two drawn dates.** Things that exist only because of the
+events the artwork depicts cannot encode a seed fixed on 2020-05-10, so
+`05.25.20` and `11.03.20` cannot be puzzle numbers whatever else they are.
+Section 10's numeral census already classes both as *editorial* rather than
+puzzle-marked, on the separate grounds that neither is underlined nor paired
+with a word. The chronology reaches the same verdict independently.
 
-| Word | Refers to | Older than the key? | Status |
-|---|---|:--:|---|
-| `subject` | 13th Amendment, 1865 | yes | **CONFIRMED** |
-| `tower` | Space Needle, 1962 | yes | **CONFIRMED** |
-| `moon` | celestial | yes | **CONFIRMED** |
-| `food` | the Needle's shaft | yes | marked, no number |
-| `real` | "ONLY real Bitcoin" | yes | marked, no number |
-| `breathe` | Floyd's hoodie, 2020-05-25 | **no** | not a BIP-39 word at all |
-| `black` | BLM, 2020 | **no** | WEAK, never promoted |
+**It excludes no candidate word — and an earlier draft of this section wrongly
+claimed it did.** That draft argued the confirmed words all predate the key
+while `breathe` and `black` do not, and called it two independent lines
+converging. That is wrong:
 
-Two independent lines — a chronological argument and a wordlist fact — pick out
-the same two failures. That is the strongest support the confirmed word set has
-had.
+* `breathe` comes from *"I can't breathe"*, which enters use with **Eric
+  Garner in 2014** — as the reference table above already records. The artwork
+  attaches it to a 2020 death, but the phrase is six years older than the key.
+* `black` reaches back to **BLM's founding in 2013**, and independently to the
+  Russian idiom `НА ЧЁРНЫЙ ДЕНЬ` and the Latin kettle proverb, both older still.
+
+So every candidate in play has a pre-2020-05-10 referent, and the chronology
+separates none of them. `breathe` and `black` fail for the reasons they always
+did — `breathe` is not in the BIP-39 wordlist at all, and `black` literalises a
+fixed idiom — not because of any date. **The convergence claim is withdrawn.**
+
+The constraint itself is untouched. It is a statement about the *depicted
+events*, not about the vocabulary, and it is worth exactly what it says: the
+artwork's 2020 content post-dates the key, so the pictures carry clues rather
+than supply them.
 
 ### A correction: the wallet's "creation date" is folklore
 

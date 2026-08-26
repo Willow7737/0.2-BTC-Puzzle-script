@@ -155,32 +155,60 @@ CONSTRAINT = {
     "gap_days": 6,
     "conclusion": "the artwork's 2020 content post-dates the key, so it "
                   "cannot encode the seed; it carries clues chosen earlier",
-    "prediction": "seed words should refer to things older than 2020-05-10",
+    "prediction": "the seed cannot be built from the events depicted; note this does NOT separate the candidate words, all of which have older referents - see PREDICTION_DOES_NOT_DISCRIMINATE",
 }
 
-#: The prediction, checked. Each confirmed or marked word against the age of
-#: what it refers to.
+#: **The prediction, checked - and it does not discriminate.** Recorded as a
+#: correction to an earlier version of this module, which claimed it did.
 #:
-#: Every confirmed word is older than the key. The two candidates that are
-#: **not** - both drawn from the 2020 events - are exactly the two that failed
-#: on independent grounds: ``breathe`` is not in the BIP-39 wordlist at all,
-#: and ``black`` was never promoted past WEAK.
-PREDICTION_CHECK = (
-    {"word": "subject", "referent": "13th Amendment, 1865", "predates": True,
-     "status": "CONFIRMED"},
-    {"word": "tower", "referent": "Space Needle, 1962", "predates": True,
-     "status": "CONFIRMED"},
-    {"word": "moon", "referent": "celestial", "predates": True,
-     "status": "CONFIRMED"},
-    {"word": "food", "referent": "Space Needle shaft", "predates": True,
-     "status": "marked, no number"},
-    {"word": "real", "referent": "'ONLY real Bitcoin'", "predates": True,
-     "status": "marked, no number"},
-    {"word": "breathe", "referent": "Floyd's hoodie, 2020-05-25",
-     "predates": False, "status": "NOT A BIP-39 WORD"},
-    {"word": "black", "referent": "BLM, 2020", "predates": False,
-     "status": "WEAK, never promoted"},
-)
+#: The constraint is sound, but the test built on it was overstated. It listed
+#: ``breathe`` and ``black`` as excluded by chronology. They are not:
+#:
+#: * ``breathe`` comes from *"I can't breathe"*, which enters use with **Eric
+#:   Garner in 2014** - as :data:`TIMELESS_REFERENTS` in this very module
+#:   already recorded. The artwork attaches it to a 2020 death, but the phrase
+#:   is six years older than the key.
+#: * ``black`` reaches back to **BLM's founding in 2013**, and independently to
+#:   the Russian idiom ``НА ЧЁРНЫЙ ДЕНЬ`` and the Latin kettle proverb, both
+#:   older still.
+#:
+#: So every candidate word in play has a pre-2020-05-10 referent, and the
+#: chronology separates none of them. ``breathe`` and ``black`` fail for the
+#: reasons they always did - ``breathe`` is not in the BIP-39 wordlist at all,
+#: and ``black`` literalises an idiom - not because of any date.
+PREDICTION_DOES_NOT_DISCRIMINATE = {
+    "claimed": "confirmed words predate the key while breathe and black do not",
+    "actual": "every candidate has a pre-2020-05-10 referent; breathe traces "
+              "to Eric Garner 2014 and black to BLM 2013, the Russian idiom "
+              "and the Latin proverb",
+    "so": "the chronology excludes no word, and the earlier 'two independent "
+          "lines converge' claim is withdrawn",
+    "they_still_fail": {"breathe": "not a BIP-39 word",
+                        "black": "literalises a fixed idiom"},
+}
+
+#: What the constraint **does** exclude, which is narrower and still useful.
+#:
+#: Things that exist *only* because of the events the artwork depicts cannot
+#: encode a seed fixed on 2020-05-10. The clearest cases are the two dates the
+#: artwork draws as numerals: ``05.25.20`` and ``11.03.20``. Neither can be a
+#: puzzle number, whatever else it is - the first names a death fifteen days
+#: after the key, the second an election 177 days after it, drawn 26 days
+#: before it happened.
+#:
+#: ``positions.NUMERAL_CENSUS`` already classes both as *editorial* rather than
+#: puzzle-marked, on the separate grounds that neither is underlined or paired
+#: with a word. The chronology reaches the same verdict independently.
+CONSTRAINT_EXCLUDES = {
+    "excluded": ("05.25.20", "11.03.20"),
+    "why": "both name events postdating the key, so neither can be a number "
+           "the seed was built from",
+    "corroborates": "positions.NUMERAL_CENSUS, which calls both editorial on "
+                    "the independent grounds that neither is underlined nor "
+                    "paired with a word",
+    "does_not_exclude": "any candidate word - see "
+                        "PREDICTION_DOES_NOT_DISCRIMINATE",
+}
 
 
 def verify_on_chain(timeout: int = 30) -> dict:

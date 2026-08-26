@@ -444,7 +444,13 @@ Negative results, so nobody re-treads them:
 * **The BLM imagery as the seed's source** — the prize was funded
   2020-05-10 08:01:46 UTC, and *every* 2020 event the artwork depicts happens
   afterwards (Floyd +15 days, the election +177). The seed predates the
-  pictures, so they carry the clues rather than supply them.
+  pictures, so they carry the clues rather than supply them. This excludes the
+  two drawn dates as puzzle numbers; it does **not** separate the candidate
+  words, all of which have older referents.
+* **The whitepaper typos as a carrier** — six words deviate from the source
+  text, but all six are canonical copying slips at a flat ~0.8% rate, the
+  deviation letters spell nothing, and the marked words hit BIP-39 *below* a
+  control drawn from the same passage (2/6 against 5/10).
 * **Rune 4's "number X"** — a placeholder asterisk, not a digit. It cannot be
   resolved as a letter either: it encodes one that appears nowhere else in the
   strip, so the crib supplies no reference for it.

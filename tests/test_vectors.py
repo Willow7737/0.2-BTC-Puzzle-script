@@ -1712,21 +1712,33 @@ class TestChronology(unittest.TestCase):
         first_mon = nth_weekday(2020, 11, 0, 1)
         self.assertEqual(first_mon + dt.timedelta(days=1), dt.date(2020, 11, 3))
 
-    def test_prediction_holds(self):
-        """Confirmed words predate the key; the ones that don't, failed."""
-        for row in self.c.PREDICTION_CHECK:
-            if row["status"] == "CONFIRMED":
-                self.assertTrue(row["predates"], row["word"])
-            if not row["predates"]:
-                self.assertNotEqual(row["status"], "CONFIRMED", row["word"])
+    def test_the_prediction_is_recorded_as_withdrawn(self):
+        """An earlier version claimed chronology separated the candidate
+        words. It does not - every one has a pre-2020-05-10 referent."""
+        rec = self.c.PREDICTION_DOES_NOT_DISCRIMINATE
+        self.assertIn("withdrawn", rec["so"])
+        self.assertIn("Garner", rec["actual"])
+        self.assertEqual(set(rec["they_still_fail"]), {"breathe", "black"})
 
-    def test_confirmed_words_match_the_positions_module(self):
-        """The check must be about the real word set, not a stale copy."""
+    def test_breathe_predates_the_key_by_its_own_referent(self):
+        """The module's own referent list says 2014. Keep the two consistent."""
+        years = {t["year"] for t in self.c.TIMELESS_REFERENTS}
+        self.assertIn(2014, years)
+        garner = [t for t in self.c.TIMELESS_REFERENTS if t["year"] == 2014][0]
+        self.assertIn("breathe", garner["what"])
+
+    def test_what_the_constraint_actually_excludes(self):
+        """It excludes the two drawn dates, and no word."""
+        rec = self.c.CONSTRAINT_EXCLUDES
+        self.assertEqual(set(rec["excluded"]), {"05.25.20", "11.03.20"})
+        self.assertIn("any candidate word", rec["does_not_exclude"])
+
+    def test_the_excluded_dates_are_editorial_in_the_census(self):
+        """Corroboration must be real: the census must agree, independently."""
         from puzzle import positions
-        confirmed = {w for a in positions.CONFIRMED for w in a.words}
-        listed = {r["word"] for r in self.c.PREDICTION_CHECK
-                  if r["status"] == "CONFIRMED"}
-        self.assertEqual(confirmed, listed)
+        roles = {k: v["role"] for k, v in positions.NUMERAL_CENSUS.items()}
+        self.assertTrue(roles["hoodie_date"].startswith("editorial"))
+        self.assertTrue(roles["election_date"].startswith("editorial"))
 
     def test_wallet_created_is_flagged_unverifiable(self):
         """It is community folklore, and one hypothesis leaned on it."""
