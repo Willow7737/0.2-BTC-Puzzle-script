@@ -401,3 +401,31 @@ CALLIGRAM_CLAIM_CORRECTED = {
            "hand-lettering noise (see WHITEPAPER_TYPOS)",
     "why_missed": "the sweep looked for emphasis, not for spelling",
 }
+
+
+#: **The plainly visible words are not the phrase either.**
+#:
+#: "FIND THE SEED PHRASE IN THIS PICTURE" invites the simplest reading: the
+#: words are just *written* there. The 60-strip sweep identified every piece of
+#: text in the artwork, giving 41 distinct English words - placards, the
+#: calligram, the marked words, the display text.
+#:
+#: 19 of the 41 are BIP-39, which is close enough to 21 to be tempting. The
+#: control shows it means nothing: **30 ordinary English nouns picked at random
+#: are BIP-39 at 80%**, while the artwork's visible vocabulary manages **46%** -
+#: below base rate, because placard text is full of function words, acronyms
+#: and proper nouns.
+#:
+#: So visibility does not enrich for BIP-39, and nothing selects 21 or 24 words
+#: out of the 41. The reading is unconstrained in the same way the community's
+#: position table is.
+VISIBLE_WORDS_ARE_NOT_THE_PHRASE = {
+    "distinct_visible_words": 41,
+    "in_bip39": 19,
+    "artwork_rate": 0.46,
+    "control_rate": 0.80,
+    "control": "30 ordinary English nouns absent from the artwork",
+    "verdict": "no enrichment - visible words hit BIP-39 below the rate for "
+               "ordinary English, and nothing selects a subset of the right "
+               "length",
+}

@@ -1844,3 +1844,21 @@ class TestChosenVersusInherited(unittest.TestCase):
         self.assertIn(11, self.rec["chosen"])
         confirmed = {a.position for a in self.p.CONFIRMED}
         self.assertNotIn(11, confirmed)
+
+
+class TestVisibleWordsAreNotThePhrase(unittest.TestCase):
+    """The simplest reading of 'find the seed phrase in this picture'."""
+
+    def test_visible_words_underperform_ordinary_english(self):
+        from puzzle import extraction
+        r = extraction.VISIBLE_WORDS_ARE_NOT_THE_PHRASE
+        self.assertLess(r["artwork_rate"], r["control_rate"])
+
+    def test_control_rate_is_recomputed(self):
+        from puzzle import wordlist
+        ctrl = ("house table river silver garden window pencil bottle jacket "
+                "candle market pillow ticket rocket forest planet dinner "
+                "summer flower orange button carpet dragon hammer island "
+                "ladder monkey needle pepper ribbon").split()
+        rate = sum(1 for w in ctrl if wordlist.is_valid(w)) / len(ctrl)
+        self.assertAlmostEqual(rate, 0.80, places=2)
