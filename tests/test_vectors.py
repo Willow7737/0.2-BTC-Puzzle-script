@@ -947,6 +947,36 @@ class TestRune2Verification(unittest.TestCase):
         self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
 
 
+class TestWordSupplySweep(unittest.TestCase):
+    """The sweep for a sixth marked word, and the honesty of its record."""
+
+    def test_surface_count_is_recomputed_not_asserted(self):
+        from puzzle import positions
+        self.assertEqual(len(positions.SURFACE_SWEEP["surfaces_examined"]),
+                         positions.WORD_SUPPLY["surfaces_swept"])
+
+    def test_failed_detector_is_recorded_as_discarded(self):
+        """A detector missing its controls must not be cited as a negative."""
+        from puzzle import positions
+        d = positions.DETECTOR_FAILED
+        self.assertLess(d["positive_controls_recovered"],
+                        d["positive_controls_total"])
+        self.assertTrue(d["verdict"].startswith("discarded"))
+
+    def test_sweep_found_nothing_and_says_so(self):
+        from puzzle import positions
+        self.assertEqual(positions.SURFACE_SWEEP["new_words_found"], 0)
+        self.assertEqual(positions.WORD_SUPPLY["new_words"], 0)
+        self.assertEqual(positions.WORD_SUPPLY["marked_words"],
+                         len(positions.MARKED_WITHOUT_NUMBER) + len(positions.CONFIRMED))
+
+    def test_word_supply_still_cannot_seed_a_search(self):
+        """The point of the sweep: five words is short of any phrase length."""
+        from puzzle import positions
+        w = positions.WORD_SUPPLY
+        self.assertLess(w["marked_words"], w["words_needed_min"])
+
+
 class TestRune3Alphabet(unittest.TestCase):
     """Which alphabet does rune 3 use? Four candidates, each with a control."""
 
