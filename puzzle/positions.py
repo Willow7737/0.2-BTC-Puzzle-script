@@ -26,7 +26,8 @@ The two grey hands cannot be separated from grey artwork by ridge detection,
 but the predicted bearings lie along them visibly.
 
 **Consequence: position 21 exists, so the phrase is not 12 words.** BIP-39
-allows 12/15/18/21/24, so it is 21 or 24 - which is why every 12-word search
+allows 12/15/18/21/24, so it is 21 or 24 - and HOUR_HAND_IS_THE_LENGTH
+argues 21. Either way this is why every 12-word search
 ever run against this puzzle was structurally unable to succeed.
 """
 
@@ -865,4 +866,66 @@ CHOSEN_VERSUS_INHERITED = {
     "verdict": "the community's table reduces to the assignments already "
                "established; every further entry rests on a number the artist "
                "did not have to choose",
+}
+
+
+#: **The unlabelled hour hand names the phrase length, not a position.**
+#:
+#: An anomaly this repo recorded without explaining: of the three clock hands,
+#: two carry words - ``tower`` on the minute hand at midpoint(1,2)=3, ``moon``
+#: on the second hand at midpoint(12,1)=13 - and the third carries **none**.
+#: It points at midpoint(10,11)=21 and is blank. Earlier notes called 21 an
+#: "orphan number": a position whose word was never found.
+#:
+#: Read it instead as a **global parameter**. 21 is a valid BIP-39 mnemonic
+#: length (12, 15, 18, 21, 24 are the permitted values), and a hand that names
+#: a parameter rather than a word slot has no reason to carry a word. That
+#: explains the blankness instead of positing a word nobody can find.
+#:
+#: **The counting argument.** The clock reaches positions 3 to 23 under its two
+#: alignments. So a phrase of length *L* needs a mechanism outside the clock
+#: for every position below 3:
+#:
+#: =========  =======================  ==============================
+#: length     needs non-clock          available in the artwork
+#: =========  =======================  ==============================
+#: 21         positions 1, 2  -> **2**  the plinth, and rune 3  -> **2**
+#: 24         positions 1, 2, 24 -> 3   the same two -> 2, one short
+#: =========  =======================  ==============================
+#:
+#: **21 is exactly saturated; 24 leaves a position with no mechanism at all.**
+#: The two non-clock mechanisms are the plinth (underlined ``subject`` beside
+#: an underlined ``Section 1``) and rune 3 - the one strip deliberately set
+#: apart, in a different cipher and a different language, attached to no
+#: object, beside a question mark, and pointing at 2 under every reading.
+#:
+#: **Independent support.** 21 is Bitcoin's signature number: the supply cap is
+#: 21 million. For a Bitcoin puzzle, a 21-word phrase is the thematically
+#: obvious choice, and aiming the slowest hand at it is a natural way to say so.
+#:
+#: **A withdrawn argument.** ANALYSIS.md previously argued for 24 on the
+#: grounds that "a 21-word phrase would leave the rays for 22 and 23 spurious".
+#: That is weak: a clock is a coordinate system, and spare capacity in a
+#: coordinate system is not evidence that every coordinate must be used. A
+#: ruler with more marks than you need is still the right ruler.
+#:
+#: **What it does not do.** It changes no arithmetic. A 21-word phrase with
+#: three confirmed positions still leaves 17 unknown words, and 2048^17 is as
+#: unsearchable as 2048^20. This is a claim about the puzzle's architecture,
+#: not a step toward enumerating it.
+HOUR_HAND_IS_THE_LENGTH = {
+    "anomaly": "two hands carry words; the third is blank and points at 21",
+    "reading": "21 is the phrase length, not a position",
+    "bip39_lengths": (12, 15, 18, 21, 24),
+    "clock_reaches": (3, 23),
+    "non_clock_needed": {21: (1, 2), 24: (1, 2, 24)},
+    "non_clock_available": ("the plinth", "rune 3"),
+    "saturated_at": 21,
+    "thematic_support": "21 million is Bitcoin's supply cap",
+    "withdraws": "the argument that 24 is preferred because a 21-word phrase "
+                 "leaves rays 22 and 23 unused",
+    "changes_tractability": False,
+    "confidence": "inference, not measurement - it explains three anomalies "
+                  "at once (the blank hand, rune 3's role, the length "
+                  "ambiguity) but it was reached after the facts it explains",
 }

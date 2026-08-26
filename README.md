@@ -12,7 +12,10 @@ a seed phrase hidden in an image, unlocking
 > **It is not a 12-word mnemonic.** The clock's three hands each point midway
 > between two numerals, and the two numerals sum to a position: `moon` = 12+1
 > = **13**, `tower` = 1+2 = **3**, and the unlabelled hour hand gives
-> 10+11 = **21**. Position 21 rules out 12 words — the phrase is 21 or 24.
+> 10+11 = **21**. That rules out 12 words. The blank hand carries no word
+> where the other two do, which reads better as the **phrase length** than as
+> an orphan position — and 21 is the only length the artwork's two non-clock
+> mechanisms exactly cover. See [ANALYSIS.md §11e](ANALYSIS.md).
 > Every 12-word search ever run against this puzzle, this repository's
 > included, was structurally unable to succeed.
 > [Details in §3](ANALYSIS.md#3-the-construction-rule-word-plus-number-gives-position).

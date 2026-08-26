@@ -1862,3 +1862,44 @@ class TestVisibleWordsAreNotThePhrase(unittest.TestCase):
                 "ladder monkey needle pepper ribbon").split()
         rate = sum(1 for w in ctrl if wordlist.is_valid(w)) / len(ctrl)
         self.assertAlmostEqual(rate, 0.80, places=2)
+
+
+class TestHourHandIsTheLength(unittest.TestCase):
+    """The blank hand names the phrase length rather than a position."""
+
+    def setUp(self):
+        from puzzle import positions
+        self.p = positions
+        self.rec = positions.HOUR_HAND_IS_THE_LENGTH
+
+    def test_21_is_a_valid_bip39_length(self):
+        self.assertIn(21, self.rec["bip39_lengths"])
+
+    def test_clock_reach_is_recomputed(self):
+        reach = sorted(self.p.all_rays())
+        self.assertEqual((reach[0], reach[-1]), self.rec["clock_reaches"])
+        self.assertEqual(reach, list(range(3, 24)))
+
+    def test_the_counting_argument(self):
+        """21 is saturated by the available mechanisms; 24 is one short."""
+        reach = set(self.p.all_rays())
+        available = len(self.rec["non_clock_available"])
+        for length, gaps in self.rec["non_clock_needed"].items():
+            computed = tuple(sorted(set(range(1, length + 1)) - reach))
+            self.assertEqual(computed, gaps, f"length {length}")
+        self.assertEqual(len(self.rec["non_clock_needed"][21]), available)
+        self.assertGreater(len(self.rec["non_clock_needed"][24]), available)
+
+    def test_the_blank_hand_really_is_blank(self):
+        """Two hands carry words, one does not - the anomaly must be real."""
+        census = self.p.CLOCK_HAND_CENSUS["hands"]
+        labelled = [v for v in census.values()
+                    if "TOWER" in v or "MOON" in v]
+        blank = [v for v in census.values() if "unlabelled" in v]
+        self.assertEqual(len(labelled), 2)
+        self.assertEqual(len(blank), 1)
+        self.assertIn("21", blank[0])
+
+    def test_it_claims_no_tractability_gain(self):
+        self.assertFalse(self.rec["changes_tractability"])
+        self.assertTrue(self.rec["confidence"].startswith("inference"))

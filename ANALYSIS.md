@@ -428,7 +428,7 @@ been. The two confirmed mechanisms have hard ceilings:
 |---|---:|---|
 | word on a clock hand, number from its bearing | **3** | a clock has three hands; there is no fourth |
 | numeral written beside the word and underlined | **1** | only `Section 1` does this |
-| | **4 total** | against 21 or 24 needed |
+| | **4 total** | against 21 needed (§11e; 24 was the earlier reading) |
 
 The bearing mechanism *requires the object to be a clock hand*. However much
 of the artwork is searched, it can never yield a fourth position. So the
@@ -520,9 +520,12 @@ plinth. Positions 2 and 24 have no known clue, and that is now the precise
 shape of the gap — not "most of the table is missing" but "two positions plus
 the words for twenty rays".
 
-Note this also decides the length question in favour of **24** over 21: a
+~~Note this also decides the length question in favour of **24** over 21: a
 21-word phrase would leave the rays for 22 and 23 spurious, whereas 24 uses
-every one of the clock's 21 reachable positions.
+every one of the clock's 21 reachable positions.~~ **Withdrawn — see §11e.**
+A clock is a coordinate system, and spare capacity in a coordinate system is
+not evidence that every coordinate must be used. The counting argument in §11e
+points the other way, to **21**.
 
 ### The cost: a worse false-positive rate
 
@@ -576,7 +579,10 @@ removed from the confirmed vocabulary.
 ### Consequence: it is not a 12-word mnemonic
 
 Position 21 exists. BIP-39 permits 12, 15, 18, 21 and 24 words, so the phrase
-is **21 or 24 words**. Every 12-word search ever run against this puzzle —
+is **21 or 24 words** — and §11e argues specifically for **21**, on the grounds
+that the blank hand names a length rather than a position and that 21 is the
+only length the artwork's two non-clock mechanisms exactly cover. Every 12-word
+search ever run against this puzzle —
 including all of this repository's, and the original script's — was
 structurally incapable of succeeding, no matter how long it ran.
 
@@ -1741,6 +1747,68 @@ widen either has now been closed with method:
 | date and numbered-source schemes | 1,167,608 tested, zero fit the anchors |
 | the whitepaper typos | canonical copying slips, below control |
 | the community's 16-entry table | reduces to the 5 already held |
+
+## 11e. The blank hand: 21 is the phrase length, not a position
+
+An anomaly this document recorded for a long time without explaining. Of the
+three clock hands, **two carry words** — `tower` on the minute hand at
+midpoint(1,2)=3, `moon` on the second hand at midpoint(12,1)=13 — and the third
+carries **none**. It points at midpoint(10,11)=21 and is blank. §3 called 21 an
+"orphan number": a position whose word was never found.
+
+Read it instead as a **global parameter**. BIP-39 permits phrase lengths of 12,
+15, 18, 21 and 24 — and **21 is one of them**. A hand naming a parameter rather
+than a word slot has no reason to carry a word. That *explains* the blankness
+rather than positing a word nobody has ever found.
+
+### The counting argument
+
+The clock reaches positions **3 to 23** under its two alignments. So a phrase of
+length *L* needs a mechanism outside the clock for every position below 3, plus
+any above 23:
+
+| Length | Positions with no clock ray | Mechanisms needed |
+|---|---|---:|
+| **21** | 1, 2 | **2** |
+| 24 | 1, 2, 24 | 3 |
+
+And the artwork contains **exactly two** non-clock mechanisms:
+
+1. **The plinth** — underlined `subject` beside an underlined `Section 1`.
+2. **Rune 3** — the one strip deliberately set apart: a different cipher, a
+   different language, attached to no object, floating beside a question mark —
+   and pointing at **2** under every reading of `TUESDAY` (§3).
+
+**21 is exactly saturated. 24 leaves a position with no mechanism at all.**
+
+That argument is not circular: it counts gaps against mechanisms, and would
+hold even if rune 3 turned out to mean something other than 2 — a 24-word
+phrase would still need a third non-clock clue that does not exist.
+
+### Independent support
+
+**21 is Bitcoin's signature number.** The supply cap is 21 million. For a
+Bitcoin puzzle, a 21-word phrase is the thematically obvious choice, and aiming
+the slowest hand at it is a natural way to say so.
+
+### What it resolves, and what it does not
+
+It explains **three anomalies at once**: why one hand is blank, why rune 3 is
+set apart from everything else in the artwork, and why the phrase length was
+ambiguous. It is the first reading in which every position from 1 to 21 has a
+mechanism behind it:
+
+| Positions | Mechanism |
+|---|---|
+| 1 | the plinth |
+| 2 | rune 3 |
+| 3–21 | the clock, both alignments |
+
+**It changes no arithmetic.** A 21-word phrase with three confirmed positions
+still leaves 17 unknown words, and 2048¹⁷ is exactly as unsearchable as 2048²⁰.
+This is a claim about the puzzle's architecture, not a step toward enumerating
+it — and it was reached *after* the facts it explains, which is the standing
+caution on any account this tidy.
 
 ## 12. Open questions
 
