@@ -1687,6 +1687,61 @@ six words are altered. They were missed because that sweep looked for
 *emphasis* — underlining, weight, colour — and not for *spelling*. The verdict
 is unchanged, but it now rests on a test rather than on an oversight.
 
+## 11d. The community's table: chosen numbers versus inherited ones
+
+The last large body of untested claims is the community's 24-word table, which
+fills 16 of 24 positions. One distinction decides most of it.
+
+A number is **chosen** when the artist had to act to put it there — underline
+it, aim a clock hand at it, write a word along it. A number is **inherited**
+when the object simply carries it, and the object is in the artwork for
+thematic reasons anyway.
+
+The Statue of Liberty's crown has seven points whether or not the puzzle needs
+a 7. An M16 is called an M16. `COVID19` contains 19. In each case
+
+```
+P(object shows the number | the puzzle needs it)
+  =  P(object shows the number | the puzzle does not)  =  1
+```
+
+so the likelihood ratio is **1** and the observation updates nothing. For an
+inherited number to be evidence, the artist's decision to *include that object*
+would have to need a puzzle explanation — and every object here is fully
+explained by the artwork's subject matter.
+
+| | Entries |
+|---|---|
+| **Chosen** (5) | 1 `subject`, 3 `tower`, 9 `eye`, 11 `pyramid`, 13 `moon` |
+| **Inherited** (10) | 2 `camera`, 4 `mask`, 5 `police`, 7 `liberty`, 10 `black`, 12 `vote`, 16 `rifle`, 17 `gold`, 19 `glove`, 20 `apple` |
+
+**The chosen set is exactly what this repository already holds** — three
+CONFIRMED, one STRONG, and `pyramid` rejected on measurement (centroid 8.7°
+off its ray against a 2° noise floor). Note that chosen is *necessary, not
+sufficient*: `pyramid` is a chosen number and still fails.
+
+So the table adds nothing. It is not so much wrong as **unconstrained**: an
+artwork this dense offers an inherited number for almost any target, which is
+why 16 slots could be filled and why filling them means so little. It is the
+same failure mode section 5 guards against by refusing arbitrary source texts —
+with enough candidates, something always fits.
+
+### Where that leaves the word supply
+
+The bottleneck was never the numbers. It is that **five marked words and four
+reachable numbers cannot seed a 21- or 24-word phrase**, and every attempt to
+widen either has now been closed with method:
+
+| Attempt | Result |
+|---|---|
+| a sixth marked word, 21 object surfaces | none |
+| a fourth clock hand | exactly three exist |
+| a fifth cipher strip | none, with all four runes as controls |
+| the runes as mechanism captions | one, and it captions the clock |
+| date and numbered-source schemes | 1,167,608 tested, zero fit the anchors |
+| the whitepaper typos | canonical copying slips, below control |
+| the community's 16-entry table | reduces to the 5 already held |
+
 ## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`

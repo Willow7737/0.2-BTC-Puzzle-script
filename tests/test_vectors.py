@@ -1812,3 +1812,35 @@ class TestWhitepaperTypos(unittest.TestCase):
         c = extraction.CALLIGRAM_CLAIM_CORRECTED
         self.assertIn("no word emphasised or altered", c["was"])
         self.assertIn("six words altered", c["now"])
+
+
+class TestChosenVersusInherited(unittest.TestCase):
+    """The community's 24-word table, evaluated on principled grounds."""
+
+    def setUp(self):
+        from puzzle import positions
+        self.p = positions
+        self.rec = positions.CHOSEN_VERSUS_INHERITED
+
+    def test_chosen_set_matches_what_the_repo_actually_holds(self):
+        """If these ever diverge, one of them is stale."""
+        confirmed = {a.position for a in self.p.CONFIRMED}
+        chosen = set(self.rec["chosen"])
+        self.assertTrue(confirmed.issubset(chosen),
+                        "every confirmed position must be a chosen number")
+        self.assertEqual(chosen, confirmed | {9, 11})
+
+    def test_inherited_numbers_carry_no_evidence(self):
+        self.assertEqual(
+            self.rec["likelihood_ratio_of_an_inherited_number"], 1.0)
+        self.assertEqual(self.rec["community_table_adds"], 0)
+
+    def test_the_two_sets_do_not_overlap(self):
+        self.assertEqual(
+            set(self.rec["chosen"]) & set(self.rec["inherited"]), set())
+
+    def test_pyramid_is_chosen_but_still_rejected(self):
+        """Chosen is necessary, not sufficient - it still has to measure up."""
+        self.assertIn(11, self.rec["chosen"])
+        confirmed = {a.position for a in self.p.CONFIRMED}
+        self.assertNotIn(11, confirmed)

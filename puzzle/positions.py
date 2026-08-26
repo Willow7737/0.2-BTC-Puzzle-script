@@ -813,3 +813,56 @@ def clock_time_consistency() -> dict:
     return {"assignments": out,
             "best_error_deg": min(a["hour_hand_error_deg"] for a in out),
             "drawing_scatter_deg": 2.0}
+
+
+#: **Chosen numbers are evidence. Inherited numbers are not.**
+#:
+#: This is the distinction that decides most of the community's 24-word table,
+#: and it is worth stating precisely because it is easy to miss.
+#:
+#: A number is **chosen** when the artist had to act to put it there: underline
+#: it, aim a clock hand at it, write a word along it. A number is **inherited**
+#: when the object simply carries it and the object is in the artwork for
+#: thematic reasons anyway.
+#:
+#: The Statue of Liberty's crown has seven points whether or not the puzzle
+#: needs a 7. An M16 is called an M16. ``COVID19`` contains 19. In each case
+#:
+#:     P(object shows the number | the puzzle needs it)
+#:   = P(object shows the number | the puzzle does not)
+#:   = 1
+#:
+#: so the likelihood ratio is 1 and the observation updates nothing. For an
+#: inherited number to be evidence, the artist's decision to *include that
+#: object* would have to need a puzzle explanation - and every object here is
+#: fully explained by the artwork's subject matter.
+#:
+#: Applying the split to the community's 16 filled entries:
+#:
+#: =========================  ==========================================
+#: chosen (5)                 1 subject, 3 tower, 9 eye, 11 pyramid,
+#:                            13 moon
+#: inherited (10)             2 camera, 4 mask, 5 police, 7 liberty,
+#:                            10 black, 12 vote, 16 rifle, 17 gold,
+#:                            19 glove, 20 apple
+#: =========================  ==========================================
+#:
+#: **The chosen set is exactly what this repository already holds**: three
+#: CONFIRMED, one STRONG, and ``pyramid`` rejected on measurement (its centroid
+#: sits 8.7 degrees off the ray, against a 2-degree noise floor).
+#:
+#: So the table adds nothing. It is not wrong so much as unconstrained: an
+#: artwork this dense offers inherited numbers for almost any target, which is
+#: why 16 slots could be filled and why filling them means so little.
+CHOSEN_VERSUS_INHERITED = {
+    "chosen": {1: "subject", 3: "tower", 9: "eye", 11: "pyramid", 13: "moon"},
+    "inherited": {2: "camera", 4: "mask", 5: "police", 7: "liberty",
+                  10: "black", 12: "vote", 16: "rifle", 17: "gold",
+                  19: "glove", 20: "apple"},
+    "likelihood_ratio_of_an_inherited_number": 1.0,
+    "chosen_set_equals_repo_state": True,
+    "community_table_adds": 0,
+    "verdict": "the community's table reduces to the assignments already "
+               "established; every further entry rests on a number the artist "
+               "did not have to choose",
+}
