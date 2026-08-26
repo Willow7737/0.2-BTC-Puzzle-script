@@ -769,14 +769,201 @@ and numbered-source references; steganography; brainwallet to six words;
    poor scan — so no amount of hunting for a better copy will unblock them.
    Only the artist's own source file could.
 2. **A fourth number-bearing mechanism.** The capacity bound says one *must*
-   exist if the position reading is right. Three attempts to find one have
-   failed.
+   exist if the position reading is right. Four attempts to find one have
+   failed. The most recent re-examined the artwork directly: the clock is
+   measured to have exactly three hands, the plinth carries only Section 1,
+   and the three previously uncatalogued numerals are event captions that meet
+   neither marking convention. If a fourth mechanism exists it is not in the
+   places it could most easily have hidden.
 3. **The author's own account** of the construction.
 
 **What will not help: more CPU.** Every remaining search is unbounded because
 the word set is unknown, and a negative from guessed fillers is not a result.
 The engine has never been the constraint — it exhausted 479M orderings of a
 12-word pool in 33 minutes.
+
+### Reading the runes for a fourth mechanism
+
+Rune 2 sits *inside* the clock dial, and its reading — "sum of two numbers" —
+is what licenses the midpoint rule and therefore the three confirmed
+positions. This repository had taken that reading on trust from the community
+analysis. If the runes caption mechanisms, then a fourth mechanism should have
+a caption too, so all four strips were read.
+
+#### Rune 2 verified — and the check is strong
+
+The alphabet used to read it was recovered from **rune 4's** crib and had
+never seen rune 2.
+
+**Structure.** The column-projection runs separate into **5 / 4 / 5** glyphs
+around two narrow separators. `СУММА`(5) `ДВУХ`(4) `ЧИСЕЛ`(5) is 5, 4, 5.
+
+**Letters.** At **8 of the 10** positions whose crib letter also occurs in
+rune 4, that letter is the *nearest* of 21 candidates:
+
+| Word | Positions | Distances |
+|---|---|---|
+| `СУММА` | С, М, М, А | 28, 41, 26, 14 |
+| `ЧИСЕЛ` | Ч, И, С, Е | 24, 21, 25, 28 |
+
+Those eight average **25.9**, sitting on the same-letter baseline of **27.2**
+— against a different-letter baseline of 66.4. Against a null of random
+assignment, 8 of 10 top-matches in a 21-letter alphabet is **p ≈ 1.1 × 10⁻⁹**.
+
+The two misses are positions 5 and 6, both inside `ДВУХ` — the one word whose
+glyphs cannot be separated at any threshold. The run stays merged at 150–185
+and shatters into eight fragments at 215. Dividing it in three keeps the crib
+positionally aligned but cannot land on true boundaries, so those positions
+are a **segmentation artefact, not a failed decode**. They are reported and
+excluded rather than dropped, and a test asserts that every miss is flagged
+unreliable.
+
+**Why this matters beyond rune 2.** The midpoint rule rests on this caption
+saying "sum of two numbers". That is no longer an assumption carried from
+elsewhere — it is verified against pixels with an independent key. The three
+confirmed positions stand on firmer ground than they did.
+
+#### Rune 3 does not decode in this alphabet
+
+Mirrored, rune 3 resolves into seven legible glyphs: a triad of dots joined
+into a `<`, an oval beneath a smaller oval, a hooked stroke with a dot, an
+outline `▽`, an `N`, an `E`, and two stacked triangles.
+
+Matched against the rune-4 alphabet they average **44.8** — between the
+same-letter band (27.2) and the different-letter band (66.4) — with incoherent
+assignments and no word emerging. Unmirrored is worse, 48.6. Its inventory
+contains shapes rune 4 never uses, and it is drawn in thin precise outlines
+where rune 4 is thick and hand-drawn.
+
+So rune 3 is not a mechanism caption in the script the other runes use. It is
+either a different sign system or not text, and is recorded as open rather
+than forced into a reading.
+
+#### The runes as a source of mechanisms
+
+| Strip | Content | Mechanism? |
+|---|---|---|
+| Rune 1 | "I hope many bitcoins will be sent here" | no — a wish |
+| Rune 2 | **"sum of two numbers"**, inside the dial | **yes — the clock, already counted** |
+| Rune 3 | does not decode in this alphabet | open |
+| Rune 4 | the framing statement, ending `НОМЕР` + one glyph | no — and that glyph resolves to no letter and is not a Dscript numeral |
+
+Four strips, exactly one mechanism caption, and it captions the mechanism
+already in hand. **No fourth mechanism in the runes.** The capacity bound is
+unchanged at four.
+
+Reproduce with `runes.verify_rune2(image)`.
+
+### Is the rune script Dscript? — refuted
+
+Dscript ("Dimensional Script", dscript.org) is a constructed 2D writing system
+built from simple geometric pen strokes. The resemblance to these runes is real
+enough to be worth testing — both alphabets are triangles, circles, bars and
+crosses — and Dscript defines a **base-100 numeral**: a core circle with
+directional strokes, nine for units and nine for tens, two decimal digits per
+glyph.
+
+That is why this mattered. Rune 4 reads "…НОМЕР" — *number* — and then one
+unresolved glyph. If that glyph were a Dscript base-100 numeral it would read
+out a two-digit number, and **that would be the fourth number-bearing mechanism
+the capacity bound says must exist.**
+
+It is not Dscript. Four checks, none depending on the others:
+
+1. **Cyrillic-only letters have their own glyphs.** The recovered alphabet
+   contains `Ь` (soft sign), `Ы`, `Ё`, `Й`, `Ч`, `Ш`, `Ф`. Dscript is optimised
+   for English, and writing Russian in it means transliterating — its digraph
+   set (`CH SH ST TH TS QU NG`) is exactly what a transliteration needs. A
+   transliteration has no soft sign and no `Ы`.
+2. **A Cyrillic diacritic relationship survives in the shapes** (below).
+   Dscript has no device by which one letter is another plus a diacritic.
+3. **The letter-to-shape assignments do not match.** Rune `О` is a chevron
+   where Dscript `O` is a circle; rune `С` is a diamond where Dscript `S` is
+   `C`; rune `И` is φ, which in Dscript is `M`. The visual vocabulary overlaps;
+   the mapping does not.
+4. **The trailing glyph is not a base-100 numeral.** It is one connected
+   component — a vertical stem crossed by two diagonals — with no core circle.
+   Every Dscript base-100 number is a circle plus strokes.
+
+#### What the comparison did produce
+
+The rune-4 alignment was fitted on two things only: word lengths between
+separator glyphs, and the similarity of glyphs the crib says are the same
+letter. **It never looked at diacritics.** So it makes a prediction it could not
+have engineered — the glyph it lands on for `Й` should be the glyph it lands on
+for `И`, plus a mark.
+
+| Pair | As drawn | De-dotted | Base letter's own spread | Baseline |
+|---|---|---|---|---|
+| `И` → `Й` | 27 | **24** | 25, 30, 33 | 66.4 |
+| `Е` → `Ё` | 71 | 71 | 20, 51, 59 | 66.4 |
+
+`Й` sits **inside `И`'s own instance-to-instance spread** — it is as close to
+`И` as `И` is to itself. That is independent corroboration of the decode, from
+a direction the crib cannot reach.
+
+`Е`/`Ё` does not corroborate. Reported anyway: at 71 it is at the baseline. But
+`Е` is drawn inconsistently — its own three instances differ by as much as 59 —
+so this is a weak negative, not a contradiction. One pair confirms, one is
+uninformative, and the record says so.
+
+**The trailing glyph stays unresolved.** Its nearest letter is `Д` at distance
+39 — above the mean intra-letter distance of 27 but below the maximum of 59, so
+the measurement neither identifies it nor excludes it. What can now be said is
+narrower and firmer: it is *not* a Dscript numeral, so no reading of it is
+available from that direction.
+
+### Re-examining the artwork for a fourth number-bearing object
+
+The capacity bound rested on an argument — "a clock has three hands" — and on
+having looked at the two marked words that lack numbers. Both deserved to be
+checked against pixels rather than reasoning.
+
+**The clock, measured.** High-pass the artwork, sweep a ray from the hub at
+every whole degree, and take mean ink between radius 40 and 150 (skipping the
+hub, where all hands overlap). A hand is a sustained radial ink ridge.
+
+Twelve bearings exceed 1.7× the mean. **Exactly three are hands:**
+
+| Bearing | Nearest midpoint | Off by | Hand |
+|---|---|---|---|
+| 332.0° | midpoint(1,2) = **3** | 0.4° | `TOWER` |
+| 304.0° | midpoint(12,1) = **13** | 1.6° | `MOON` |
+| 240.0° | midpoint(10,11) = **21** | 1.7° | unlabelled hour hand |
+
+The other nine sit 3.7–13.7° off, and every one falls inside the arc covered
+by the Great Seal coin, which overlaps the dial and hides numerals 4–7. They
+are its rim, rays and pyramid courses. **The clock is exhausted — there is no
+fourth hand**, and the ceiling of three is now a measurement.
+
+**The plinth, re-read.** The 13th Amendment has two sections, so a second
+underlined pair was possible in principle. Isolating the blue channel lifts
+the ink out from under the translucent red graffiti: the stone carries
+**Section 1 only**, ending at "their jurisdiction". One pairing, no second.
+
+**Three numerals nobody had catalogued.** A full numeral census turned up
+three date inscriptions absent from every record in this repository:
+
+| Numeral | Where | Reading |
+|---|---|---|
+| `05.25.20` | on George Floyd's hoodie, directly above `I can't BREATHE` | the date of the death depicted |
+| `11.03.20` | beneath the red `·VS·` between Trump and Biden | the 2020 election, drawn before the result was known |
+| `1865 - 202…?` | beside the Statue; ellipsis and `?` in red | emancipation to an unfinished present |
+
+Finding them was worth the pass. Promoting them is not warranted, on three
+counts. **Neither convention:** none is underlined and paired with an
+underlined word, and none rides a pointer — the only two marking conventions
+the artwork has ever established. **Range:** read as positions they overflow a
+24-word phrase, since `05.25.20` yields 25 and `1865 - 202…?` yields 1865 and
+2020; only `11.03.20` stays in range, and one in three is what chance looks
+like. **They are already explained:** each captions a real event the artwork
+depicts, and the red `?` appears on exactly the two open questions — when the
+struggle ends, and who wins — matching the artwork's own vertical caption,
+`THIS IS THE FIRST PREDICTION`. Nothing is left over for a puzzle role.
+
+So the fourth mechanism was not overlooked in the places it could most easily
+have hidden. The capacity bound stands at four, now measured rather than
+argued. Reproduce the hand scan with `positions.scan_hands(image)`.
 
 ### Where that leaves the numbers
 

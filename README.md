@@ -249,6 +249,17 @@ are established, the mechanism caps at four, and twenty-four are needed. What
 would change that is a fourth number-bearing mechanism, which the capacity
 bound says must exist if the position reading is right.
 
+**The artwork was re-examined for one, and it is not in the obvious places.**
+A radial ink scan of the clock finds **exactly three hands** (332.0°/304.0°/
+240.0°, each within 1.7° of a numeral midpoint); the other nine ink peaks are
+Great Seal engraving, 3.7–13.7° off. The plinth carries **Section 1 only**.
+The pass did turn up three date inscriptions no earlier record mentions —
+`05.25.20` on Floyd's hoodie, `11.03.20` under the red `·VS·`, and
+`1865 - 202…?` beside the Statue — but none is underlined or on a pointer,
+read as positions they overflow 24 (`05.25.20` → 25), and each already has a
+complete non-puzzle explanation as a caption for an event depicted. They are
+catalogued, not promoted.
+
 **A higher-resolution original does not exist.** privatekeys.pw,
 `i.redd.it/n1x7g8ceaur51.png` and the `HomelessPhD/BLM_0.2BTC` repository all
 serve byte-identical content (`d0b04378…`, 1600×1200) — and i.redd.it is

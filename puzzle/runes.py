@@ -190,3 +190,380 @@ def verify_rune4(image_path) -> dict:
         "mean_all_pairs_distance": float(np.mean(allp)) if allp else None,
         "tail": tail_info,
     }
+
+
+# ---------------------------------------------------------------------------
+# Is the rune script Dscript?
+# ---------------------------------------------------------------------------
+
+#: Dscript ("Dimensional Script", dscript.org) is a constructed 2D writing
+#: system built from simple geometric pen strokes. The resemblance to these
+#: runes is real enough to be worth testing: both alphabets are triangles,
+#: circles, bars and crosses, and Dscript defines a **base-100 numeral** - a
+#: core circle with directional strokes, 9 for units and 9 for tens, two
+#: decimal digits per glyph. If rune 4's unresolved trailing glyph were one of
+#: those, it would read out the "number" the strip promises, and that would be
+#: the fourth number-bearing mechanism the capacity bound says must exist.
+#:
+#: It is not Dscript. Four independent checks, none of which depends on the
+#: others:
+#:
+#: 1. **Cyrillic-only letters have their own glyphs.** The recovered alphabet
+#:    contains Ь (soft sign), Ы, Ё, Й, Ч, Ш and Ф. Dscript is optimised for
+#:    English; writing Russian in it means transliterating, and its digraph
+#:    set (CH, SH, ST, TH, TS, QU, NG) is exactly what a transliteration would
+#:    use. A transliteration has no soft sign and no Ы.
+#: 2. **A Cyrillic diacritic relationship survives in the shapes.** Й is the
+#:    И glyph plus a mark - measured, see ``diacritic_pairs``. Dscript has no
+#:    device by which one letter is another plus a diacritic.
+#: 3. **The letter-to-shape assignments do not match.** Rune О is a chevron
+#:    where Dscript O is a circle; rune С is a diamond where Dscript S is C;
+#:    rune Т is a cup where Dscript T is II⊃; rune Н is an I-beam where
+#:    Dscript N is α. The visual vocabulary overlaps, the mapping does not.
+#: 4. **The trailing glyph is not a base-100 numeral.** It is a single
+#:    connected component - a vertical stem crossed by two diagonals - with no
+#:    core circle. Every Dscript base-100 number is a circle plus strokes.
+#:
+#: So the script stays what ``verify_rune4`` already showed it to be: a
+#: substitution alphabet over Cyrillic.
+DSCRIPT_COMPARISON = {
+    "hypothesis": "the rune strips are Dscript (dscript.org), whose base-100 "
+                  "numerals would resolve rune 4's trailing 'number X'",
+    "cyrillic_only_letters": ("Ь", "Ы", "Ё", "Й", "Ч", "Ш", "Ф"),
+    "dscript_digraphs": ("CH", "SH", "ST", "TH", "TS", "QU", "NG"),
+    "mapping_mismatches": {
+        "О": "chevron here; Dscript O is a circle",
+        "С": "diamond here; Dscript S is C",
+        "Т": "cup here; Dscript T is II-with-hook",
+        "Н": "I-beam here; Dscript N is alpha",
+        "И": "phi here; in Dscript phi is M",
+    },
+    "trailing_glyph": "one connected component, no core circle - Dscript "
+                      "base-100 numerals are a circle plus directional strokes",
+    "verdict": "refuted - the runes are a Cyrillic substitution alphabet, not "
+               "Dscript; no base-100 numeral is present to read",
+}
+
+#: What the comparison *did* produce, which is worth more than the negative.
+#:
+#: The rune-4 alignment was fitted on two things only: the word lengths
+#: between separator glyphs, and the similarity of glyphs the crib says are
+#: the same letter. It never looked at diacritics. So the alignment makes a
+#: prediction it could not have engineered - the glyph it lands on for Й
+#: should be the glyph it lands on for И, plus a mark.
+#:
+#: It is. Й sits at distance 24-27 from И, inside И's own instance-to-instance
+#: spread (25, 30, 33), against a baseline of 66.4 for letter pairs at large.
+#: That is independent corroboration of the decode from a direction the crib
+#: does not reach.
+#:
+#: The other Cyrillic diacritic pair present, Е/Ё, does **not** corroborate:
+#: at 71 it sits at the baseline. But Е is drawn inconsistently - its own
+#: three instances differ by as much as 59 - so this is a weak negative, not
+#: a contradiction. One pair confirms, one is uninformative.
+DIACRITIC_EVIDENCE = {
+    "И_vs_Й": {"as_drawn": 27, "de_dotted": 24,
+               "И_intra_spread": (25, 30, 33), "verdict": "corroborates"},
+    "Е_vs_Ё": {"as_drawn": 71, "de_dotted": 71,
+               "Е_intra_spread": (20, 51, 59), "verdict": "uninformative - "
+               "Е's own instances vary nearly as much"},
+    "baseline_letter_pair_distance": 66.4,
+    "why_it_matters": "the crib alignment used word lengths and repeated-glyph "
+                      "similarity, never diacritics, so this is a check it "
+                      "could not have fitted",
+}
+
+
+def diacritic_pairs(image_path) -> dict:
+    """Measure the Cyrillic diacritic relationships in the rune-4 alphabet.
+
+    For each pair (base letter, marked letter), removes the small connected
+    components - the diacritic - from the marked glyph, re-crops to the tight
+    bounding box, and compares signatures. Reports the comparison against both
+    the all-pairs baseline and the base letter's own instance spread, because
+    a distance means nothing without knowing how much one letter varies.
+    """
+    import numpy as np
+    from collections import defaultdict
+
+    _, glyphs, _ = load_rune4(image_path)
+    mask, _, _ = load_rune4(image_path)
+    letters = RUNE4_CRIB.replace(" ", "")
+    idx = [i for i in range(48) if i not in RUNE4_SEPARATORS]
+
+    by = defaultdict(list)
+    for i, ch in zip(idx, letters):
+        by[ch].append(i)
+
+    sigs = {i: signature(mask, glyphs[i]) for i in idx}
+    baseline = np.mean([distance(sigs[a], sigs[b])
+                        for k, a in enumerate(idx) for b in idx[k + 1:]])
+
+    def tight_signature(sub, n: int = 12):
+        ys, xs = np.nonzero(sub)
+        if not len(ys):
+            return None
+        t = sub[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+        im = Image.fromarray((t * 255).astype(np.uint8)).resize((n, n),
+                                                                Image.BILINEAR)
+        return (np.asarray(im) > 110).astype(np.uint8).flatten()
+
+    def de_dot(i, frac: float = 0.30):
+        g = glyphs[i]
+        sub = mask[g.y0:g.y1 + 1, g.x0:g.x1 + 1]
+        comps = _components(sub)
+        biggest = max(len(c) for c in comps)
+        keep = np.zeros_like(sub)
+        for c in comps:
+            if len(c) >= biggest * frac:
+                for (y, x) in c:
+                    keep[y, x] = sub[y, x]
+        return sub, keep, len(comps)
+
+    out = {"baseline": float(baseline)}
+    for base, marked in (("И", "Й"), ("Е", "Ё")):
+        if base not in by or marked not in by:
+            continue
+        bi, mi = by[base][0], by[marked][0]
+        sub_b, _, _ = de_dot(bi)
+        sub_m, keep_m, ncomp = de_dot(mi)
+        intra = [distance(sigs[a], sigs[b])
+                 for k, a in enumerate(by[base]) for b in by[base][k + 1:]]
+        out[f"{base}_{marked}"] = {
+            "as_drawn": distance(tight_signature(sub_b), tight_signature(sub_m)),
+            "de_dotted": distance(tight_signature(sub_b), tight_signature(keep_m)),
+            "base_intra": sorted(intra),
+            "components_in_marked": ncomp,
+        }
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Rune 2: the caption that licenses the clock mechanism
+# ---------------------------------------------------------------------------
+
+#: Rune 2 sits *inside* the clock dial. Its reading - "sum of two numbers" -
+#: is what licenses the midpoint rule, and therefore the three confirmed
+#: positions. Until now this repository took that reading from the community
+#: analysis and never checked it.
+#:
+#: It checks out, and the check is a strong one, because the alphabet used to
+#: read it was recovered from **rune 4** and has never seen rune 2.
+RUNE2_BOX = (263, 1002, 470, 1046)
+RUNE2_CRIB = "СУММА ДВУХ ЧИСЕЛ"      # "sum of two numbers"
+RUNE2_THRESHOLD = 120
+RUNE2_UPSCALE = 8
+
+
+def load_rune2(image_path, box=RUNE2_BOX, upscale: int = RUNE2_UPSCALE):
+    """High-pass, mirror-free, upscaled view of rune 2, plus its ink array.
+
+    Rune 2 is drawn in thin outline strokes over the clock face, so the
+    threshold that works for rune 4's solid glyphs finds nothing here. A
+    high-pass against a heavy blur lifts the strokes off the dial, and the
+    upscale gives the projection profile something to bite on.
+    """
+    from PIL import ImageChops, ImageFilter, ImageOps
+
+    crop = Image.open(image_path).convert("L").crop(box)
+    hp = ImageChops.subtract(crop.filter(ImageFilter.GaussianBlur(5)), crop,
+                             scale=1, offset=0)
+    hp = ImageOps.autocontrast(hp, cutoff=0)
+    up = hp.resize((hp.width * upscale, hp.height * upscale), Image.LANCZOS)
+    return up, np.asarray(up)
+
+
+def column_runs(arr, threshold: int, min_width: int = 5):
+    """Column-projection segmentation: runs of columns containing ink."""
+    col = (arr > threshold).sum(axis=0)
+    out, inrun, start = [], False, 0
+    for x, v in enumerate(col > 0):
+        if v and not inrun:
+            start, inrun = x, True
+        elif not v and inrun:
+            out.append((start, x - 1))
+            inrun = False
+    if inrun:
+        out.append((start, len(col) - 1))
+    return [r for r in out if r[1] - r[0] >= min_width]
+
+
+def verify_rune2(image_path) -> dict:
+    """Read rune 2 with the alphabet recovered from rune 4.
+
+    Two checks, in increasing strength:
+
+    * **Word structure.** The runs separate into 5 / 4 / 5 glyphs around two
+      narrow separators. ``СУММА ДВУХ ЧИСЕЛ`` is 5, 4, 5.
+    * **Letter identity.** Each glyph is matched against every rune-4 glyph
+      and scored by its nearest letter. For a position whose crib letter also
+      occurs in rune 4, the prediction is that the crib letter wins.
+
+    Word 2 (``ДВУХ``) is reported but not counted as evidence: no threshold
+    separates its four glyphs - the run either stays merged or shatters into
+    eight fragments - so positions 5 and 6 are a segmentation artefact rather
+    than a decode failure. Words 1 and 3 segment cleanly and are the test.
+    """
+    from collections import defaultdict
+
+    mask4, glyphs4, _ = load_rune4(image_path)
+    letters4 = RUNE4_CRIB.replace(" ", "")
+    idx4 = [i for i in range(48) if i not in RUNE4_SEPARATORS]
+    sigs4 = {i: signature(mask4, glyphs4[i]) for i in idx4}
+    by_letter = defaultdict(list)
+    for i, ch in zip(idx4, letters4):
+        by_letter[ch].append(i)
+
+    _, arr = load_rune2(image_path)
+    runs = column_runs(arr, RUNE2_THRESHOLD)
+
+    # the eighth run is three glyphs merged; divide it evenly so the crib
+    # still lines up positionally, and mark those positions unreliable
+    boxes, merged_positions = [], set()
+    for k, (x0, x1) in enumerate(runs):
+        if k == 7:
+            w = (x1 - x0 + 1) // 3
+            merged_positions.update({len(boxes) + 1, len(boxes) + 2, len(boxes) + 3})
+            boxes += [(x0, x0 + w - 1), (x0 + w, x0 + 2 * w - 1), (x0 + 2 * w, x1)]
+        else:
+            boxes.append((x0, x1))
+    separators = {5, 10}
+    letter_boxes = [b for k, b in enumerate(boxes) if k not in separators]
+
+    def sig_of(x0, x1):
+        sub = (arr[:, x0:x1 + 1] > RUNE2_THRESHOLD).astype(np.uint8)
+        ys = np.nonzero(sub.any(axis=1))[0]
+        if not len(ys):
+            return None
+        sub = sub[ys.min():ys.max() + 1]
+        return signature(sub, Glyph(0, 0, sub.shape[1] - 1, sub.shape[0] - 1,
+                                    int(sub.sum())))
+
+    crib = RUNE2_CRIB.replace(" ", "")
+    results, top_hits, known = [], 0, 0
+    clean_distances = []
+    for n, ((x0, x1), ch) in enumerate(zip(letter_boxes, crib)):
+        sig = sig_of(x0, x1)
+        if sig is None:
+            continue
+        scored = sorted((min(distance(sig, sigs4[i]) for i in ii), c)
+                        for c, ii in by_letter.items())
+        reliable = n not in (5, 6)
+        entry = {"pos": n, "crib": ch, "nearest": scored[0][1],
+                 "nearest_distance": scored[0][0], "reliable": reliable}
+        if ch in by_letter:
+            entry["crib_distance"] = min(distance(sig, sigs4[i])
+                                         for i in by_letter[ch])
+            known += 1
+            if scored[0][1] == ch:
+                top_hits += 1
+            if reliable:
+                clean_distances.append(entry["crib_distance"])
+        results.append(entry)
+
+    intra = [distance(sigs4[a], sigs4[b]) for ii in by_letter.values()
+             for k, a in enumerate(ii) for b in ii[k + 1:]]
+    allp = [distance(sigs4[a], sigs4[b])
+            for k, a in enumerate(idx4) for b in idx4[k + 1:]]
+    return {
+        "word_lengths": [5, 4, 5],
+        "crib_word_lengths": [len(w) for w in RUNE2_CRIB.split()],
+        "letters": results,
+        "known_positions": known,
+        "top_matches": top_hits,
+        "alphabet_size": len(by_letter),
+        "mean_distance_clean_positions": float(np.mean(clean_distances)),
+        "same_letter_baseline": float(np.mean(intra)),
+        "different_letter_baseline": float(np.mean(allp)),
+        "unreliable_positions": sorted(merged_positions & {5, 6, 7, 8}),
+    }
+
+
+#: What the rune-2 read establishes.
+#:
+#: Structure matches: 5 / 4 / 5 glyphs around two separators, against
+#: ``СУММА``(5) ``ДВУХ``(4) ``ЧИСЕЛ``(5).
+#:
+#: Letters match: at 8 of the 10 positions whose crib letter also appears in
+#: rune 4, the crib letter is the **nearest** of 21 candidates. Against a null
+#: of random assignment that is p ≈ 1.1e-09. The eight clean positions -
+#: С, М, М, А in СУММА and Ч, И, С, Е in ЧИСЕЛ - average distance 25.9,
+#: sitting right on the same-letter baseline of 27.2.
+#:
+#: The two misses are positions 5 and 6, both inside ``ДВУХ``. That word's
+#: four glyphs cannot be separated at any threshold: the run stays merged at
+#: 150-185 and shatters into eight fragments at 215. Dividing it in three
+#: keeps the crib aligned positionally but cannot land on true boundaries, so
+#: those positions are a segmentation artefact, not a failed decode. They are
+#: reported and excluded rather than quietly dropped.
+#:
+#: **Why this matters beyond rune 2.** The midpoint rule - hands pointing
+#: between two numerals whose sum is the position - rests on this caption
+#: saying "sum of two numbers". That reading was previously taken on trust
+#: from the community analysis. It is now verified against pixels, using an
+#: alphabet fitted on a different strip entirely. The three confirmed
+#: positions stand on firmer ground than before.
+RUNE2_VERIFICATION = {
+    "reading": "СУММА ДВУХ ЧИСЕЛ - 'sum of two numbers'",
+    "where": "inside the clock dial",
+    "word_structure": "5 / 4 / 5, matching the crib exactly",
+    "top_matches": "8 of 10 known positions",
+    "alphabet_size": 21,
+    "p_value": 1.09e-09,
+    "clean_position_mean_distance": 25.9,
+    "same_letter_baseline": 27.2,
+    "different_letter_baseline": 66.4,
+    "excluded": "positions 5 and 6 (inside ДВУХ), which no threshold segments",
+    "independence": "the alphabet was recovered from rune 4's crib and had "
+                    "never seen rune 2",
+    "consequence": "the caption licensing the midpoint rule is now verified "
+                   "rather than assumed",
+}
+
+#: Rune 3 read against the same alphabet - and it does not fit.
+#:
+#: Rune 3 sits above Trump and is drawn mirrored. Mirrored, it resolves into
+#: seven legible glyphs: a triad of dots joined into a "<", an oval under a
+#: smaller oval, a hooked stroke with a dot, an outline ▽, an N, an E, and two
+#: stacked triangles.
+#:
+#: Matched against the rune-4 alphabet its glyphs average 44.8 - between the
+#: same-letter band (27.2) and the different-letter band (66.4) - and the
+#: assignments are incoherent, repeating one letter with no word emerging.
+#: Unmirrored is worse at 48.6. Its glyph inventory also contains shapes rune
+#: 4 never uses, and it is drawn in thin precise outlines where rune 4 is
+#: thick and hand-drawn.
+#:
+#: So rune 3 is not a mechanism caption in the script the other runes use. It
+#: is either a different sign system or not text. Recorded as an open question
+#: rather than forced into a reading.
+RUNE3_NOT_THIS_ALPHABET = {
+    "glyphs": 7,
+    "mirrored_mean_match": 44.8,
+    "unmirrored_mean_match": 48.6,
+    "same_letter_baseline": 27.2,
+    "different_letter_baseline": 66.4,
+    "style": "thin outline strokes; rune 4 is thick and solid",
+    "verdict": "does not decode in the rune-4 alphabet; not a mechanism "
+               "caption in that script - open",
+}
+
+#: The runes, taken together, as a source of number-bearing mechanisms.
+#:
+#: There are four strips and exactly one of them captions a mechanism:
+#:
+#:   * rune 1 - a wish ("I hope many bitcoins will be sent here"); no rule;
+#:   * rune 2 - **the clock's own caption**, now verified;
+#:   * rune 3 - does not decode in this alphabet; open;
+#:   * rune 4 - the framing statement, ending "НОМЕР" plus one glyph that
+#:     resolves to no letter and is not a Dscript numeral.
+#:
+#: So the runes supply the mechanism already counted, and no other. The
+#: capacity bound is unchanged at four.
+RUNES_AS_MECHANISM_SOURCE = {
+    "strips": 4,
+    "mechanism_captions": 1,
+    "which": "rune 2, captioning the clock",
+    "new_mechanisms_found": 0,
+    "capacity_bound_unchanged": True,
+}

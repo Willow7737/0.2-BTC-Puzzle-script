@@ -477,3 +477,191 @@ UNCLAIMED_AXES: dict[tuple[int, int], tuple[float, float, str]] = {
     (11, 23): (92.4, 272.5, "right through the pyramid, Trump/Biden and the "
                             "plinth; left through the Statue's robe"),
 }
+
+
+# ---------------------------------------------------------------------------
+# Re-examination for a fourth number-bearing object
+# ---------------------------------------------------------------------------
+
+#: The capacity bound above was argued from "a clock has three hands". This
+#: measures it instead, so the ceiling rests on the image rather than on a
+#: fact about clocks.
+#:
+#: Method: high-pass the artwork, then sweep a ray out from the hub at
+#: ``CLOCK_CENTRE`` for every whole-degree bearing and take the mean ink
+#: between radius 40 and 150 (skipping the hub, where every hand overlaps).
+#: A hand is a sustained radial ink ridge; engraving and lettering are not.
+#:
+#: Twelve bearings exceed 1.7x the mean. **Exactly three of them are hands**,
+#: and each lands within 1.7 degrees of a numeral midpoint. The other nine sit
+#: 3.7 to 13.7 degrees off, and all nine fall inside the arc occupied by the
+#: Great Seal coin, which overlaps the dial and hides numerals 4 through 7 -
+#: they are its rim, rays and pyramid courses, not hands.
+#:
+#: So the clock is exhausted: three hands, all three already read, no fourth.
+CLOCK_HAND_CENSUS = {
+    "method": "radial high-pass ink profile about the hub, 1-degree steps, "
+              "radius 40-150 px",
+    "peaks_above_1_7x_mean": 12,
+    "hands": {
+        332.0: "midpoint(1,2)=3, off 0.4 deg - TOWER",
+        304.0: "midpoint(12,1)=13, off 1.6 deg - MOON",
+        240.0: "midpoint(10,11)=21, off 1.7 deg - unlabelled hour hand",
+    },
+    "non_hand_peaks": 9,
+    "non_hand_offset_range_deg": (3.7, 13.7),
+    "non_hand_explanation": "all nine lie in the arc covered by the Great "
+                            "Seal coin, which occludes numerals 4-7",
+    "verdict": "exactly three hands; the clock cannot yield a fourth number",
+}
+
+#: The other confirmed mechanism, checked the same way for a second instance.
+#:
+#: The 13th Amendment has two sections, so a second underlined numeral/word
+#: pair was possible in principle. Reading the plinth through the blue channel
+#: (which lifts the ink out from under the translucent red graffiti) shows the
+#: rendered text is **Section 1 only**, ending at "their jurisdiction". There
+#: is no Section 2 on the stone, so there is no second pairing to find.
+PLINTH_SINGLE_SECTION = {
+    "method": "blue-channel isolation + autocontrast + unsharp, 7x",
+    "sections_rendered": 1,
+    "text_ends_at": "their jurisdiction",
+    "underlined_numeral": "1 (in the heading 'Section 1')",
+    "underlined_word": "subject",
+    "verdict": "one pairing only; the plinth cannot yield a second",
+}
+
+#: Every numeral visible in the artwork, including three that no previous
+#: record in this repository mentions. Catalogued so the census is closed:
+#: the question "is there a number somewhere nobody looked at?" now has a
+#: written answer rather than an assumption.
+#:
+#: ``role`` is the honest reading, not a hopeful one. A numeral counts as
+#: *puzzle-marked* only if it meets one of the two conventions the artwork
+#: actually established - underlined and paired with an underlined word, or
+#: carried on an object that points at the dial. None of the new three does.
+NUMERAL_CENSUS = {
+    "clock_dial": {
+        "where": "numerals 12,1,2,3 and 8,9,10,11; 4-7 occluded by the Seal",
+        "role": "puzzle-marked - the scale the hands are read against",
+    },
+    "section_1": {
+        "where": "plinth heading, underlined, beside underlined 'subject'",
+        "role": "puzzle-marked - the one explicit numeral/word pairing",
+    },
+    "hoodie_date": {
+        "where": "05.25.20 on George Floyd's hoodie, directly above "
+                 "'I can't BREATHE'",
+        "new": True,
+        "role": "editorial - the date of the death depicted. Not underlined; "
+                "'BREATHE' is not a BIP-39 word",
+    },
+    "election_date": {
+        "where": "11.03.20 beneath the red 'VS' between Trump and Biden",
+        "new": True,
+        "role": "editorial - the 2020 election date, drawn before the result "
+                "was known. No adjacent word",
+    },
+    "emancipation_range": {
+        "where": "1865 - 202...? beside the Statue, ellipsis and ? in red",
+        "new": True,
+        "role": "editorial - emancipation to an unfinished present. The red ? "
+                "is the artwork's own device for an open question",
+    },
+    "price_axis": {
+        "where": "1800/1600/1400/1200/... on the chart behind the figures",
+        "role": "depicted content - a price axis under a BTC curve",
+    },
+    "covid_slogan": {
+        "where": "'COVID 19 IS A HOAX / 5G IS THE KILLER', and a vial "
+                 "labelled COVID19",
+        "role": "depicted content - graffiti slogans",
+    },
+    "target_address": {
+        "where": "vertical text, left edge",
+        "role": "the puzzle's target, not a clue",
+    },
+}
+
+#: Why the three newly catalogued dates are not a fourth mechanism.
+#:
+#: They fail both established conventions - none is underlined, none rides a
+#: pointer - but that alone is soft. The hard check is range. A 24-word
+#: phrase has positions 1..24, and read as positions the dates overflow it:
+#: ``05.25.20`` yields 25, and ``1865 - 202...?`` yields 1865 and 2020. Only
+#: ``11.03.20`` stays in range, and one date in range out of three is what
+#: chance looks like.
+#:
+#: They also have a complete non-puzzle explanation, which is the part that
+#: matters: each captions a real event the artwork depicts. The red ``?``
+#: appears on exactly the two open questions - when does the struggle end,
+#: and who wins - matching the artwork's own caption, "THIS IS THE FIRST
+#: PREDICTION". Nothing is left over for a puzzle role to explain.
+DATES_NOT_A_MECHANISM = {
+    "candidates": ("05.25.20", "11.03.20", "1865 - 202...?"),
+    "underlined": 0,
+    "on_a_pointer": 0,
+    "out_of_range_for_24": ("05.25.20 -> 25", "1865 - 202...? -> 1865, 2020"),
+    "in_range": ("11.03.20 -> 11, 3, 20",),
+    "alternative_explanation": "each dates an event the artwork depicts; the "
+                               "red ? marks predictions, per the artwork's "
+                               "own 'THIS IS THE FIRST PREDICTION'",
+    "verdict": "catalogued, not promoted - no fourth mechanism here",
+}
+
+
+def scan_hands(image_path: str, r0: int = 40, r1: int = 150,
+               threshold: float = 1.7) -> dict:
+    """Re-derive ``CLOCK_HAND_CENSUS`` from the artwork.
+
+    Sweeps a ray from the hub at every whole-degree bearing and measures mean
+    high-pass ink between *r0* and *r1*. Returns the peaks and, for each, the
+    nearest numeral midpoint and how far off it is. Kept here rather than in
+    ``forensics`` because it reads ``CLOCK_CENTRE`` and the numeral bearings
+    that the rest of this module is built on.
+    """
+    import math
+    from PIL import Image, ImageChops, ImageFilter, ImageOps
+
+    im = Image.open(image_path).convert("RGB")
+    grey = ImageOps.grayscale(im)
+    hp = ImageChops.subtract(grey.filter(ImageFilter.GaussianBlur(10)), grey)
+    px, cx, cy = hp.load(), CLOCK_CENTRE[0], CLOCK_CENTRE[1]
+
+    def ink(bearing: float) -> float:
+        th = math.radians(bearing)
+        dx, dy = math.sin(th), -math.cos(th)
+        vals = [px[int(cx + dx * r), int(cy + dy * r)]
+                for r in range(r0, r1)
+                if 0 <= cx + dx * r < im.width and 0 <= cy + dy * r < im.height]
+        return sum(vals) / len(vals) if vals else 0.0
+
+    profile = [(b, ink(b)) for b in range(360)]
+    mean = sum(v for _, v in profile) / len(profile)
+
+    peaks = []
+    for i, (b, v) in enumerate(profile):
+        window = [profile[(i + d) % 360][1] for d in range(-6, 7)]
+        if v == max(window) and v > mean * threshold:
+            if peaks and b - peaks[-1][0] <= 8:
+                if v > peaks[-1][1]:
+                    peaks[-1] = (b, v)
+            else:
+                peaks.append((b, v))
+
+    out = []
+    for b, v in peaks:
+        best = min(
+            ((a, a % 12 + 1) for a in range(1, 13)),
+            key=lambda ac: abs((b - _midpoint_bearing(*ac) + 180) % 360 - 180))
+        off = abs((b - _midpoint_bearing(*best) + 180) % 360 - 180)
+        out.append({"bearing": float(b), "ink": v, "pair": best,
+                    "position": best[0] + best[1], "off_deg": off})
+    return {"mean_ink": mean, "peaks": out,
+            "hands": [p for p in out if p["off_deg"] <= 2.0]}
+
+
+def _midpoint_bearing(a: int, c: int) -> float:
+    """Bearing of the midpoint between two adjacent numerals."""
+    delta = (NUMERAL_BEARING[c] - NUMERAL_BEARING[a] + 540) % 360 - 180
+    return (NUMERAL_BEARING[a] + delta / 2) % 360

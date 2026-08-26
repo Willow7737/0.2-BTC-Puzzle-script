@@ -829,6 +829,185 @@ class TestExtractionHypothesis(unittest.TestCase):
         self.assertEqual(ex.REFUTED["text_indexing"]["four_of_four"], 0)
 
 
+class TestFourthMechanismSearch(unittest.TestCase):
+    """Re-examination of the artwork for an overlooked number-bearing object."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def test_census_covers_the_three_newly_found_numerals(self):
+        from puzzle import positions
+        new = [k for k, v in positions.NUMERAL_CENSUS.items() if v.get("new")]
+        self.assertEqual(sorted(new),
+                         ["election_date", "emancipation_range", "hoodie_date"])
+        for entry in positions.NUMERAL_CENSUS.values():
+            self.assertIn("role", entry, "every numeral needs a stated role")
+
+    def test_new_numerals_are_not_promoted_to_assignments(self):
+        """Catalogued is not confirmed. Nothing here may reach CONFIRMED."""
+        from puzzle import positions
+        confirmed = {w for a in positions.CONFIRMED for w in a.words}
+        self.assertEqual(confirmed, {"subject", "tower", "moon"})
+        self.assertEqual(positions.DATES_NOT_A_MECHANISM["underlined"], 0)
+        self.assertEqual(positions.DATES_NOT_A_MECHANISM["on_a_pointer"], 0)
+
+    def test_dates_overflow_a_24_position_phrase(self):
+        """The hard check on the date reading, recomputed not asserted."""
+        from puzzle import positions
+        for spec in ("05.25.20", "11.03.20"):
+            parts = [int(x) for x in spec.split(".")]
+            over = [n for n in parts if not 1 <= n <= 24]
+            recorded_in_range = any(
+                spec in s for s in positions.DATES_NOT_A_MECHANISM["in_range"])
+            self.assertEqual(not over, recorded_in_range,
+                             f"{spec}: range check disagrees with the record")
+        self.assertNotIn(25, range(1, 25))
+
+    def test_capacity_bound_is_unchanged_by_the_re_examination(self):
+        from puzzle import positions
+        cap = positions.MECHANISM_CAPACITY
+        self.assertEqual(cap["clock_hands"], 3)
+        self.assertEqual(cap["explicit_adjacent_numeral"], 1)
+        self.assertEqual(cap["total_reachable"], 4)
+
+    def test_clock_has_exactly_three_hands(self):
+        """Measured from the image, not argued from 'clocks have three hands'."""
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        from puzzle import positions
+        got = positions.scan_hands(self.IMAGE)
+        self.assertEqual(len(got["hands"]), 3,
+                         "a fourth hand would break the capacity bound")
+        bearings = sorted(round(h["bearing"], 1) for h in got["hands"])
+        self.assertEqual(bearings, sorted(positions.CLOCK_HAND_CENSUS["hands"]))
+        self.assertEqual(len(got["peaks"]),
+                         positions.CLOCK_HAND_CENSUS["peaks_above_1_7x_mean"])
+
+    def test_the_three_hands_land_on_the_recorded_positions(self):
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        from puzzle import positions
+        got = positions.scan_hands(self.IMAGE)
+        self.assertEqual({h["position"] for h in got["hands"]}, {3, 13, 21})
+
+
+class TestRune2Verification(unittest.TestCase):
+    """Rune 2 captions the clock. Read it with the alphabet from rune 4."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def setUp(self):
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+
+    def test_word_structure_matches_the_crib(self):
+        from puzzle.runes import verify_rune2
+        r = verify_rune2(self.IMAGE)
+        self.assertEqual(r["word_lengths"], r["crib_word_lengths"])
+
+    def test_crib_letter_wins_at_most_known_positions(self):
+        """The decisive check, recomputed from the artwork."""
+        from puzzle.runes import verify_rune2
+        r = verify_rune2(self.IMAGE)
+        self.assertGreaterEqual(r["top_matches"], 8)
+        self.assertEqual(r["known_positions"], 10)
+        self.assertEqual(r["alphabet_size"], 21)
+
+    def test_clean_positions_sit_at_the_same_letter_baseline(self):
+        from puzzle.runes import verify_rune2
+        r = verify_rune2(self.IMAGE)
+        self.assertLess(r["mean_distance_clean_positions"],
+                        r["same_letter_baseline"] * 1.1)
+        self.assertLess(r["mean_distance_clean_positions"],
+                        r["different_letter_baseline"] * 0.5)
+
+    def test_the_two_misses_are_declared_unreliable(self):
+        """Positions 5 and 6 are a segmentation artefact and must be flagged."""
+        from puzzle.runes import verify_rune2
+        r = verify_rune2(self.IMAGE)
+        misses = [e for e in r["letters"]
+                  if "crib_distance" in e and e["nearest"] != e["crib"]]
+        for e in misses:
+            self.assertFalse(e["reliable"],
+                             f"position {e['pos']} missed but is not flagged")
+
+    def test_significance_recomputed_not_trusted(self):
+        from math import comb
+        from puzzle.runes import verify_rune2, RUNE2_VERIFICATION
+        r = verify_rune2(self.IMAGE)
+        n, k, a = r["known_positions"], r["top_matches"], r["alphabet_size"]
+        p = sum(comb(n, j) * (1 / a) ** j * (1 - 1 / a) ** (n - j)
+                for j in range(k, n + 1))
+        self.assertLess(p, 1e-8)
+        self.assertAlmostEqual(p, RUNE2_VERIFICATION["p_value"], places=11)
+
+    def test_runes_supply_no_new_mechanism(self):
+        from puzzle import positions
+        from puzzle.runes import RUNES_AS_MECHANISM_SOURCE
+        self.assertEqual(RUNES_AS_MECHANISM_SOURCE["new_mechanisms_found"], 0)
+        self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
+
+
+class TestDscriptHypothesis(unittest.TestCase):
+    """Are the rune strips Dscript? If so its base-100 numerals would read
+    out rune 4's trailing 'number X'."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def test_alphabet_carries_cyrillic_only_letters(self):
+        """Dscript would transliterate; a transliteration has no soft sign."""
+        from puzzle.runes import DSCRIPT_COMPARISON, RUNE4_CRIB
+        recorded = set(DSCRIPT_COMPARISON["cyrillic_only_letters"])
+        present = {c for c in recorded if c in RUNE4_CRIB}
+        self.assertGreaterEqual(len(present), 5,
+                                "the crib must actually contain the letters "
+                                "the record claims Dscript cannot write")
+        self.assertTrue(recorded >= {"Ь", "Ы", "Ё"})
+        self.assertTrue(DSCRIPT_COMPARISON["verdict"].startswith("refuted"))
+
+    def test_marked_letter_sits_inside_its_base_letters_spread(self):
+        """Y-breve corroboration: measured, not asserted.
+
+        The crib alignment never used diacritics, so this is a prediction it
+        could not have fitted.
+        """
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        from puzzle.runes import diacritic_pairs
+        d = diacritic_pairs(self.IMAGE)
+        pair = d["И_Й"]
+        self.assertLessEqual(pair["de_dotted"], max(pair["base_intra"]),
+                             "Й must fall inside И's own instance spread")
+        self.assertLess(pair["de_dotted"], d["baseline"] * 0.6)
+
+    def test_de_dotting_does_not_move_the_uninformative_pair(self):
+        """Recorded honestly: one pair corroborates, one does not."""
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        from puzzle.runes import diacritic_pairs, DIACRITIC_EVIDENCE
+        d = diacritic_pairs(self.IMAGE)
+        self.assertEqual(d["Е_Ё"]["as_drawn"],
+                         DIACRITIC_EVIDENCE["Е_vs_Ё"]["as_drawn"])
+        self.assertGreater(d["Е_Ё"]["de_dotted"], d["baseline"] * 0.9,
+                           "the record must not overstate this pair")
+
+    def test_trailing_glyph_has_no_core_circle(self):
+        """A Dscript base-100 numeral is a circle plus directional strokes."""
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        from puzzle.runes import load_rune4, _components
+        mask, glyphs, _ = load_rune4(self.IMAGE)
+        g = glyphs[48]
+        comps = _components(mask[g.y0:g.y1 + 1, g.x0:g.x1 + 1])
+        self.assertEqual(len(comps), 1,
+                         "a base-100 numeral would not be one bare stroke group")
+
+    def test_dscript_finding_does_not_add_a_position(self):
+        """The hypothesis was a route to a fourth number. It did not supply one."""
+        from puzzle import positions
+        self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
+        self.assertEqual(len(positions.CONFIRMED), 3)
+
+
 class TestRuneAnalysis(unittest.TestCase):
     """Rune-4 crib verification. Skipped unless the artwork is available."""
 
