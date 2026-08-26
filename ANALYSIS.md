@@ -844,7 +844,7 @@ Two structural regularities constrain what kind of system this is:
 triangles), and **three of the seven carry dots**. A plain letter alphabet
 rarely does either.
 
-**Four candidates tested, each against a control.** The control is the part
+**Six candidates tested, each against a control.** The control is the part
 that matters: a 12×12 fingerprint always finds *some* nearest neighbour, so a
 mean distance means nothing until you know what an unrelated strip scores —
 and that a control glyph's best *accidental* Latin match is 14.
@@ -856,6 +856,26 @@ and that a control glyph's best *accidental* Latin match is 14.
 | Latin | 40.1 | rune 4 scores 42.8 | no aggregate signal |
 | Cyrillic | 41.0 | rune 4 scores 44.0 | no signal |
 
+**Two named candidates, tested on request.** Aurebesh (Star Wars) and the
+Standard Galactic Alphabet (Commander Keen / Minecraft), both from
+freely-licensed Wikimedia Commons reference charts, all four orientations:
+
+| Candidate | Rune 3 (best) | Rune 4 (control) | Rune 2 (control) | Verdict |
+|---|---|---|---|---|
+| Aurebesh | 45.4 | 44.7 | 45.7 | **refuted — worse than control** |
+| Standard Galactic | 48.4 | 47.2 | 45.6 | **refuted — worse than control** |
+
+Rune 3 scores *worse than the control* against both. Three unrelated strips —
+rune 3, rune 4 and rune 2, the last two known to be a Cyrillic substitution —
+all land in the same 44–49 band. That band **is** the noise floor for
+geometric glyphs against an unrelated geometric alphabet, and rune 3 sits in
+it with nothing to distinguish it.
+
+A structural check agrees and needs no statistics: **both alphabets are
+entirely straight-edged and contain no circle.** Rune 3 opens with three
+joined circles and a pair of stacked ovals. Whatever it is, it is not written
+in an alphabet with no round forms.
+
 **One thing does stand out, and it is thin.** Glyphs 5 and 6 match Latin `N`
 at **24** and `E` at **21** — inside the same-letter band of 27.2 — while the
 other five sit at 44–52. But 2 of 7 glyphs landing that low carries
@@ -863,7 +883,7 @@ other five sit at 44–52. But 2 of 7 glyphs landing that low carries
 *after* seeing those two shapes; and the control's best accidental match is
 14. Suggestive, not established, and recorded that way.
 
-So **rune 3's alphabet is unidentified.** Four candidates are closed with
+So **rune 3's alphabet is unidentified.** Six candidates are closed with
 method; no positive identification. What would settle it is a specific
 candidate to test — `runes.compare_to_reference()` makes that cheap, and
 `RUNE3_INVENTORY` describes the glyphs for matching by eye.

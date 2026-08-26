@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass
+from pathlib import Path as _Path
 
 try:
     import numpy as np
@@ -729,6 +730,72 @@ RUNE3_ALPHABET_SEARCH = {
         "caveats": "post-hoc hypothesis; control's best accidental Latin "
                    "match is 14; 2 of 7 is a thin result",
     },
-    "verdict": "unidentified - four candidates excluded with controls, no "
+    "also_tested": ("aurebesh", "sga"),   # see AUREBESH_AND_SGA
+    "verdict": "unidentified - six candidates excluded with controls, no "
                "positive identification",
+}
+
+
+#: Fingerprints of two constructed alphabets, vendored so the comparison runs
+#: offline. These are 12x12 binary signatures derived from freely-licensed
+#: reference charts - not reproductions of the charts themselves.
+#:
+#: Provenance, both from Wikimedia Commons, fetched 2026-08-26:
+#:   * Aurebesh - ``File:Star-Wars-aurek-besh-alphabet-chart.svg`` (34 glyphs:
+#:     A-Z plus the digraphs Aurebesh writes as single characters);
+#:   * Standard Galactic Alphabet - ``File:Standard Galactic Alphabet
+#:     reference transliteration.jpg`` (26 glyphs, A-Z).
+REFERENCE_ALPHABETS = _Path(__file__).resolve().parent.parent / "data" / "reference_alphabets.npz"
+
+
+def load_reference_alphabet(name: str) -> dict:
+    """Load a vendored reference alphabet as ``letter -> signature``.
+
+    *name* is ``"aurebesh"`` or ``"sga"``.
+    """
+    if name not in ("aurebesh", "sga"):
+        raise ValueError(f"unknown reference alphabet {name!r}")
+    with np.load(REFERENCE_ALPHABETS) as z:
+        return dict(zip(z[f"{name}_names"].tolist(), z[name]))
+
+
+#: Aurebesh and Standard Galactic tested, both refuted - and the controls are
+#: what make that readable.
+#:
+#: ================  =========  ===========  =========  =====================
+#: candidate          rune 3     rune 4       rune 2     verdict
+#:                    (best)     (control)    (control)
+#: ================  =========  ===========  =========  =====================
+#: Aurebesh             45.4        44.7        45.7     rune 3 scores *worse*
+#:                                                       than the control
+#: Standard Galactic    48.4        47.2        45.6     rune 3 scores *worse*
+#:                                                       than the control
+#: ================  =========  ===========  =========  =====================
+#:
+#: All four orientations were tried for each. Three unrelated strips - rune 3,
+#: rune 4 and rune 2, the last two known to be a Cyrillic substitution - all
+#: land in the same 44-49 band against both alphabets. That band *is* the
+#: noise floor for "geometric glyphs against an unrelated geometric alphabet",
+#: and rune 3 sits in it with nothing to distinguish it.
+#:
+#: A structural check agrees, and is worth stating because it needs no
+#: statistics: **Aurebesh and Standard Galactic are both entirely
+#: straight-edged.** Neither contains a circle. Rune 3's first two glyphs are
+#: three joined circles and a pair of stacked ovals. Whatever rune 3 is, it is
+#: not written in an alphabet with no round forms.
+AUREBESH_AND_SGA = {
+    "aurebesh": {"rune3_best": 45.4, "orientation": "rot180",
+                 "control_rune4": 44.7, "control_rune2": 45.7,
+                 "source": "Wikimedia Commons, "
+                           "File:Star-Wars-aurek-besh-alphabet-chart.svg",
+                 "glyphs": 34, "verdict": "refuted - worse than control"},
+    "sga": {"rune3_best": 48.4, "orientation": "flipped",
+            "control_rune4": 47.2, "control_rune2": 45.6,
+            "source": "Wikimedia Commons, File:Standard Galactic Alphabet "
+                      "reference transliteration.jpg",
+            "glyphs": 26, "verdict": "refuted - worse than control"},
+    "structural_check": "both alphabets are entirely straight-edged and "
+                        "contain no circle; rune 3 opens with three joined "
+                        "circles and a pair of stacked ovals",
+    "noise_band": "three unrelated strips all score 44-49 against both",
 }

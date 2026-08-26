@@ -1005,6 +1005,40 @@ class TestRune3Alphabet(unittest.TestCase):
         for name, entry in rec["tested"].items():
             self.assertIn("control", entry, f"{name} recorded without a control")
 
+    def test_aurebesh_and_sga_are_refuted_by_their_controls(self):
+        """Recomputed from vendored fingerprints, not trusted as constants."""
+        from PIL import ImageOps
+        R = self.runes
+        s2 = R.strip_signatures(self.IMAGE, R.RUNE2_BOX, R.RUNE2_THRESHOLD)
+        for name in ("aurebesh", "sga"):
+            ref = R.load_reference_alphabet(name)
+            best = min(
+                R.compare_to_reference(
+                    R.strip_signatures(self.IMAGE, R.RUNE3_BOX,
+                                       R.RUNE3_THRESHOLD, transform=tf),
+                    ref, self.control)["mean"]
+                for tf in (None, ImageOps.mirror,
+                           lambda x: x.rotate(180), ImageOps.flip))
+            ctrl = R.compare_to_reference([], ref, self.control)["control_mean"]
+            r2 = R.compare_to_reference(s2, ref, self.control)["mean"]
+            self.assertGreater(best, ctrl * 0.95,
+                               f"{name}: rune 3 must not beat its control")
+            self.assertLess(abs(best - r2), 8,
+                            f"{name}: rune 3 must sit in the same noise band "
+                            "as an unrelated strip")
+
+    def test_reference_alphabets_are_internally_discriminable(self):
+        """A reference that cannot tell its own letters apart proves nothing."""
+        from puzzle.runes import distance
+        for name, expected in (("aurebesh", 34), ("sga", 26)):
+            ref = self.runes.load_reference_alphabet(name)
+            self.assertEqual(len(ref), expected)
+            keys = sorted(ref)
+            ds = [distance(ref[a], ref[b])
+                  for i, a in enumerate(keys) for b in keys[i+1:]]
+            self.assertGreater(sum(ds) / len(ds), 50,
+                               f"{name} letters are not well separated")
+
     def test_weak_positive_is_recorded_with_its_caveats(self):
         """The N/E match is thin and post-hoc; the record must say so."""
         wp = self.runes.RUNE3_ALPHABET_SEARCH["weak_positive"]
