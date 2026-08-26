@@ -6,10 +6,17 @@ segmented reliably, aligning them against the known text both checks the
 translation and yields the substitution alphabet needed to read anything that
 was never translated.
 
-Rune 4 segments cleanly and the alignment holds (see ``verify_rune4``). Runes
-1 and 2 are drawn smaller and sit below the resolution limit of the 1600x1200
-image - connected components merge and projection profiles split individual
-strokes rather than glyphs. That is a property of the scan, not of the method.
+Rune 4 segments cleanly and the alignment holds (see ``verify_rune4``).
+
+An earlier version of this docstring said runes 1 and 2 "sit below the
+resolution limit of the 1600x1200 image". **That was wrong for both.** Rune 2
+is verified in ``verify_rune2`` and rune 1 in ``verify_rune1``; both needed an
+8x upscale before thresholding and a box that excludes neighbouring artwork,
+not a better scan. The limit was the segmentation, not the image.
+
+All four strips are now read: rune 1 and rune 4 are Russian in the artwork's
+own runic substitution, rune 2 is its caption for the clock, and rune 3 is
+English in the *Gravity Falls* cipher (see ``RUNE3_DECODE``).
 """
 
 from __future__ import annotations
@@ -547,6 +554,9 @@ RUNE3_NOT_THIS_ALPHABET = {
     "style": "thin outline strokes; rune 4 is thick and solid",
     "verdict": "does not decode in the rune-4 alphabet; not a mechanism "
                "caption in that script - open",
+    "SUPERSEDED": "rune 3 reads TUESDAY in the Gravity Falls cipher; see "
+                  "RUNE3_DECODE. This record's conclusion was right for the "
+                  "wrong reason - see RUNE3_NOT_THE_ARTWORK_SCRIPT.",
 }
 
 #: The runes, taken together, as a source of number-bearing mechanisms.
@@ -567,6 +577,11 @@ RUNES_AS_MECHANISM_SOURCE = {
     "which": "rune 2, captioning the clock",
     "new_mechanisms_found": 0,
     "capacity_bound_unchanged": True,
+    "rune3_now_decoded": "TUESDAY, in the Gravity Falls cipher - see "
+                         "RUNE3_DECODE. It names no mechanism and is not a "
+                         "BIP-39 word, so the capacity bound is untouched; "
+                         "what it establishes is that a *second* cipher is "
+                         "in play in this artwork.",
 }
 
 
@@ -731,8 +746,10 @@ RUNE3_ALPHABET_SEARCH = {
                    "match is 14; 2 of 7 is a thin result",
     },
     "also_tested": ("aurebesh", "sga"),   # see AUREBESH_AND_SGA
-    "verdict": "unidentified - six candidates excluded with controls, no "
-               "positive identification",
+    "verdict": "WITHDRAWN - rune 3 reads TUESDAY in the Gravity Falls "
+               "cipher (RUNE3_DECODE). Every exclusion here was produced by "
+               "a wrong mirror transform and a metric with no cross-source "
+               "power; see RUNE3_SEARCH_WITHDRAWN.",
 }
 
 
@@ -798,4 +815,530 @@ AUREBESH_AND_SGA = {
                         "contain no circle; rune 3 opens with three joined "
                         "circles and a pair of stacked ovals",
     "noise_band": "three unrelated strips all score 44-49 against both",
+    "SUPERSEDED": "the numeric verdicts are withdrawn - the metric that "
+                  "produced them has no cross-source power "
+                  "(RUNE3_SEARCH_WITHDRAWN). The structural check survives "
+                  "on its own terms, and rune 3 is in fact the Gravity Falls "
+                  "alphabet (RUNE3_DECODE), which does contain circles.",
+}
+
+
+# ---------------------------------------------------------------------------
+# Rune 3 decoded: the Gravity Falls cipher
+# ---------------------------------------------------------------------------
+
+#: Rune 3 reads **TUESDAY**, in the *Gravity Falls* "strange symbols"
+#: substitution alphabet, left to right, as drawn.
+#:
+#: The artwork points at this cipher twice over: the Great Seal's pyramid is
+#: drawn as Bill Cipher, the show's triangular antagonist, and rune 3 is the
+#: one strip that floats free of any object, beside a question mark. It is the
+#: only strip in English and the only one *not* in the artwork's own Cyrillic
+#: runic script.
+#:
+#: The mapping, glyph by glyph:
+#:
+#: ======  =========================================  ========
+#: letter  glyph                                      position
+#: ======  =========================================  ========
+#: T       a small triangle above a larger triangle          1
+#: U       ``Ǝ`` - three bars                                2
+#: E       ``И`` - a zigzag                                  3
+#: S       ``▽`` - an outline down-triangle                  4
+#: D       a hooked stroke with dots                         5
+#: A       a small oval above a larger oval, with a tail     6
+#: Y       three circles joined by two lines                 7
+#: ======  =========================================  ========
+RUNE3_DECODE = {
+    "reads": "TUESDAY",
+    "cipher": "Gravity Falls 'strange symbols' substitution alphabet",
+    "orientation": "left to right, as drawn - NOT mirrored",
+    "language": "English",
+    "glyphs": 7,
+    "source": "the community's own notes (HomelessPhD/BLM_0.2BTC, section 11, "
+              "'Runes (above Trump head)'), verified here against the chart",
+    "artwork_pointer": "the Great Seal's pyramid is drawn as Bill Cipher",
+    "is_bip39": False,
+}
+
+#: **Two errors made the earlier search fail, and both are now demonstrated.**
+#:
+#: 1. *The mirror.* Rune 3 was recorded as "drawn mirrored" and every
+#:    comparison was run with ``transform=ImageOps.mirror``. It is not
+#:    mirrored. The chart's ``E`` *is* a ``И`` and its ``U`` *is* a ``Ǝ``;
+#:    mirroring the strip turned those into a Latin-looking ``N`` and ``E``
+#:    and reversed the reading order. The "weak positive" of glyphs 5 and 6
+#:    matching Latin ``N`` at 24 and ``E`` at 21 was this artefact - real
+#:    signal, misread.
+#:
+#: 2. *The metric.* The 12x12 binary fingerprint has **no cross-source
+#:    power**. Against known ground truth it ranks the correct letter at a
+#:    mean of 13.7 out of 26; chance is 13.5. It recovers ``OVYRLVG``.
+#:
+#: The fingerprint works *within* a source - rune 2 against rune 4's own
+#: alphabet is 8/14 under 32, p ~ 1e-09 - because line weight, rendering and
+#: aliasing are then shared. Comparing an artwork glyph to a screenshot of a
+#: television chart shares none of that.
+#:
+#: **Consequence: the six earlier exclusions do not stand.** Dscript, Latin,
+#: Cyrillic, Aurebesh and the Standard Galactic Alphabet were each "excluded"
+#: by a detector that cannot see the answer when it is placed in front of it.
+#: Those verdicts are withdrawn, not reversed - nothing says rune 3 *is* any
+#: of them, only that this instrument never had the power to say otherwise.
+RUNE3_SEARCH_WITHDRAWN = {
+    "withdrawn": ("artwork_rune_alphabet", "dscript", "latin", "cyrillic",
+                  "aurebesh", "sga"),
+    "reason": "tested with a wrong mirror transform, by a metric with no "
+              "cross-source discriminating power",
+    "ground_truth_rank_of_correct_letter": (13, 7, 7, 6, 26, 26, 11),
+    "ground_truth_mean_rank": 13.7,
+    "chance_mean_rank": 13.5,
+    "reading_the_metric_returns": "OVYRLVG",
+    "verdict": "withdrawn - the instrument fails its own positive control",
+}
+
+#: The one comparison that remains sound is same-source, and it got *stronger*
+#: on re-examination. Rune 3 against the artwork's own recovered alphabet
+#: scores 0 of 7 glyphs under 32 (minimum 35) where rune 2 - verified same
+#: script - puts 8 of 14 under 32 (minimum 14).
+#:
+#: That reference covers only the 21 Cyrillic letters rune 4's text uses, so
+#: 12 letters have no entry and *cannot* match. For the coverage hole to
+#: explain the null, all seven of rune 3's letters would have to come from
+#: those 12 - about 17% of Russian text by letter frequency, so ~5e-06.
+#: The exclusion stands, and it never mattered: rune 3 is not Cyrillic at all.
+RUNE3_NOT_THE_ARTWORK_SCRIPT = {
+    "rune3_glyphs_under_32": 0,
+    "rune3_min_distance": 35,
+    "rune2_control_under_32": 8,
+    "rune2_control_min_distance": 14,
+    "reference_letter_coverage": "21 of 33 Cyrillic letters",
+    "coverage_hole_rescue_probability": 5e-06,
+    "verdict": "sound - same-source comparison, and confirmed by the decode",
+}
+
+#: Rune 4's trailing glyph, after ``НОМЕР``.
+#:
+#: There are two components past the crib. Index 49 spans the full height of
+#: the strip at its extreme right edge: it is the strip's border, not a glyph.
+#: Index 48 is the real trailing symbol.
+#:
+#: It resolves to no letter because the alphabet recovered from rune 4 covers
+#: only the letters rune 4 itself uses - and this one appears nowhere else in
+#: the strip, so it has no reference. Shape carries no information here: the
+#: script is a *substitution*, so a glyph need not resemble the letter it
+#: stands for, and the mirror-symmetry test accordingly separates nothing
+#: (0.63, z = -0.89 against the known letters' 0.749 +/- 0.132).
+RUNE4_TAIL = {
+    "glyphs_past_crib": (48, 49),
+    "index_49": "the strip's right border, full strip height - not a glyph",
+    "index_48": "the trailing symbol proper",
+    "why_unresolved": "encodes a letter that appears nowhere else in rune 4, "
+                      "so the crib supplies no reference for it",
+    "symmetry": 0.631,
+    "symmetry_z_vs_known_letters": -0.89,
+    "looks_like": "an asterisk or star - the reading recorded elsewhere in "
+                  "this repo as 'a placeholder asterisk, not a digit'. That "
+                  "remains the best visual reading and is consistent with "
+                  "this record; it is simply not evidence, for the reason "
+                  "below.",
+    "verdict": "unresolvable from internal evidence; shape is uninformative "
+               "because the cipher is a substitution",
+}
+
+
+#: Vendored descriptors for the Gravity Falls alphabet, so the check runs
+#: without the chart present. These are 12x12 binary signatures and hole
+#: counts *derived from* the community's reference chart - measurements, not
+#: a reproduction of the artwork they were taken from.
+GRAVITY_FALLS = _Path(__file__).resolve().parent.parent / "data" / "gravity_falls.npz"
+
+
+def gravity_falls_alphabet(chart_path) -> dict:
+    """Extract the 26 'strange symbols' from the community's reference chart.
+
+    The chart lays the alphabet out on a pyramid in rows of 1, 2, 6, 8 and 9
+    cells. Cell separators are the only near-full-height columns in a row, so
+    they locate the grid without any hand-placed boxes.
+    """
+    from PIL import Image
+
+    a = np.asarray(Image.open(chart_path).convert("L")).astype(float)
+    rows = (("A", (176, 204), [472, 520]),
+            ("BC", (214, 243), [463, 500, 537]),
+            ("DEFGHI", (358, 388), [384, 420, 456, 493, 529, 565, 601]),
+            ("JKLMNOPQ", (395, 423),
+             [353, 389, 425, 462, 498, 534, 570, 607, 643]),
+            ("RSTUVWXYZ", (431, 460),
+             [333, 369, 405, 441, 477, 514, 550, 586, 622, 658]))
+    out = {}
+    for letters, (y0, y1), bounds in rows:
+        for i, ch in enumerate(letters):
+            sub = a[y0:y1, bounds[i] + 3:bounds[i + 1] - 3] < 120
+            ys = np.nonzero(sub.any(axis=1))[0]
+            xs = np.nonzero(sub.any(axis=0))[0]
+            if len(ys) and len(xs):
+                out[ch] = sub[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    return out
+
+
+def rune3_masks(image_path):
+    """Rune 3's seven glyph masks, as drawn - no mirror."""
+    from PIL import Image, ImageChops, ImageFilter, ImageOps
+
+    crop = Image.open(image_path).convert("L").crop(RUNE3_BOX)
+    hp = ImageChops.subtract(crop.filter(ImageFilter.GaussianBlur(5)), crop,
+                             scale=1, offset=0)
+    hp = ImageOps.autocontrast(hp, cutoff=0)
+    up = hp.resize((hp.width * RUNE3_UPSCALE, hp.height * RUNE3_UPSCALE),
+                   Image.LANCZOS)
+    arr = np.asarray(up)
+    out = []
+    for x0, x1 in column_runs(arr, RUNE3_THRESHOLD, 6):
+        sub = arr[:, x0:x1 + 1] > RUNE3_THRESHOLD
+        ys = np.nonzero(sub.any(axis=1))[0]
+        if len(ys):
+            out.append(sub[ys.min():ys.max() + 1])
+    return out
+
+
+def _holes(mask, close: int = 2) -> int:
+    """Number of enclosed holes - a topological feature, robust to weight."""
+    from scipy import ndimage
+
+    m = ndimage.binary_closing(mask, np.ones((close, close)))
+    padded = np.pad(~m, 1, constant_values=True)
+    return ndimage.label(padded)[1] - 1
+
+
+def verify_rune3(image_path, claim: str = "TUESDAY") -> dict:
+    """Check rune 3 against the vendored Gravity Falls descriptors.
+
+    The 12x12 fingerprint is useless across sources, so the check uses hole
+    count instead: a topological feature that survives the difference in line
+    weight between a pale artwork wash and a television screenshot.
+
+    Significance is exact, not sampled. Each position contributes the fraction
+    of the 26 letters sharing its observed hole count; the number of agreeing
+    positions is Poisson-binomial, and the tail is summed directly.
+    """
+    data = np.load(GRAVITY_FALLS, allow_pickle=False)
+    letters = "".join(str(c) for c in data["letters"])
+    holes = {c: int(h) for c, h in zip(letters, data["holes"])}
+
+    observed = [_holes(m) for m in rune3_masks(image_path)]
+    agree = [i for i, ch in enumerate(claim)
+             if i < len(observed) and observed[i] == holes[ch]]
+
+    # exact Poisson-binomial tail
+    probs = [sum(1 for h in holes.values() if h == o) / 26.0 for o in observed]
+    dist = [1.0]
+    for p in probs:
+        nxt = [0.0] * (len(dist) + 1)
+        for k, v in enumerate(dist):
+            nxt[k] += v * (1 - p)
+            nxt[k + 1] += v * p
+        dist = nxt
+    p_value = sum(dist[len(agree):])
+
+    return {
+        "claim": claim,
+        "glyphs": len(observed),
+        "observed_holes": observed,
+        "claim_holes": [holes[c] for c in claim],
+        "agreeing_positions": len(agree),
+        "p_value": p_value,
+        "expected_agreements_by_chance": sum(probs),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Rune 1 read, and the alphabet extended
+# ---------------------------------------------------------------------------
+
+#: Rune 1 is a **three-line block** in the artwork's top-left corner, in the
+#: same Cyrillic runic substitution as runes 2 and 4. This module's docstring
+#: long said runes 1 and 2 "sit below the resolution limit"; rune 2 was read
+#: first, and rune 1 is read here. The limit was the segmentation, not the scan.
+#:
+#: The lines were located by a strip sweep (see ``STRIP_SWEEP``), not guessed.
+RUNE1_LINES = ((200, 44, 450, 63), (192, 69, 390, 86), (196, 88, 378, 107))
+RUNE1_THRESHOLD = 120
+RUNE1_UPSCALE = 8
+
+#: The published plaintext, which the word structure confirms before any glyph
+#: is identified: the separator marks split the lines 1/7/3/4, 5/9 and 5/9,
+#: and the crib's words are exactly those lengths.
+RUNE1_CRIB = ("Я НАДЕЮСЬ ЧТО СЮДА", "БУДУТ ПРИСЫЛАТЬ", "МНОГО БИТКОИНОВ")
+RUNE1_TRANSLATION = "I hope that many bitcoins will be sent here"
+
+#: Separator positions within each segmented line, and the letters each
+#: non-separator mark carries. Line 2 segments to 14 marks where the crib
+#: needs 15: index 2 is 173 px wide against a median of 92 and is a **merge**
+#: of Д and У in ``БУДУТ``. It is excluded from the strict alignment rather
+#: than split by guesswork.
+RUNE1_SEPARATORS = {0: (1, 9, 13), 1: (4,), 2: (5,)}
+RUNE1_MERGED_GLYPH = {"line": 1, "index": 2, "letters": "ДУ",
+                      "width": 173, "median_width": 92}
+
+
+def load_rune1(image_path):
+    """Segment rune 1's three lines. Returns a list of lists of glyph masks."""
+    from PIL import Image, ImageChops, ImageFilter, ImageOps
+
+    src = Image.open(image_path).convert("L")
+    out = []
+    for box in RUNE1_LINES:
+        crop = src.crop(box)
+        hp = ImageChops.subtract(crop.filter(ImageFilter.GaussianBlur(5)), crop,
+                                 scale=1, offset=0)
+        hp = ImageOps.autocontrast(hp, cutoff=0)
+        up = hp.resize((hp.width * RUNE1_UPSCALE, hp.height * RUNE1_UPSCALE),
+                       Image.LANCZOS)
+        arr = np.asarray(up)
+        line = []
+        for x0, x1 in column_runs(arr, RUNE1_THRESHOLD, 4):
+            sub = arr[:, x0:x1 + 1] > RUNE1_THRESHOLD
+            ys = np.nonzero(sub.any(axis=1))[0]
+            if len(ys):
+                line.append(sub[ys.min():ys.max() + 1])
+        out.append(line)
+    return out
+
+
+def _mask_signature(mask):
+    g = Glyph(0, 0, mask.shape[1] - 1, mask.shape[0] - 1, int(mask.sum()))
+    return signature(mask.astype(np.uint8), g)
+
+
+def rune1_pairs(image_path):
+    """``(letter, signature)`` for every rune-1 glyph the crib pins down.
+
+    Line 2 carries a merged glyph, so its first word is aligned only up to
+    that merge; the nine letters of ``ПРИСЫЛАТЬ`` after the separator are
+    unambiguous and are included.
+    """
+    lines = load_rune1(image_path)
+    plan = {
+        0: ("ЯНАДЕЮСЬЧТОСЮДА", None),
+        2: ("МНОГОБИТКОИНОВ", None),
+        1: (None, {0: "Б", 1: "У", 3: "Т", 5: "П", 6: "Р", 7: "И", 8: "С",
+                   9: "Ы", 10: "Л", 11: "А", 12: "Т", 13: "Ь"}),
+    }
+    out = []
+    for li, (crib, explicit) in plan.items():
+        if explicit is not None:
+            for i, ch in explicit.items():
+                out.append((ch, _mask_signature(lines[li][i])))
+            continue
+        idx = [i for i in range(len(lines[li]))
+               if i not in RUNE1_SEPARATORS[li]]
+        for i, ch in zip(idx, crib):
+            out.append((ch, _mask_signature(lines[li][i])))
+    return out
+
+
+def verify_rune1(image_path) -> dict:
+    """Check rune 1 against its crib, two independent ways.
+
+    *Internal*: glyphs the crib calls the same letter should be far more alike
+    than glyphs it calls different letters — the test that confirmed rune 4.
+
+    *External*: each glyph's nearest letter in the alphabet recovered from
+    **rune 4**, a different strip segmented separately, should be the letter
+    the crib names. This one cannot be produced by a self-consistent
+    mis-segmentation, which is why it is the stronger of the two.
+    """
+    import itertools
+
+    lines = load_rune1(image_path)
+    pairs = rune1_pairs(image_path)
+    same, diff = [], []
+    for (a, sa), (b, sb) in itertools.combinations(pairs, 2):
+        (same if a == b else diff).append(distance(sa, sb))
+
+    alphabet = rune4_alphabet(image_path)
+    shared = [(c, s) for c, s in pairs if c in alphabet]
+    hits = 0
+    for ch, s in shared:
+        best = min((min(distance(s, r) for r in refs), name)
+                   for name, refs in alphabet.items())
+        hits += best[1] == ch
+
+    return {
+        "line_marks": [len(l) for l in lines],
+        "expected_marks": [18, 15, 15],
+        "aligned_glyphs": len(pairs),
+        "same_letter_mean": float(np.mean(same)) if same else None,
+        "different_letter_mean": float(np.mean(diff)) if diff else None,
+        "rune4_same_letter_baseline": 27.2,
+        "rune4_different_letter_baseline": 66.4,
+        "cross_check_hits": hits,
+        "cross_check_n": len(shared),
+        "cross_check_chance": len(shared) / len(alphabet),
+        "translation": RUNE1_TRANSLATION,
+    }
+
+
+def extended_alphabet(image_path) -> dict:
+    """Rune 4's alphabet plus the six letters only rune 1 supplies.
+
+    Rune 4's text uses 21 of the 33 Cyrillic letters, so 12 had no reference
+    and could not be matched to anything. Rune 1 adds **Я Ю Г У П Л**, taking
+    coverage to 27. Still absent: Ж Х Ц Щ Ъ Э.
+    """
+    alphabet = {k: list(v) for k, v in rune4_alphabet(image_path).items()}
+    for ch, sig in rune1_pairs(image_path):
+        alphabet.setdefault(ch, []).append(sig)
+    return alphabet
+
+
+#: **Rune 1 is decoded and verified.** Three lines, top left, same runic
+#: substitution as runes 2 and 4:
+#:
+#:   ``Я НАДЕЮСЬ ЧТО СЮДА БУДУТ ПРИСЫЛАТЬ МНОГО БИТКОИНОВ``
+#:   — *"I hope that many bitcoins will be sent here."*
+#:
+#: The word structure settles the alignment before any glyph is identified.
+#: The separator marks split the lines **1/7/3/4**, **5/9** and **5/9**, and
+#: the crib's words are exactly those lengths.
+#:
+#: Two independent checks then confirm it:
+#:
+#: * *internal* — glyphs the crib calls the same letter average 29.4 apart,
+#:   against 68.7 for glyphs it calls different letters, matching rune 4's own
+#:   baselines of 27.2 and 66.4;
+#: * *external* — **33 of 34** glyphs have, as their nearest letter in the
+#:   alphabet recovered from *rune 4*, exactly the letter the crib names.
+#:   Chance is 1.6 of 34, so p ≈ 7.5e-43. This check is the stronger one: it
+#:   cannot be manufactured by a self-consistent mis-segmentation, because the
+#:   reference comes from a different strip segmented separately.
+RUNE1_DECODE = {
+    "reads": " ".join(RUNE1_CRIB),
+    "translation": RUNE1_TRANSLATION,
+    "lines": 3,
+    "word_structure": ((1, 7, 3, 4), (5, 9), (5, 9)),
+    "same_letter_mean": 29.4,
+    "different_letter_mean": 68.7,
+    "cross_check": "33/34 against rune 4's independently recovered alphabet",
+    "cross_check_chance": 1.6,
+    "cross_check_p": 7.5e-43,
+    "supersedes": "this module's docstring called runes 1 and 2 'below the "
+                  "resolution limit of the 1600x1200 image'. That was wrong "
+                  "for both. The limit was the segmentation, not the scan.",
+    "mechanism": None,
+}
+
+#: Reading rune 1 extends the cipher alphabet, because rune 1 uses letters
+#: rune 4 never does.
+#:
+#: Rune 4's text covers 21 of the 33 Cyrillic letters, so 12 letters had no
+#: reference at all - and any glyph carrying one of them was structurally
+#: unmatchable, a hole that quietly weakened every comparison made against
+#: that alphabet. Rune 1 supplies six of the twelve.
+ALPHABET_EXTENSION = {
+    "before": 21,
+    "after": 27,
+    "new_letters": ("Я", "Ю", "Г", "У", "П", "Л"),
+    "still_missing": ("Ж", "Х", "Ц", "Щ", "Ъ", "Э"),
+    "missing_frequency_in_russian": 0.031,
+}
+
+#: Does the extension resolve rune 4's trailing glyph? **No** - and that is
+#: now informative rather than merely inconclusive.
+#:
+#: Glyph 48's nearest letter is still Д at 39, unchanged by the six new
+#: references, against a same-letter baseline of 27.2. With 27 of 33 letters
+#: now covered, a *letter* would have had about a 97% chance of being one we
+#: can identify: the six still missing account for roughly 3% of Russian text
+#: by frequency, and none of Ж Х Ц Щ Ъ Э follows "НОМЕР" sensibly.
+#:
+#: So the reading recorded elsewhere in this repo - a placeholder mark rather
+#: than a character - is now the better-supported one, on evidence rather than
+#: on appearance.
+RUNE4_TAIL_AFTER_EXTENSION = {
+    "nearest_letter": ("Д", 39),
+    "unchanged_by_extension": True,
+    "letter_coverage": "27 of 33",
+    "p_a_letter_would_be_unidentifiable": 0.031,
+    "verdict": "not a letter in this cipher - the placeholder reading is "
+               "supported, not merely assumed",
+}
+
+#: A sweep for glyph strips across the whole artwork, with the four known
+#: runes as positive controls.
+#:
+#: Contrast alone cannot find these: rune 3's ink peaks at 36 on the
+#: high-pass where rune 4's reaches 222, so any threshold low enough to see
+#: rune 3 also picks up the artwork's shading everywhere. The discriminating
+#: feature is **regularity** - a run of similarly sized, evenly spaced marks
+#: on a common baseline - which shading does not have.
+#:
+#: All four rune strips are recovered, so the sweep has demonstrated
+#: sensitivity and its negative means something. Of 60 candidate strips, every
+#: one was identified by eye: the four runes, the Bitcoin address, the Latin
+#: kettle proverb, the protest placards, the two dates, and the whitepaper
+#: calligram. **There is no fifth cipher strip.**
+STRIP_SWEEP = {
+    "candidates": 60,
+    "controls_recovered": ("rune1", "rune2", "rune3", "rune4"),
+    "criterion": "height CV <= 0.42, baseline sd <= 6 px, gap sd <= 8 px, "
+                 ">= 5 marks",
+    "rune_strips_found": 4,
+    "new_cipher_strips": 0,
+    "everything_else": ("bitcoin address", "Latin kettle proverb",
+                        "protest placards", "05.25.20", "11.03.20",
+                        "whitepaper calligram"),
+}
+
+
+#: What is ``TUESDAY`` for? It is not a BIP-39 word, so it is not a seed word.
+#:
+#: **Every reading of it gives the number 2.**
+#:
+#: * ISO-8601 makes Tuesday weekday **2** (Monday is 1);
+#: * the Russian for Tuesday, *вторник*, derives transparently from *второй*,
+#:   "second" - and the artist writes Russian;
+#: * the wallet was created on **Tuesday 5 May 2020**;
+#: * the US election the artwork draws as ``11.03.20`` was **Tuesday 3
+#:   November 2020** - though US elections are always Tuesdays, so that one
+#:   is nearly vacuous as a coincidence.
+#:
+#: Where 2 would fit is the interesting part. Section 3 of ANALYSIS.md shows
+#: the clock can reach positions 3 to 23 and nothing else; position 1 comes
+#: from the plinth; **positions 2 and 24 are the only ones with no mechanism
+#: at all**. So a standalone clue is exactly what position 2 requires, and
+#: rune 3 is the one strip deliberately set apart - floating free of every
+#: object, in English, in a different cipher, beside a question mark.
+#:
+#: **It is not promoted, for two reasons.**
+#:
+#: 1. *It supplies a number but no word.* Every confirmed position pairs a
+#:    word **with** a number - ``subject``+1, ``tower``+3, ``moon``+13. Rune 3
+#:    gives a bare ordinal attached to nothing, so it cannot complete position
+#:    2 on its own; at best it says position 2 is in play.
+#: 2. *The mapping was chosen after the decode.* That position 2 was a gap
+#:    was established first, which helps - but "Tuesday means 2" was picked
+#:    knowing the answer needed to be 2.
+#:
+#: What it does do is give position 2 a second, independent pointer. It had
+#: rested on ``camera``, from counting the two cameras drawn - an incidental
+#: count, recorded at the weakest evidence level.
+TUESDAY_AS_A_NUMBER = {
+    "readings": {
+        "iso_weekday": 2,
+        "russian_etymology": "вторник from второй, 'second'",
+        "wallet_created": "Tuesday 5 May 2020",
+        "election_drawn_in_artwork": "Tuesday 3 November 2020",
+    },
+    "all_readings_agree_on": 2,
+    "why_2_is_interesting": "the clock reaches 3..23; the plinth gives 1; "
+                            "positions 2 and 24 are the only ones with no "
+                            "mechanism, so 2 is exactly where a standalone "
+                            "clue is required",
+    "promoted": False,
+    "blockers": ("supplies a number but no word, unlike every confirmed pair",
+                 "the Tuesday->2 mapping was chosen after the decode"),
+    "existing_proposal_for_2": "camera, from an incidental count of two "
+                               "cameras drawn",
 }

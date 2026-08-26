@@ -748,3 +748,121 @@ WORD_SUPPLY = {
     "consequence": "the word set cannot be completed from the artwork by any "
                    "convention it demonstrably uses; search remains unseedable",
 }
+
+
+#: **The clock does not show a time.** The three hands are pointers.
+#:
+#: This is worth establishing because "the clock encodes a timestamp" is the
+#: obvious rival to the position-map reading, and it is cheap to kill.
+#:
+#: Converting each hand's bearing to a dial position (12 sits at 287.4 deg,
+#: 30 deg per numeral):
+#:
+#: =========  =========  ==================
+#: bearing    dial       reads as
+#: =========  =========  ==================
+#: 240.0 deg  10.420     hour ~10:25
+#: 304.0 deg   0.553     2.77 min/sec marks
+#: 332.0 deg   1.487     7.43 min/sec marks
+#: =========  =========  ==================
+#:
+#: The hour hand sits at 10.42 on the dial, which on a working clock means
+#: **25 minutes past** - but no hand points at minute 25. The only minute
+#: readings available are 2.8, 7.4 and 52.1.
+#:
+#: All six assignments of the three hands to (hour, minute, second) were
+#: tried. Every one fails on the hour hand, by **8.9 to 13.2 degrees**,
+#: against a measured drawing scatter of about +/-2 degrees (numeral steps run
+#: 28.0-32.0). The best, 8.9 deg, is still 4.5x the noise floor.
+#:
+#: So no reading of this clock as a clock survives, and the hands cannot
+#: encode a timestamp, a date, or a time of death. They point.
+CLOCK_SHOWS_NO_TIME = {
+    "dial_positions": {240.0: 10.420, 304.0: 0.553, 332.0: 1.487},
+    "hour_hand_implies_minute": 25.2,
+    "minute_readings_available": (2.77, 7.43, 52.10),
+    "assignments_tried": 6,
+    "hour_hand_error_range_deg": (8.9, 13.2),
+    "drawing_scatter_deg": 2.0,
+    "verdict": "not a time - the hands are pointers, so no timestamp, date "
+               "or time-of-day can be read from the clock",
+}
+
+
+def clock_time_consistency() -> dict:
+    """Recompute ``CLOCK_SHOWS_NO_TIME`` from the measured bearings.
+
+    For each of the six ways the three hands could play (hour, minute,
+    second), check the one constraint a working clock must satisfy: the hour
+    hand's fractional part equals minutes/60.
+    """
+    import itertools
+
+    twelve = NUMERAL_BEARING[12]
+    dial = lambda b: ((b - twelve) / 30.0) % 12
+    hands = {"A": 240.0, "B": 304.0, "C": 332.0}
+    out = []
+    for hour, minute, second in itertools.permutations(hands):
+        h_d = dial(hands[hour])
+        minutes = dial(hands[minute]) * 5
+        implied = (int(h_d) + minutes / 60.0) % 12
+        err = abs(((h_d - implied + 6) % 12) - 6) * 30
+        out.append({"hour": hour, "minute": minute, "second": second,
+                    "reads": f"{int(h_d):02d}:{minutes:05.2f}",
+                    "hour_hand_error_deg": round(err, 1)})
+    return {"assignments": out,
+            "best_error_deg": min(a["hour_hand_error_deg"] for a in out),
+            "drawing_scatter_deg": 2.0}
+
+
+#: **Chosen numbers are evidence. Inherited numbers are not.**
+#:
+#: This is the distinction that decides most of the community's 24-word table,
+#: and it is worth stating precisely because it is easy to miss.
+#:
+#: A number is **chosen** when the artist had to act to put it there: underline
+#: it, aim a clock hand at it, write a word along it. A number is **inherited**
+#: when the object simply carries it and the object is in the artwork for
+#: thematic reasons anyway.
+#:
+#: The Statue of Liberty's crown has seven points whether or not the puzzle
+#: needs a 7. An M16 is called an M16. ``COVID19`` contains 19. In each case
+#:
+#:     P(object shows the number | the puzzle needs it)
+#:   = P(object shows the number | the puzzle does not)
+#:   = 1
+#:
+#: so the likelihood ratio is 1 and the observation updates nothing. For an
+#: inherited number to be evidence, the artist's decision to *include that
+#: object* would have to need a puzzle explanation - and every object here is
+#: fully explained by the artwork's subject matter.
+#:
+#: Applying the split to the community's 16 filled entries:
+#:
+#: =========================  ==========================================
+#: chosen (5)                 1 subject, 3 tower, 9 eye, 11 pyramid,
+#:                            13 moon
+#: inherited (10)             2 camera, 4 mask, 5 police, 7 liberty,
+#:                            10 black, 12 vote, 16 rifle, 17 gold,
+#:                            19 glove, 20 apple
+#: =========================  ==========================================
+#:
+#: **The chosen set is exactly what this repository already holds**: three
+#: CONFIRMED, one STRONG, and ``pyramid`` rejected on measurement (its centroid
+#: sits 8.7 degrees off the ray, against a 2-degree noise floor).
+#:
+#: So the table adds nothing. It is not wrong so much as unconstrained: an
+#: artwork this dense offers inherited numbers for almost any target, which is
+#: why 16 slots could be filled and why filling them means so little.
+CHOSEN_VERSUS_INHERITED = {
+    "chosen": {1: "subject", 3: "tower", 9: "eye", 11: "pyramid", 13: "moon"},
+    "inherited": {2: "camera", 4: "mask", 5: "police", 7: "liberty",
+                  10: "black", 12: "vote", 16: "rifle", 17: "gold",
+                  19: "glove", 20: "apple"},
+    "likelihood_ratio_of_an_inherited_number": 1.0,
+    "chosen_set_equals_repo_state": True,
+    "community_table_adds": 0,
+    "verdict": "the community's table reduces to the assignments already "
+               "established; every further entry rests on a number the artist "
+               "did not have to choose",
+}

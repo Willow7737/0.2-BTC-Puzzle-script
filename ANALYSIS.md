@@ -22,6 +22,13 @@ the BIP-39 English wordlist**:
 | "'Breathe' can be found on George Floyd's chest as well as the Statue's Neck" | `breathe` | **No** | `bread`, `breeze` |
 | Rune 3 (above Trump), Bill Cipher, translates to "Tuesday" | `tuesday` | **No** | *(no weekday is in BIP-39)* |
 
+This second hint is no longer a claim taken on trust. Rune 3 is **decoded and
+verified** in section 3: seven glyphs, the Gravity Falls "strange symbols"
+alphabet, reading `TUESDAY` left to right as drawn, at p = 0.0039. Worth
+recording plainly: **this table had the answer while section 3 spent six tests
+failing to find it**, because the search was run under an instruction from
+section 12 that turned out to be false.
+
 Verify it yourself:
 
 ```console
@@ -823,80 +830,237 @@ saying "sum of two numbers". That is no longer an assumption carried from
 elsewhere — it is verified against pixels with an independent key. The three
 confirmed positions stand on firmer ground than they did.
 
-#### Rune 3: which alphabet?
+#### Rune 1 read — and the cipher alphabet extended
 
-Rune 3 floats free above Trump, drawn mirrored in a pale wash, attached to no
-object — so it is meant to be read. Its segmentation is **seven glyphs, stable
-across thresholds 80–100**:
+This document and `puzzle/runes.py` both said runes 1 and 2 "sit below the
+resolution limit of the 1600×1200 image". **That was wrong for both.** Rune 2
+was read earlier; rune 1 is read here. What it needed was an 8× upscale before
+thresholding and a box that excludes the neighbouring artwork — not a better
+scan. The limit was the segmentation, not the image.
 
-| # | Glyph |
-|---|---|
-| 1 | three small circles joined by two lines into a `<` |
-| 2 | a small oval above a larger oval |
-| 3 | a hooked stroke with two dots |
-| 4 | an outline `▽` with a dot |
-| 5 | `N` |
-| 6 | `E` |
-| 7 | a small triangle above a larger triangle |
+Rune 1 is a **three-line block** in the top-left corner, in the same runic
+substitution as runes 2 and 4:
 
-Two structural regularities constrain what kind of system this is:
-**small-shape-above-large-shape occurs twice** (glyphs 2 and 7 — ovals, then
-triangles), and **three of the seven carry dots**. A plain letter alphabet
-rarely does either.
+> `Я НАДЕЮСЬ ЧТО СЮДА БУДУТ ПРИСЫЛАТЬ МНОГО БИТКОИНОВ`
+> — *"I hope that many bitcoins will be sent here."*
 
-**Six candidates tested, each against a control.** The control is the part
-that matters: a 12×12 fingerprint always finds *some* nearest neighbour, so a
-mean distance means nothing until you know what an unrelated strip scores —
-and that a control glyph's best *accidental* Latin match is 14.
+**The word structure settles the alignment before any glyph is identified.**
+The separator marks split the lines `1/7/3/4`, `5/9` and `5/9` — and the crib's
+words are exactly those lengths. That is eight independent length constraints
+satisfied at once.
 
-| Candidate | Rune 3 | Control | Verdict |
-|---|---|---|---|
-| The artwork's own rune alphabet | **46.3** | rune 2 scores **32.7** by the same pipeline, and is a verified true match (baseline 27.2) | excluded |
-| Dscript | 44.4 (best of four orientations) | rune 4, known *not* Dscript, scores **46.3** | excluded — no signal whatever |
-| Latin | 40.1 | rune 4 scores 42.8 | no aggregate signal |
-| Cyrillic | 41.0 | rune 4 scores 44.0 | no signal |
+Two further checks confirm it:
 
-**Two named candidates, tested on request.** Aurebesh (Star Wars) and the
-Standard Galactic Alphabet (Commander Keen / Minecraft), both from
-freely-licensed Wikimedia Commons reference charts, all four orientations:
+| Check | Result | Baseline |
+|---|---|---|
+| glyphs the crib calls the **same** letter | mean **29.4** apart | rune 4's own same-letter baseline is 27.2 |
+| glyphs the crib calls **different** letters | mean **68.7** apart | rune 4's is 66.4 |
+| nearest letter in **rune 4's** alphabet is the crib's letter | **33 of 34** | chance is 1.6 of 34 → **p ≈ 7.5×10⁻⁴³** |
 
-| Candidate | Rune 3 (best) | Rune 4 (control) | Rune 2 (control) | Verdict |
-|---|---|---|---|---|
-| Aurebesh | 45.4 | 44.7 | 45.7 | **refuted — worse than control** |
-| Standard Galactic | 48.4 | 47.2 | 45.6 | **refuted — worse than control** |
+The third check is the strong one. Its reference alphabet comes from a
+*different strip, segmented separately*, so it cannot be manufactured by a
+self-consistent mis-segmentation of rune 1 — the failure mode that a
+same-source test cannot rule out.
 
-Rune 3 scores *worse than the control* against both. Three unrelated strips —
-rune 3, rune 4 and rune 2, the last two known to be a Cyrillic substitution —
-all land in the same 44–49 band. That band **is** the noise floor for
-geometric glyphs against an unrelated geometric alphabet, and rune 3 sits in
-it with nothing to distinguish it.
+One honest wrinkle: line 2 segments to 14 marks where the crib needs 15. Index
+2 is 173 px wide against a median of 92 — a **merge** of `Д` and `У` in
+`БУДУТ`. It is excluded from the strict alignment rather than split by
+guesswork, and the other nine letters of that line still score 9/9.
 
-A structural check agrees and needs no statistics: **both alphabets are
-entirely straight-edged and contain no circle.** Rune 3 opens with three
-joined circles and a pair of stacked ovals. Whatever it is, it is not written
-in an alphabet with no round forms.
+##### The alphabet goes from 21 letters to 27
 
-**One thing does stand out, and it is thin.** Glyphs 5 and 6 match Latin `N`
-at **24** and `E` at **21** — inside the same-letter band of 27.2 — while the
-other five sit at 44–52. But 2 of 7 glyphs landing that low carries
-**p ≈ 0.042** against the control's own rate; the Latin hypothesis was chosen
-*after* seeing those two shapes; and the control's best accidental match is
-14. Suggestive, not established, and recorded that way.
+This is the part that matters beyond rune 1 itself. Rune 4's text uses only 21
+of the 33 Cyrillic letters, so **12 letters had no reference at all** — any
+glyph carrying one was structurally unmatchable. That hole quietly weakened
+every comparison ever made against that alphabet.
 
-So **rune 3's alphabet is unidentified.** Six candidates are closed with
-method; no positive identification. What would settle it is a specific
-candidate to test — `runes.compare_to_reference()` makes that cheap, and
-`RUNE3_INVENTORY` describes the glyphs for matching by eye.
+Rune 1 supplies six of the twelve: **`Я Ю Г У П Л`**. Coverage is now 27 of 33;
+still absent are `Ж Х Ц Щ Ъ Э`.
 
+##### What that does to rune 4's trailing glyph
+
+Nothing — and the nothing is now informative. Glyph 48's nearest letter is
+still `Д` at 39, unchanged by the six new references, against a same-letter
+baseline of 27.2.
+
+With 27 of 33 letters covered, a *letter* would have had roughly a 97% chance
+of being one we can now identify: the six still missing account for about 3% of
+Russian text by frequency, and none of `Ж Х Ц Щ Ъ Э` follows "НОМЕР" sensibly.
+So the placeholder reading recorded elsewhere in this repo is now supported by
+evidence rather than by appearance.
+
+#### A sweep for a fifth cipher strip — there is none
+
+Knowing a second cipher was in play made it worth asking whether any strip had
+been missed. Contrast alone cannot answer it: **rune 3's ink peaks at 36 on the
+high-pass where rune 4's reaches 222**, so any threshold low enough to see rune
+3 also picks up the artwork's shading everywhere.
+
+The discriminating feature is **regularity** — a run of similarly sized, evenly
+spaced marks on a common baseline, which shading does not have. The criterion
+was height CV ≤ 0.42, baseline sd ≤ 6 px, gap sd ≤ 8 px, ≥ 5 marks.
+
+**All four rune strips come back as positive controls**, so the sweep has
+demonstrated sensitivity and its negative is worth something. Two earlier
+attempts did not: a native-resolution sweep missed runes 2 and 3 entirely, and
+a tiled sweep with per-tile normalisation recovered 1 of 14 and 5 of 7 of their
+glyphs. Neither could have supported a negative, and neither is reported as one.
+
+Of **60 candidate strips, every one was identified**: the four runes, the
+Bitcoin address, the Latin kettle proverb, the protest placards, the dates
+`05.25.20` and `11.03.20`, and the whitepaper calligram. **There is no fifth
+cipher strip.**
+
+Rune 1 is a wish. It names no rule and contains no number, so the capacity
+bound stays at four — but the artwork's runic text is now completely read.
+
+#### Rune 3 decoded: `TUESDAY`, in the Gravity Falls cipher
+
+Rune 3 floats free above Trump, attached to no object, beside a large question
+mark — so it is meant to be read. It reads **`TUESDAY`**, left to right, as
+drawn, in the *Gravity Falls* "strange symbols" substitution alphabet.
+
+| Position | Glyph | Letter |
+|---:|---|:--:|
+| 1 | a small triangle above a larger triangle | **T** |
+| 2 | `Ǝ` — three bars | **U** |
+| 3 | `И` — a zigzag | **E** |
+| 4 | `▽` — an outline down-triangle | **S** |
+| 5 | a hooked stroke with dots | **D** |
+| 6 | a small oval above a larger oval, with a tail | **A** |
+| 7 | three circles joined by two lines | **Y** |
+
+The artwork points at this cipher twice: the Great Seal's pyramid is drawn as
+**Bill Cipher**, the show's triangular antagonist, and rune 3 is the only strip
+in English and the only one *not* in the artwork's own Cyrillic runic script.
+
+**The decode is the community's, not mine.** It is in their notes —
+`HomelessPhD/BLM_0.2BTC`, section 11, "Runes (above Trump head)" — a file that
+was on disk here throughout. What is added is the verification.
+
+##### Verifying it
+
+The 26 symbols were extracted from the reference chart without hand-placed
+boxes: the chart lays the alphabet on a pyramid in rows of 1, 2, 6, 8 and 9
+cells, and a row's cell separators are the only near-full-height columns in it.
+
+Line weight cannot be compared across sources — a pale artwork wash against a
+television screenshot — so the check uses **hole count**, a topological feature
+that survives the difference:
+
+| # | Letter | Rune 3 holes | Chart holes | |
+|---:|:--:|---:|---:|:--|
+| 1 | T | 2 | 2 | ✔ |
+| 2 | U | 0 | 0 | ✔ |
+| 3 | E | 0 | 0 | ✔ |
+| 4 | S | 1 | 1 | ✔ |
+| 5 | D | 0 | 0 | ✔ |
+| 6 | A | 2 | 2 | ✔ |
+| 7 | Y | 2 | 3 | ✘ |
+
+Six of seven. Hole counts across the 26 letters run `{0: 10, 1: 8, 2: 6, 3: 2}`,
+so chance expects **2.15** agreements; the exact Poisson-binomial tail gives
+**p = 0.0039**. `runes.verify_rune3(image)` recomputes it, and the test suite
+checks that `MONDAYS`, `FRIDAYS` and `SUNDAYS` all score worse — a check that
+cannot fail is not a check.
+
+##### Two errors made the earlier search fail
+
+This section previously reported rune 3's alphabet as *unidentified*, with six
+candidates excluded. **Every one of those exclusions is withdrawn.** Two
+independent faults produced them, and the decode exposes both:
+
+1. **The mirror.** Rune 3 was recorded as "drawn mirrored", and every
+   comparison was run with `transform=ImageOps.mirror`. It is not mirrored.
+   The chart's `E` *is* a `И` and its `U` *is* a `Ǝ`; mirroring turned those
+   into a Latin-looking `N` and `E` and reversed the reading order. The "weak
+   positive" of glyphs 5 and 6 matching Latin `N` at 24 and `E` at 21 was
+   exactly this artefact — real signal, misread as a different alphabet.
+
+2. **The metric.** The 12×12 binary fingerprint has **no cross-source power at
+   all.** Given the correct answer as ground truth it ranks the true letter at
+   a mean of **13.7 of 26**; chance is **13.5**. It reads the strip as
+   `OVYRLVG` and scores it 47.3 — indistinguishable from its own controls at
+   47.9 and 52.8.
+
+The fingerprint is sound *within* a source: rune 2 against rune 4's own
+alphabet is 8/14 under 32 at p ≈ 1e-09, because line weight, rendering and
+aliasing are shared there. Across sources it measures nothing.
+
+So the negatives for Dscript, Latin, Cyrillic, Aurebesh and the Standard
+Galactic Alphabet are **withdrawn, not reversed**. Nothing says rune 3 is any
+of them; the point is that the instrument never had the power to say otherwise,
+and it was reported as though it did. The missing piece was a positive control
+— an alphabet known to be right — and it existed all along.
+
+**One comparison survives, and it got stronger.** Rune 3 against the artwork's
+*own* alphabet is same-source, so the metric applies: 0 of 7 glyphs under 32,
+minimum 35, where rune 2 puts 8 of 14 under 32 with a minimum of 14. That
+reference covers only the 21 Cyrillic letters rune 4's text uses, so 12 letters
+have no entry and cannot match — but for that hole to explain the null, all
+seven of rune 3's letters would have to come from those 12, about 17% of
+Russian by letter frequency, so ~5×10⁻⁶.
+
+##### What it is worth
+
+`tuesday` is **not a BIP-39 word**, so it is not a seed word. It names no
+mechanism, so the capacity bound stays at four. What the decode establishes is
+that **a second cipher is in play**, from a source the artwork separately
+signposts by drawing the Great Seal's pyramid as Bill Cipher.
+
+**Every reading of `TUESDAY` gives the number 2:**
+
+| Reading | Value |
+|---|---:|
+| ISO-8601 weekday (Monday = 1) | **2** |
+| Russian *вторник*, from *второй* — "second" — and the artist writes Russian | **2** |
+| The wallet was created on Tuesday 5 May 2020 | **2** |
+| The election the artwork draws as `11.03.20` was Tuesday 3 November 2020 | **2** |
+
+The last is nearly vacuous — US elections are always Tuesdays — but the others
+are independent, and they converge.
+
+Where 2 would fit is the interesting part. The clock reaches positions 3–23 and
+nothing else; the plinth supplies 1; **positions 2 and 24 are the only ones
+with no mechanism at all.** A standalone clue is exactly what position 2
+requires — and rune 3 is the one strip deliberately set apart: floating free of
+every object, in English, in a different cipher, beside a question mark.
+
+**It is not promoted, for two reasons.**
+
+1. **It supplies a number but no word.** Every confirmed position pairs a word
+   *with* a number — `subject`+1, `tower`+3, `moon`+13. Rune 3 gives a bare
+   ordinal attached to nothing. It cannot complete position 2 on its own; at
+   most it says position 2 is in play.
+2. **The mapping was chosen after the decode.** That position 2 was a gap was
+   established first, which helps — but "Tuesday means 2" was picked knowing
+   the answer needed to be 2.
+
+What it does do is give position 2 a *second, independent* pointer. It had
+rested solely on `camera`, from counting the two cameras drawn — an incidental
+count, recorded at the weakest evidence level.
+
+##### Rune 4's trailing glyph
+
+Two components sit past the crib. Index 49 spans the full height of the strip
+at its extreme right edge — it is the strip's **border**, not a glyph. Index 48
+is the trailing symbol proper, and it resolves to no letter for a plain reason:
+the alphabet recovered from rune 4 covers only the letters rune 4 itself uses,
+and this one appears nowhere else in the strip.
+
+Its shape carries no information. The script is a *substitution*, so a glyph
+need not resemble the letter it stands for — a mirror-symmetry test accordingly
+separates nothing (0.63, z = −0.89 against the known letters' 0.749 ± 0.132).
+It is unresolvable from internal evidence.
 
 #### The runes as a source of mechanisms
 
 | Strip | Content | Mechanism? |
 |---|---|---|
-| Rune 1 | "I hope many bitcoins will be sent here" | no — a wish |
+| Rune 1 | **read and verified**: "I hope that many bitcoins will be sent here" | no — a wish |
 | Rune 2 | **"sum of two numbers"**, inside the dial | **yes — the clock, already counted** |
-| Rune 3 | does not decode in this alphabet | open |
-| Rune 4 | the framing statement, ending `НОМЕР` + one glyph | no — and that glyph resolves to no letter and is not a Dscript numeral |
+| Rune 3 | **`TUESDAY`**, in the Gravity Falls cipher | no — names no rule, and not a BIP-39 word |
+| Rune 4 | the framing statement, ending `НОМЕР` + one glyph | no — that glyph encodes a letter appearing nowhere else in the strip, so the crib gives it no reference |
 
 Four strips, exactly one mechanism caption, and it captions the mechanism
 already in hand. **No fourth mechanism in the runes.** The capacity bound is
@@ -1033,7 +1197,7 @@ closed.
 | Rune 4's "number X" | a placeholder asterisk, not a digit |
 | `breathe` on the Statue's neck | **no lettering at 16x** — only robe drapery. It is plain visible text on Floyd's hoodie and nothing more |
 | Flag stripes | clean; no text along any stripe |
-| Whitepaper calligram | uniform whitepaper prose, no word emphasised or altered |
+| Whitepaper calligram | no word emphasised — but **six words are altered**; see §11c, where the alterations test out as hand-lettering noise |
 | Fine-detail sweep of unexamined regions | no further text cache — the marked-word list is likely complete for this scan |
 | **Brainwallet, phrases of 3–6 words** | **exhausted, no match** (see below) |
 | Blockchain history | funded 2020-05-10 08:01 UTC, 0.20000000 BTC, from four P2SH inputs; never spent; no OP_RETURN. Later deposits are third-party dust |
@@ -1339,6 +1503,245 @@ passphrase, and against the same target with the correct passphrase removed
 from the list — the second case guards against the passphrase being silently
 ignored, which would otherwise produce a false negative across an entire run.
 
+## 11b. The chronology, traced to records — and what it rules out
+
+The artwork is dense with dateable reference. Tracing each to the record turns
+up one fact that constrains the puzzle more than all the imagery does.
+
+### The clock is not a clock
+
+First, kill the obvious rival reading. Converting each hand's bearing to a dial
+position (12 sits at 287.4°, 30° per numeral):
+
+| Bearing | Dial position | Reads as |
+|---:|---:|---|
+| 240.0° | 10.420 | hour ≈ 10:25 |
+| 304.0° | 0.553 | 2.77 min/sec marks |
+| 332.0° | 1.487 | 7.43 min/sec marks |
+
+The hour hand sits at 10.42, which on a working clock means **25 minutes past**
+— but no hand points at minute 25. The only minute readings available are 2.8,
+7.4 and 52.1.
+
+All **six** assignments of the three hands to (hour, minute, second) were
+tried. Every one fails on the hour hand, by **8.9° to 13.2°**, against a
+measured drawing scatter of ±2°. The best is still 4.5× the noise floor.
+
+**So the clock encodes no timestamp, date, or time of death.** The hands point.
+`positions.clock_time_consistency()` recomputes it.
+
+### The one date that is not interpretation
+
+The prize entered the address in block 629754 at **2020-05-10 08:01:46 UTC**, a
+Sunday. That is on-chain and re-checkable with `chronology.verify_on_chain()`.
+The private key — and therefore the seed phrase — existed at or before that
+moment.
+
+Now date what the artwork depicts:
+
+| Date | +days | Event |
+|---|---:|---|
+| 2020-05-10 | 0 | **the prize is funded; the seed exists by now** |
+| 2020-05-16 | +6 | first vandalism of the Leopold II statue, Ekeren |
+| 2020-05-25 | +15 | George Floyd killed — drawn as `05.25.20` on the hoodie |
+| 2020-06-04 | +25 | decision to remove the Ekeren statue; the artwork's bust is red-painted and gagged, matching the photographs |
+| 2020-06-09 | +30 | the Ekeren statue is removed |
+| 2020-06-30 | +51 | Leopold II bust removed in Ghent, on the 60th anniversary of Congolese independence |
+| 2020-10-08 | +151 | the artwork is published to Reddit |
+| 2020-11-03 | +177 | the US election, drawn as `11.03.20` — **before it happened**, since publication precedes it by 26 days |
+
+**Every 2020 event the artwork shows post-dates the key**, the earliest by six
+days. So the BLM layer **cannot have encoded the seed**. It is a carrier, not a
+source: whatever the phrase is, it was chosen from things that already existed
+on 2020-05-10.
+
+This sits well with the authorship finding in section 10 — a signed base
+artwork plus a cipher layer, plausibly two hands and certainly two dates.
+
+### What the constraint does and does not exclude
+
+**It excludes the two drawn dates.** Things that exist only because of the
+events the artwork depicts cannot encode a seed fixed on 2020-05-10, so
+`05.25.20` and `11.03.20` cannot be puzzle numbers whatever else they are.
+Section 10's numeral census already classes both as *editorial* rather than
+puzzle-marked, on the separate grounds that neither is underlined nor paired
+with a word. The chronology reaches the same verdict independently.
+
+**It excludes no candidate word — and an earlier draft of this section wrongly
+claimed it did.** That draft argued the confirmed words all predate the key
+while `breathe` and `black` do not, and called it two independent lines
+converging. That is wrong:
+
+* `breathe` comes from *"I can't breathe"*, which enters use with **Eric
+  Garner in 2014** — as the reference table above already records. The artwork
+  attaches it to a 2020 death, but the phrase is six years older than the key.
+* `black` reaches back to **BLM's founding in 2013**, and independently to the
+  Russian idiom `НА ЧЁРНЫЙ ДЕНЬ` and the Latin kettle proverb, both older still.
+
+So every candidate in play has a pre-2020-05-10 referent, and the chronology
+separates none of them. `breathe` and `black` fail for the reasons they always
+did — `breathe` is not in the BIP-39 wordlist at all, and `black` literalises a
+fixed idiom — not because of any date. **The convergence claim is withdrawn.**
+
+The constraint itself is untouched. It is a statement about the *depicted
+events*, not about the vocabulary, and it is worth exactly what it says: the
+artwork's 2020 content post-dates the key, so the pictures carry clues rather
+than supply them.
+
+### A correction: the wallet's "creation date" is folklore
+
+This repo carried `wallet_created: 2020-05-05` from the community notes. **It
+is not on-chain and not verifiable.** A Bitcoin address has no creation event;
+it becomes visible only when first used, and this one's first appearance
+anywhere is the funding transaction on 2020-05-10.
+
+That matters for one live reading: 2020-05-05 was a Tuesday, which made "rune
+3's `TUESDAY` names the wallet's birthday" attractive. It rests on an
+unverifiable date and should not be leaned on. The `TUESDAY → 2` reading in
+section 3 is unaffected — it never depended on this.
+
+### Rune 1's wish, answered by the ledger
+
+Rune 1 reads *"I hope that many bitcoins will be sent here."* The chain records
+that **four separate people did**, between 2023 and 2025 — 0.00001, 0.001,
+0.00000557 and 0.00005727 BTC. The balance is **0.20107284 BTC**, not 0.2, and
+nothing has ever been spent.
+
+A decoded cipher and a public ledger agreeing is as direct as tracing gets.
+
+### What funded it
+
+Four P2SH inputs of 0.059–0.073 BTC, consolidated into 0.2 BTC plus 0.0508 BTC
+change. Each input address has exactly two transactions — one receive, one
+spend — the signature of an HD wallet's single-use receive addresses, not an
+exchange. **The change output has never moved in six years.**
+
+One detail is worth keeping: the funder's own wallet is **P2SH-SegWit** while
+the puzzle address is **legacy P2PKH**. Different software — so the puzzle key
+was generated deliberately for the purpose, not simply reused from the wallet
+that paid it.
+
+### Media provenance, settled
+
+*Gravity Falls* contributes exactly one thing: the **Journal 3 "Author's"
+symbol substitution cipher**, which is what rune 3 is written in, and which is
+why the Great Seal's pyramid is drawn as Bill Cipher. The show's other famous
+ciphers — the per-episode Caesar, Atbash, A1Z26 and Vigenère cryptograms — are
+**not** in play: the strip sweep in section 3 finds no further cipher text, and
+none of the artwork's 60 identified text strips is gibberish that would want
+decoding.
+
+The other references are literary and documentary rather than cryptographic:
+Huxley's *Brave New World* (1932) supplies the acrostic spelled by the
+whitepaper calligram's first letters; the Latin *Esse quam niger es, sic dixit
+caccabus ollae* is the pot calling the kettle black; and `НА ЧЁРНЫЙ ДЕНЬ` is a
+fixed Russian idiom for "for a rainy day".
+
+## 11c. The whitepaper typos: a tempting carrier that isn't one
+
+The artwork hand-copies about **1,180 characters of the whitepaper's section 2**
+into the `BRAVE NEW WORLD` calligram and the bottom strip, and six words deviate
+from the source. That is an attractive lead: a known source text plus deliberate
+errors is a classic carrier, and the whitepaper (2008) sits comfortably inside
+the pre-2020-05-10 window §11b requires.
+
+`INTRODUE` is real — verified against the image, which reads
+`A COMMON SOLUTION IS TO INTRODUE CENT/RAL AU/THORITY, OR MINT, THAT CHECKS
+EVERY TRAN…` where the whitepaper has *introduce*. None of the six spellings
+occurs anywhere in the real whitepaper.
+
+| Artwork | Source | Kind of error |
+|---|---|---|
+| `doudle` | double | `b`/`d` confusion |
+| `introdue` | introduce | dropped letter |
+| `sing` | sign | transposition |
+| `abcense` | absence | transposition |
+| `arrrived` | arrived | doubled letter |
+| `participans` | participants | dropped letter |
+
+**They are noise.** Four independent reasons:
+
+1. **Every one is a canonical copying slip** — two dropped letters, one doubled
+   letter, two transpositions, and a `b`/`d` confusion, which is the single most
+   common error in hand lettering. Not one is the kind of substitution a cipher
+   would need.
+2. **The rate is flat, not sparse.** The ~240 characters the community
+   transcribed in full contain two typos — 0.8%. Across 1,180 characters that
+   projects to about nine, and six were found. A deliberate payload would be
+   sparse and placed; this is a uniform error rate.
+3. **The deviation letters spell nothing.** In the order the passage presents
+   them, deleted letters give `cnncet` and inserted letters give `ncenr`.
+4. **The marked words miss BIP-39 below chance.** Two of the six typo-bearing
+   words are in the wordlist (`double`, `sign`) — but **five of ten** ordinary
+   words from the same passage are (`problem`, `solution`, `history`, `company`,
+   `system`). The typos point at BIP-39 words *less* often than the control.
+
+The control is the load-bearing part. Without it, "two of six typo words are
+BIP-39" reads as a hit.
+
+### A correction
+
+Section 10 recorded the calligram as "uniform whitepaper prose, no word
+emphasised or altered". The first half stands; **the second half was wrong** —
+six words are altered. They were missed because that sweep looked for
+*emphasis* — underlining, weight, colour — and not for *spelling*. The verdict
+is unchanged, but it now rests on a test rather than on an oversight.
+
+## 11d. The community's table: chosen numbers versus inherited ones
+
+The last large body of untested claims is the community's 24-word table, which
+fills 16 of 24 positions. One distinction decides most of it.
+
+A number is **chosen** when the artist had to act to put it there — underline
+it, aim a clock hand at it, write a word along it. A number is **inherited**
+when the object simply carries it, and the object is in the artwork for
+thematic reasons anyway.
+
+The Statue of Liberty's crown has seven points whether or not the puzzle needs
+a 7. An M16 is called an M16. `COVID19` contains 19. In each case
+
+```
+P(object shows the number | the puzzle needs it)
+  =  P(object shows the number | the puzzle does not)  =  1
+```
+
+so the likelihood ratio is **1** and the observation updates nothing. For an
+inherited number to be evidence, the artist's decision to *include that object*
+would have to need a puzzle explanation — and every object here is fully
+explained by the artwork's subject matter.
+
+| | Entries |
+|---|---|
+| **Chosen** (5) | 1 `subject`, 3 `tower`, 9 `eye`, 11 `pyramid`, 13 `moon` |
+| **Inherited** (10) | 2 `camera`, 4 `mask`, 5 `police`, 7 `liberty`, 10 `black`, 12 `vote`, 16 `rifle`, 17 `gold`, 19 `glove`, 20 `apple` |
+
+**The chosen set is exactly what this repository already holds** — three
+CONFIRMED, one STRONG, and `pyramid` rejected on measurement (centroid 8.7°
+off its ray against a 2° noise floor). Note that chosen is *necessary, not
+sufficient*: `pyramid` is a chosen number and still fails.
+
+So the table adds nothing. It is not so much wrong as **unconstrained**: an
+artwork this dense offers an inherited number for almost any target, which is
+why 16 slots could be filled and why filling them means so little. It is the
+same failure mode section 5 guards against by refusing arbitrary source texts —
+with enough candidates, something always fits.
+
+### Where that leaves the word supply
+
+The bottleneck was never the numbers. It is that **five marked words and four
+reachable numbers cannot seed a 21- or 24-word phrase**, and every attempt to
+widen either has now been closed with method:
+
+| Attempt | Result |
+|---|---|
+| a sixth marked word, 21 object surfaces | none |
+| a fourth clock hand | exactly three exist |
+| a fifth cipher strip | none, with all four runes as controls |
+| the runes as mechanism captions | one, and it captions the clock |
+| date and numbered-source schemes | 1,167,608 tested, zero fit the anchors |
+| the whitepaper typos | canonical copying slips, below control |
+| the community's 16-entry table | reduces to the 5 already held |
+
 ## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
@@ -1356,8 +1759,11 @@ ignored, which would otherwise produce a false negative across an entire run.
   "number X" turned out to be a placeholder, so the remaining numeric hope is
   rune 2's "sum of two numbers". Both runes need a higher-resolution scan
   before the crib method can reach them; the alphabet recovered from rune 4 is
-  already in `puzzle/runes.py` and ready to apply. Rune 3 is written
-  **mirrored** — flip it before transcribing.
+  already in `puzzle/runes.py` and ready to apply. **Rune 3 is settled**: it
+  reads `TUESDAY` in the Gravity Falls cipher (section 3). Note that the
+  earlier instruction here — "rune 3 is written mirrored, flip it before
+  transcribing" — was **wrong**, and it is what made six alphabet tests fail.
+  It is not mirrored.
 - **Where does a higher-resolution original live?** This is now the single
   highest-value thing to find. Three separate leads — runes 1 and 2, the clock
   hand bearings, and the claimed `breathe` on the Statue's neck — are all

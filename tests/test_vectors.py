@@ -1089,12 +1089,18 @@ class TestRune3Alphabet(unittest.TestCase):
         self.assertLess(r["control_min"], 30,
                         "accidental close matches happen; the record must show it")
 
-    def test_record_reports_no_identification(self):
+    def test_record_marks_every_exclusion_withdrawn(self):
+        """These verdicts were produced by an instrument that fails its own
+        positive control. The record must say so, not quietly keep them."""
         rec = self.runes.RUNE3_ALPHABET_SEARCH
-        self.assertTrue(rec["verdict"].startswith("unidentified"))
+        self.assertTrue(rec["verdict"].startswith("WITHDRAWN"))
         self.assertEqual(len(rec["tested"]), 4)
         for name, entry in rec["tested"].items():
             self.assertIn("control", entry, f"{name} recorded without a control")
+        w = self.runes.RUNE3_SEARCH_WITHDRAWN
+        for cand in ("dscript", "latin", "cyrillic", "aurebesh", "sga",
+                     "artwork_rune_alphabet"):
+            self.assertIn(cand, w["withdrawn"])
 
     def test_aurebesh_and_sga_are_refuted_by_their_controls(self):
         """Recomputed from vendored fingerprints, not trusted as constants."""
@@ -1466,3 +1472,393 @@ class TestReferenceReadings(unittest.TestCase):
         self.assertEqual(self.ref.word_at(0), "abandon")
 
 
+
+
+class TestRune3Decoded(unittest.TestCase):
+    """Rune 3 reads TUESDAY in the Gravity Falls 'strange symbols' cipher."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+    CHART = "/home/user/homelessphd/blm_0.2btc/pictures/11_1.png"
+
+    def setUp(self):
+        from puzzle import runes
+        self.runes = runes
+
+    def test_decode_is_recorded(self):
+        d = self.runes.RUNE3_DECODE
+        self.assertEqual(d["reads"], "TUESDAY")
+        self.assertEqual(d["glyphs"], 7)
+        self.assertIn("Gravity Falls", d["cipher"])
+        self.assertIn("NOT mirrored", d["orientation"])
+
+    def test_tuesday_is_not_a_bip39_word(self):
+        """It cannot be a seed word, whatever else it is."""
+        from puzzle import wordlist
+        self.assertFalse(wordlist.is_valid("tuesday"))
+        self.assertFalse(self.runes.RUNE3_DECODE["is_bip39"])
+
+    def test_vendored_alphabet_has_26_letters(self):
+        import numpy as np
+        data = np.load(self.runes.GRAVITY_FALLS, allow_pickle=False)
+        letters = "".join(str(c) for c in data["letters"])
+        self.assertEqual(letters, "".join(chr(ord("A") + i) for i in range(26)))
+        self.assertEqual(len(data["holes"]), 26)
+
+    def test_hole_counts_confirm_the_reading(self):
+        """Six of seven positions agree topologically; p is computed exactly."""
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        r = self.runes.verify_rune3(self.IMAGE)
+        self.assertEqual(r["glyphs"], 7)
+        self.assertGreaterEqual(r["agreeing_positions"], 6)
+        self.assertLess(r["p_value"], 0.01)
+        self.assertLess(r["expected_agreements_by_chance"], 3)
+
+    def test_a_wrong_word_does_not_verify(self):
+        """The check must be able to fail, or it checks nothing."""
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        good = self.runes.verify_rune3(self.IMAGE, "TUESDAY")
+        for decoy in ("MONDAYS", "FRIDAYS", "SUNDAYS"):
+            bad = self.runes.verify_rune3(self.IMAGE, decoy)
+            self.assertLess(bad["agreeing_positions"],
+                            good["agreeing_positions"],
+                            f"{decoy} scored as well as TUESDAY")
+
+    def test_extraction_from_the_chart_reproduces_the_vendored_data(self):
+        """If the chart is present, the vendored descriptors must match it."""
+        if not os.path.exists(self.CHART):
+            self.skipTest("Gravity Falls reference chart not present")
+        import numpy as np
+        glyphs = self.runes.gravity_falls_alphabet(self.CHART)
+        self.assertEqual(len(glyphs), 26)
+        data = np.load(self.runes.GRAVITY_FALLS, allow_pickle=False)
+        letters = "".join(str(c) for c in data["letters"])
+        for i, ch in enumerate(letters):
+            self.assertEqual(self.runes._holes(glyphs[ch], close=1),
+                             int(data["holes"][i]), f"letter {ch}")
+
+    def test_the_metric_that_excluded_six_alphabets_has_no_power(self):
+        """The negative control that was missing: against known ground truth
+        the 12x12 fingerprint ranks the right letter at chance."""
+        w = self.runes.RUNE3_SEARCH_WITHDRAWN
+        self.assertAlmostEqual(w["ground_truth_mean_rank"], 13.7, places=1)
+        self.assertAlmostEqual(w["chance_mean_rank"], 13.5, places=1)
+        self.assertGreater(w["ground_truth_mean_rank"], w["chance_mean_rank"])
+        self.assertTrue(w["verdict"].startswith("withdrawn"))
+
+    def test_rune4_tail_is_two_components_one_being_the_border(self):
+        t = self.runes.RUNE4_TAIL
+        self.assertEqual(t["glyphs_past_crib"], (48, 49))
+        self.assertIn("border", t["index_49"])
+        self.assertTrue(t["verdict"].startswith("unresolvable"))
+
+    def test_capacity_bound_is_not_inflated_by_the_decode(self):
+        """TUESDAY names no mechanism. The bound must stay at four."""
+        from puzzle import positions
+        self.assertTrue(
+            self.runes.RUNES_AS_MECHANISM_SOURCE["capacity_bound_unchanged"])
+        self.assertEqual(
+            self.runes.RUNES_AS_MECHANISM_SOURCE["new_mechanisms_found"], 0)
+        self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
+
+
+class TestRune1Decoded(unittest.TestCase):
+    """Rune 1: three lines this repo long called unreadable."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def setUp(self):
+        from puzzle import runes
+        self.runes = runes
+
+    def _image(self):
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        return self.IMAGE
+
+    def test_word_structure_matches_the_crib(self):
+        """The alignment is settled by word lengths, before any glyph is read."""
+        lines = self.runes.load_rune1(self._image())
+        seps = self.runes.RUNE1_SEPARATORS
+        for li, line in enumerate(lines):
+            words, cur = [], 0
+            for i in range(len(line)):
+                if i in seps[li]:
+                    words.append(cur); cur = 0
+                else:
+                    cur += 1
+            words.append(cur)
+            crib = [len(w) for w in self.runes.RUNE1_CRIB[li].split()]
+            if li == 1:                       # one merged glyph, documented
+                self.assertEqual(sum(words) + 1, sum(crib))
+            else:
+                self.assertEqual(words, crib, f"line {li + 1}")
+
+    def test_same_letter_glyphs_cluster(self):
+        r = self.runes.verify_rune1(self._image())
+        self.assertLess(r["same_letter_mean"], 35)
+        self.assertGreater(r["different_letter_mean"], 60)
+        self.assertGreater(r["different_letter_mean"] - r["same_letter_mean"], 30)
+
+    def test_cross_check_against_rune4_alphabet(self):
+        """The strong check: the reference comes from a different strip."""
+        r = self.runes.verify_rune1(self._image())
+        self.assertGreaterEqual(r["cross_check_hits"], 30)
+        self.assertGreaterEqual(r["cross_check_n"], 30)
+        self.assertLess(r["cross_check_chance"], 3)
+
+    def test_alphabet_extends_to_27_letters(self):
+        ext = self.runes.extended_alphabet(self._image())
+        self.assertEqual(len(ext), 27)
+        for ch in self.runes.ALPHABET_EXTENSION["new_letters"]:
+            self.assertIn(ch, ext)
+        for ch in self.runes.ALPHABET_EXTENSION["still_missing"]:
+            self.assertNotIn(ch, ext)
+
+    def test_extension_does_not_resolve_rune4_tail(self):
+        """A negative that must stay negative: the tail is still no letter."""
+        img = self._image()
+        ext = self.runes.extended_alphabet(img)
+        mask, glyphs, _ = self.runes.load_rune4(img)
+        s = self.runes.signature(mask, glyphs[48])
+        best = min((min(self.runes.distance(s, r) for r in refs), name)
+                   for name, refs in ext.items())
+        self.assertGreater(best[0], 30, "tail must not resolve inside the "
+                                        "same-letter band")
+        self.assertTrue(
+            self.runes.RUNE4_TAIL_AFTER_EXTENSION["verdict"].startswith(
+                "not a letter"))
+
+    def test_rune1_names_no_mechanism(self):
+        """It is a wish. The capacity bound must not move."""
+        from puzzle import positions
+        self.assertIsNone(self.runes.RUNE1_DECODE["mechanism"])
+        self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
+
+    def test_sweep_recovered_all_four_runes_as_controls(self):
+        """A sweep that cannot find what it already knows proves nothing."""
+        s = self.runes.STRIP_SWEEP
+        self.assertEqual(len(s["controls_recovered"]), 4)
+        self.assertEqual(s["rune_strips_found"], 4)
+        self.assertEqual(s["new_cipher_strips"], 0)
+
+
+class TestTuesdayAsANumber(unittest.TestCase):
+    """TUESDAY points at 2 under every reading. It stays unpromoted."""
+
+    def test_all_readings_agree_on_two(self):
+        from puzzle import runes
+        self.assertEqual(runes.TUESDAY_AS_A_NUMBER["all_readings_agree_on"], 2)
+
+    def test_the_dates_really_were_tuesdays(self):
+        """Recomputed, not asserted."""
+        import datetime as dt
+        self.assertEqual(dt.date(2020, 5, 5).isoweekday(), 2)    # wallet created
+        self.assertEqual(dt.date(2020, 11, 3).isoweekday(), 2)   # election
+        self.assertNotEqual(dt.date(2020, 5, 10).isoweekday(), 2)  # funding
+
+    def test_it_is_not_promoted(self):
+        """A bare ordinal with no word cannot complete a position."""
+        from puzzle import runes, positions
+        rec = runes.TUESDAY_AS_A_NUMBER
+        self.assertFalse(rec["promoted"])
+        self.assertEqual(len(rec["blockers"]), 2)
+        confirmed = {a.position for a in positions.CONFIRMED}
+        self.assertNotIn(2, confirmed, "position 2 must not be confirmed")
+
+    def test_position_2_is_still_unreachable_by_the_clock(self):
+        """The gap that makes the reading interesting must remain a gap."""
+        from puzzle import positions
+        self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
+
+
+class TestChronology(unittest.TestCase):
+    """The one date that is not interpretation, and what it rules out."""
+
+    def setUp(self):
+        from puzzle import chronology
+        self.c = chronology
+
+    def test_offsets_are_recomputed_not_asserted(self):
+        for e in self.c.DEPICTED_EVENTS:
+            self.assertEqual(self.c.days_after_key(e["date"]),
+                             e["days_after_key"], e["date"])
+
+    def test_every_depicted_2020_event_postdates_the_key(self):
+        """The constraint. If this ever fails, the argument collapses."""
+        for e in self.c.DEPICTED_EVENTS:
+            if e["date"] == self.c.CONSTRAINT["key_fixed_by"]:
+                continue
+            self.assertGreater(e["days_after_key"], 0,
+                               f"{e['date']} is not after the key")
+        earliest = min(e["days_after_key"] for e in self.c.DEPICTED_EVENTS
+                       if e["days_after_key"] > 0)
+        self.assertEqual(earliest, self.c.CONSTRAINT["gap_days"])
+
+    def test_calendar_identities(self):
+        """Memorial Day, Mother's Day and Election Day, recomputed."""
+        import datetime as dt
+
+        def nth_weekday(y, m, wd, n):
+            d = dt.date(y, m, 1)
+            d += dt.timedelta(days=(wd - d.weekday()) % 7)
+            return d + dt.timedelta(weeks=n - 1)
+
+        may_mondays = [d for d in (dt.date(2020, 5, i) for i in range(1, 32))
+                       if d.weekday() == 0]
+        self.assertEqual(may_mondays[-1], dt.date(2020, 5, 25))   # Memorial Day
+        self.assertEqual(nth_weekday(2020, 5, 6, 2), dt.date(2020, 5, 10))
+        first_mon = nth_weekday(2020, 11, 0, 1)
+        self.assertEqual(first_mon + dt.timedelta(days=1), dt.date(2020, 11, 3))
+
+    def test_the_prediction_is_recorded_as_withdrawn(self):
+        """An earlier version claimed chronology separated the candidate
+        words. It does not - every one has a pre-2020-05-10 referent."""
+        rec = self.c.PREDICTION_DOES_NOT_DISCRIMINATE
+        self.assertIn("withdrawn", rec["so"])
+        self.assertIn("Garner", rec["actual"])
+        self.assertEqual(set(rec["they_still_fail"]), {"breathe", "black"})
+
+    def test_breathe_predates_the_key_by_its_own_referent(self):
+        """The module's own referent list says 2014. Keep the two consistent."""
+        years = {t["year"] for t in self.c.TIMELESS_REFERENTS}
+        self.assertIn(2014, years)
+        garner = [t for t in self.c.TIMELESS_REFERENTS if t["year"] == 2014][0]
+        self.assertIn("breathe", garner["what"])
+
+    def test_what_the_constraint_actually_excludes(self):
+        """It excludes the two drawn dates, and no word."""
+        rec = self.c.CONSTRAINT_EXCLUDES
+        self.assertEqual(set(rec["excluded"]), {"05.25.20", "11.03.20"})
+        self.assertIn("any candidate word", rec["does_not_exclude"])
+
+    def test_the_excluded_dates_are_editorial_in_the_census(self):
+        """Corroboration must be real: the census must agree, independently."""
+        from puzzle import positions
+        roles = {k: v["role"] for k, v in positions.NUMERAL_CENSUS.items()}
+        self.assertTrue(roles["hoodie_date"].startswith("editorial"))
+        self.assertTrue(roles["election_date"].startswith("editorial"))
+
+    def test_wallet_created_is_flagged_unverifiable(self):
+        """It is community folklore, and one hypothesis leaned on it."""
+        rec = self.c.WALLET_CREATED_IS_UNVERIFIED
+        self.assertFalse(rec["on_chain"])
+        self.assertEqual(rec["first_chain_appearance"], "2020-05-10")
+
+    def test_rune1_wish_is_matched_by_the_ledger(self):
+        """'I hope many bitcoins will be sent here' - four people did."""
+        self.assertEqual(len(self.c.TIPS), 4)
+        total = sum(t["btc"] for t in self.c.TIPS)
+        self.assertAlmostEqual(self.c.BALANCE_BTC, 0.2 + total, places=8)
+
+    def test_clock_shows_no_coherent_time(self):
+        """The rival to the position map, killed exhaustively."""
+        from puzzle import positions
+        r = positions.clock_time_consistency()
+        self.assertEqual(len(r["assignments"]), 6)
+        self.assertGreater(r["best_error_deg"],
+                           4 * r["drawing_scatter_deg"])
+        self.assertTrue(
+            positions.CLOCK_SHOWS_NO_TIME["verdict"].startswith("not a time"))
+
+    def test_on_chain_matches_the_record(self):
+        """Network-gated: re-read the chain and compare."""
+        try:
+            got = self.c.verify_on_chain(timeout=20)
+        except Exception as exc:                      # offline, rate-limited
+            self.skipTest(f"chain unavailable: {exc}")
+        self.assertEqual(got["block_height"], self.c.FUNDING["block_height"])
+        self.assertEqual(got["block_time_utc"], self.c.FUNDING["block_time_utc"])
+        self.assertEqual(got["spent_txo_sum"], 0, "the prize must be unspent")
+
+
+class TestWhitepaperTypos(unittest.TestCase):
+    """A known source text plus deliberate errors is a classic carrier.
+    Here it is noise, and the control is what shows it."""
+
+    def setUp(self):
+        from puzzle import extraction
+        self.rec = extraction.WHITEPAPER_TYPOS
+
+    def test_typos_hit_bip39_below_the_control_rate(self):
+        r = self.rec
+        typo_rate = r["typo_words_in_bip39"] / r["typo_words_total"]
+        ctrl_rate = r["control_words_in_bip39"] / r["control_words_total"]
+        self.assertLess(typo_rate, ctrl_rate,
+                        "if typos beat the control this verdict must be revisited")
+
+    def test_the_control_words_really_are_bip39(self):
+        """Recomputed, so the control cannot rot."""
+        from puzzle import wordlist
+        ctrl = ["problem", "solution", "transaction", "history", "earliest",
+                "purposes", "company", "trusted", "system", "single"]
+        hits = sum(1 for w in ctrl if wordlist.is_valid(w))
+        self.assertEqual(hits, self.rec["control_words_in_bip39"])
+        typo = [d["source"] for d in self.rec["deviations"]]
+        self.assertEqual(sum(1 for w in typo if wordlist.is_valid(w)),
+                         self.rec["typo_words_in_bip39"])
+
+    def test_none_of_the_artwork_spellings_is_correct_english(self):
+        """Each deviation must actually differ from the source."""
+        for d in self.rec["deviations"]:
+            self.assertNotEqual(d["artwork"], d["source"])
+
+    def test_verdict_is_noise(self):
+        self.assertTrue(self.rec["verdict"].startswith("noise"))
+
+    def test_the_earlier_calligram_claim_is_corrected(self):
+        from puzzle import extraction
+        c = extraction.CALLIGRAM_CLAIM_CORRECTED
+        self.assertIn("no word emphasised or altered", c["was"])
+        self.assertIn("six words altered", c["now"])
+
+
+class TestChosenVersusInherited(unittest.TestCase):
+    """The community's 24-word table, evaluated on principled grounds."""
+
+    def setUp(self):
+        from puzzle import positions
+        self.p = positions
+        self.rec = positions.CHOSEN_VERSUS_INHERITED
+
+    def test_chosen_set_matches_what_the_repo_actually_holds(self):
+        """If these ever diverge, one of them is stale."""
+        confirmed = {a.position for a in self.p.CONFIRMED}
+        chosen = set(self.rec["chosen"])
+        self.assertTrue(confirmed.issubset(chosen),
+                        "every confirmed position must be a chosen number")
+        self.assertEqual(chosen, confirmed | {9, 11})
+
+    def test_inherited_numbers_carry_no_evidence(self):
+        self.assertEqual(
+            self.rec["likelihood_ratio_of_an_inherited_number"], 1.0)
+        self.assertEqual(self.rec["community_table_adds"], 0)
+
+    def test_the_two_sets_do_not_overlap(self):
+        self.assertEqual(
+            set(self.rec["chosen"]) & set(self.rec["inherited"]), set())
+
+    def test_pyramid_is_chosen_but_still_rejected(self):
+        """Chosen is necessary, not sufficient - it still has to measure up."""
+        self.assertIn(11, self.rec["chosen"])
+        confirmed = {a.position for a in self.p.CONFIRMED}
+        self.assertNotIn(11, confirmed)
+
+
+class TestVisibleWordsAreNotThePhrase(unittest.TestCase):
+    """The simplest reading of 'find the seed phrase in this picture'."""
+
+    def test_visible_words_underperform_ordinary_english(self):
+        from puzzle import extraction
+        r = extraction.VISIBLE_WORDS_ARE_NOT_THE_PHRASE
+        self.assertLess(r["artwork_rate"], r["control_rate"])
+
+    def test_control_rate_is_recomputed(self):
+        from puzzle import wordlist
+        ctrl = ("house table river silver garden window pencil bottle jacket "
+                "candle market pillow ticket rocket forest planet dinner "
+                "summer flower orange button carpet dragon hammer island "
+                "ladder monkey needle pepper ribbon").split()
+        rate = sum(1 for w in ctrl if wordlist.is_valid(w)) / len(ctrl)
+        self.assertAlmostEqual(rate, 0.80, places=2)

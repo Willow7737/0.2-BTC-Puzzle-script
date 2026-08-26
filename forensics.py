@@ -290,6 +290,7 @@ PUBLICATION = {
     "posted": "2020-10-08",
     "title": "Bitcoin puzzle (2000$)",
     "wallet_created": "2020-05-05",
+    "wallet_created_is_unverified": "NOT on-chain. An address has no creation\n        event; this one first appears in the funding tx of 2020-05-10. The\n        2020-05-05 date is community folklore - see puzzle.chronology.\n        WALLET_CREATED_IS_UNVERIFIED. It matters because that day was a\n        Tuesday, which made rune 3 look like a wallet birthday.",
     "wallet_funded": "2020-05-10",
     "funding_tx": "fcee21d44ee94c09869947c74b61669bf928358e9c2d1699fb075bb6ebf5d043",
     "note": "funded five months before publication, and two weeks before the "

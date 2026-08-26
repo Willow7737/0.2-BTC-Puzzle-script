@@ -147,6 +147,15 @@ $ ./forensics.py runes puzzle.png            # verify rune 4 against its crib
 $ ./forensics.py crop puzzle.png 1295,790,1495,1000 -m channel --channel r
 ```
 
+All four rune strips are now read. **Rune 1** — three lines, top left, long
+recorded here as "below the resolution limit" — is verified against its crib
+two ways: same-letter glyphs average 29.4 apart against 68.7 for different
+letters, and **33 of 34** glyphs name the crib's letter when matched against
+the alphabet recovered from *rune 4*, a different strip (chance 1.6, p ≈
+7.5e-43). Reading it extends the cipher alphabet from **21 letters to 27**,
+adding `Я Ю Г У П Л`. A regularity-based strip sweep that recovers all four
+runes as positive controls finds **no fifth cipher strip** among 60 candidates.
+
 Rune 4 segments into 50 glyphs whose word lengths match the published Russian
 plaintext exactly, and glyphs the crib calls the same letter are far more
 alike (mean distance 27.2) than random pairs (66.7) — so the translation is
@@ -383,6 +392,7 @@ puzzle/feasibility.py    search-space arithmetic and time estimates
 puzzle/candidates.py     curated candidate tiers
 puzzle/positions.py      word-plus-number position map and its evidence scale
 puzzle/extraction.py     tests whether the numbers index text instead
+puzzle/chronology.py     the dated record, and the constraint it imposes
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
 tests/test_vectors.py    105 tests: published vectors + planted targets
@@ -428,7 +438,26 @@ Verified against Electrum's own test vectors.
 Negative results, so nobody re-treads them:
 
 * **Steganography** — no metadata, uniform alpha, clean LSB planes.
-* **Rune 4's "number X"** — a placeholder asterisk, not a digit.
+* **The clock as a timestamp** — it shows no coherent time. All six
+  assignments of the three hands to (hour, minute, second) fail on the hour
+  hand by 8.9°–13.2°, against ±2° of drawing scatter. The hands are pointers.
+* **The BLM imagery as the seed's source** — the prize was funded
+  2020-05-10 08:01:46 UTC, and *every* 2020 event the artwork depicts happens
+  afterwards (Floyd +15 days, the election +177). The seed predates the
+  pictures, so they carry the clues rather than supply them. This excludes the
+  two drawn dates as puzzle numbers; it does **not** separate the candidate
+  words, all of which have older referents.
+* **The whitepaper typos as a carrier** — six words deviate from the source
+  text, but all six are canonical copying slips at a flat ~0.8% rate, the
+  deviation letters spell nothing, and the marked words hit BIP-39 *below* a
+  control drawn from the same passage (2/6 against 5/10).
+* **Rune 4's "number X"** — a placeholder asterisk, not a digit. It cannot be
+  resolved as a letter either: it encodes one that appears nowhere else in the
+  strip, so the crib supplies no reference for it.
+* **Rune 3's alphabet** — *identified*: it reads **`TUESDAY`** in the Gravity
+  Falls cipher. Six earlier "exclusions" of other alphabets are **withdrawn** —
+  they were produced by a wrong mirror transform and a metric with no
+  cross-source power (it ranks the true letter at chance, 13.7 of 26).
 * **`breathe` on the Statue's neck** — no lettering at 16×; it is plain
   visible text on Floyd's hoodie and nothing more.
 * **Brainwallet phrases of 3–6 words** — *exhausted*, no match, over a
@@ -451,7 +480,9 @@ worth starting — so you spend CPU only where it can pay off.
 
 The best available lead is not more compute. It is decoding what the runes
 mean: three of the four refer to numbers or ordinals, and if they encode word
-*positions*, the search collapses from intractable to trivial. See
+*positions*, the search collapses from intractable to trivial. All four are
+now read — rune 3 was the last, and it says `TUESDAY` — but none of them names
+a rule beyond rune 2's "sum of two numbers". See
 [ANALYSIS.md §12](ANALYSIS.md#12-open-questions).
 
 ## Safety
