@@ -1671,3 +1671,91 @@ class TestTuesdayAsANumber(unittest.TestCase):
         """The gap that makes the reading interesting must remain a gap."""
         from puzzle import positions
         self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
+
+
+class TestChronology(unittest.TestCase):
+    """The one date that is not interpretation, and what it rules out."""
+
+    def setUp(self):
+        from puzzle import chronology
+        self.c = chronology
+
+    def test_offsets_are_recomputed_not_asserted(self):
+        for e in self.c.DEPICTED_EVENTS:
+            self.assertEqual(self.c.days_after_key(e["date"]),
+                             e["days_after_key"], e["date"])
+
+    def test_every_depicted_2020_event_postdates_the_key(self):
+        """The constraint. If this ever fails, the argument collapses."""
+        for e in self.c.DEPICTED_EVENTS:
+            if e["date"] == self.c.CONSTRAINT["key_fixed_by"]:
+                continue
+            self.assertGreater(e["days_after_key"], 0,
+                               f"{e['date']} is not after the key")
+        earliest = min(e["days_after_key"] for e in self.c.DEPICTED_EVENTS
+                       if e["days_after_key"] > 0)
+        self.assertEqual(earliest, self.c.CONSTRAINT["gap_days"])
+
+    def test_calendar_identities(self):
+        """Memorial Day, Mother's Day and Election Day, recomputed."""
+        import datetime as dt
+
+        def nth_weekday(y, m, wd, n):
+            d = dt.date(y, m, 1)
+            d += dt.timedelta(days=(wd - d.weekday()) % 7)
+            return d + dt.timedelta(weeks=n - 1)
+
+        may_mondays = [d for d in (dt.date(2020, 5, i) for i in range(1, 32))
+                       if d.weekday() == 0]
+        self.assertEqual(may_mondays[-1], dt.date(2020, 5, 25))   # Memorial Day
+        self.assertEqual(nth_weekday(2020, 5, 6, 2), dt.date(2020, 5, 10))
+        first_mon = nth_weekday(2020, 11, 0, 1)
+        self.assertEqual(first_mon + dt.timedelta(days=1), dt.date(2020, 11, 3))
+
+    def test_prediction_holds(self):
+        """Confirmed words predate the key; the ones that don't, failed."""
+        for row in self.c.PREDICTION_CHECK:
+            if row["status"] == "CONFIRMED":
+                self.assertTrue(row["predates"], row["word"])
+            if not row["predates"]:
+                self.assertNotEqual(row["status"], "CONFIRMED", row["word"])
+
+    def test_confirmed_words_match_the_positions_module(self):
+        """The check must be about the real word set, not a stale copy."""
+        from puzzle import positions
+        confirmed = {w for a in positions.CONFIRMED for w in a.words}
+        listed = {r["word"] for r in self.c.PREDICTION_CHECK
+                  if r["status"] == "CONFIRMED"}
+        self.assertEqual(confirmed, listed)
+
+    def test_wallet_created_is_flagged_unverifiable(self):
+        """It is community folklore, and one hypothesis leaned on it."""
+        rec = self.c.WALLET_CREATED_IS_UNVERIFIED
+        self.assertFalse(rec["on_chain"])
+        self.assertEqual(rec["first_chain_appearance"], "2020-05-10")
+
+    def test_rune1_wish_is_matched_by_the_ledger(self):
+        """'I hope many bitcoins will be sent here' - four people did."""
+        self.assertEqual(len(self.c.TIPS), 4)
+        total = sum(t["btc"] for t in self.c.TIPS)
+        self.assertAlmostEqual(self.c.BALANCE_BTC, 0.2 + total, places=8)
+
+    def test_clock_shows_no_coherent_time(self):
+        """The rival to the position map, killed exhaustively."""
+        from puzzle import positions
+        r = positions.clock_time_consistency()
+        self.assertEqual(len(r["assignments"]), 6)
+        self.assertGreater(r["best_error_deg"],
+                           4 * r["drawing_scatter_deg"])
+        self.assertTrue(
+            positions.CLOCK_SHOWS_NO_TIME["verdict"].startswith("not a time"))
+
+    def test_on_chain_matches_the_record(self):
+        """Network-gated: re-read the chain and compare."""
+        try:
+            got = self.c.verify_on_chain(timeout=20)
+        except Exception as exc:                      # offline, rate-limited
+            self.skipTest(f"chain unavailable: {exc}")
+        self.assertEqual(got["block_height"], self.c.FUNDING["block_height"])
+        self.assertEqual(got["block_time_utc"], self.c.FUNDING["block_time_utc"])
+        self.assertEqual(got["spent_txo_sum"], 0, "the prize must be unspent")

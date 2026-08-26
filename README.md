@@ -392,6 +392,7 @@ puzzle/feasibility.py    search-space arithmetic and time estimates
 puzzle/candidates.py     curated candidate tiers
 puzzle/positions.py      word-plus-number position map and its evidence scale
 puzzle/extraction.py     tests whether the numbers index text instead
+puzzle/chronology.py     the dated record, and the constraint it imposes
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
 tests/test_vectors.py    105 tests: published vectors + planted targets
@@ -437,6 +438,13 @@ Verified against Electrum's own test vectors.
 Negative results, so nobody re-treads them:
 
 * **Steganography** — no metadata, uniform alpha, clean LSB planes.
+* **The clock as a timestamp** — it shows no coherent time. All six
+  assignments of the three hands to (hour, minute, second) fail on the hour
+  hand by 8.9°–13.2°, against ±2° of drawing scatter. The hands are pointers.
+* **The BLM imagery as the seed's source** — the prize was funded
+  2020-05-10 08:01:46 UTC, and *every* 2020 event the artwork depicts happens
+  afterwards (Floyd +15 days, the election +177). The seed predates the
+  pictures, so they carry the clues rather than supply them.
 * **Rune 4's "number X"** — a placeholder asterisk, not a digit. It cannot be
   resolved as a letter either: it encodes one that appears nowhere else in the
   strip, so the crib supplies no reference for it.

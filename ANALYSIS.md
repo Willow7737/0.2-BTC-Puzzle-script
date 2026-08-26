@@ -1503,6 +1503,130 @@ passphrase, and against the same target with the correct passphrase removed
 from the list — the second case guards against the passphrase being silently
 ignored, which would otherwise produce a false negative across an entire run.
 
+## 11b. The chronology, traced to records — and what it rules out
+
+The artwork is dense with dateable reference. Tracing each to the record turns
+up one fact that constrains the puzzle more than all the imagery does.
+
+### The clock is not a clock
+
+First, kill the obvious rival reading. Converting each hand's bearing to a dial
+position (12 sits at 287.4°, 30° per numeral):
+
+| Bearing | Dial position | Reads as |
+|---:|---:|---|
+| 240.0° | 10.420 | hour ≈ 10:25 |
+| 304.0° | 0.553 | 2.77 min/sec marks |
+| 332.0° | 1.487 | 7.43 min/sec marks |
+
+The hour hand sits at 10.42, which on a working clock means **25 minutes past**
+— but no hand points at minute 25. The only minute readings available are 2.8,
+7.4 and 52.1.
+
+All **six** assignments of the three hands to (hour, minute, second) were
+tried. Every one fails on the hour hand, by **8.9° to 13.2°**, against a
+measured drawing scatter of ±2°. The best is still 4.5× the noise floor.
+
+**So the clock encodes no timestamp, date, or time of death.** The hands point.
+`positions.clock_time_consistency()` recomputes it.
+
+### The one date that is not interpretation
+
+The prize entered the address in block 629754 at **2020-05-10 08:01:46 UTC**, a
+Sunday. That is on-chain and re-checkable with `chronology.verify_on_chain()`.
+The private key — and therefore the seed phrase — existed at or before that
+moment.
+
+Now date what the artwork depicts:
+
+| Date | +days | Event |
+|---|---:|---|
+| 2020-05-10 | 0 | **the prize is funded; the seed exists by now** |
+| 2020-05-16 | +6 | first vandalism of the Leopold II statue, Ekeren |
+| 2020-05-25 | +15 | George Floyd killed — drawn as `05.25.20` on the hoodie |
+| 2020-06-04 | +25 | decision to remove the Ekeren statue; the artwork's bust is red-painted and gagged, matching the photographs |
+| 2020-06-09 | +30 | the Ekeren statue is removed |
+| 2020-06-30 | +51 | Leopold II bust removed in Ghent, on the 60th anniversary of Congolese independence |
+| 2020-10-08 | +151 | the artwork is published to Reddit |
+| 2020-11-03 | +177 | the US election, drawn as `11.03.20` — **before it happened**, since publication precedes it by 26 days |
+
+**Every 2020 event the artwork shows post-dates the key**, the earliest by six
+days. So the BLM layer **cannot have encoded the seed**. It is a carrier, not a
+source: whatever the phrase is, it was chosen from things that already existed
+on 2020-05-10.
+
+This sits well with the authorship finding in section 10 — a signed base
+artwork plus a cipher layer, plausibly two hands and certainly two dates.
+
+### The constraint makes a prediction, and it holds
+
+If the seed predates 2020-05-10, seed words should refer to things older than
+that. They do — and the two candidates that don't are exactly the two that had
+already failed on independent grounds:
+
+| Word | Refers to | Older than the key? | Status |
+|---|---|:--:|---|
+| `subject` | 13th Amendment, 1865 | yes | **CONFIRMED** |
+| `tower` | Space Needle, 1962 | yes | **CONFIRMED** |
+| `moon` | celestial | yes | **CONFIRMED** |
+| `food` | the Needle's shaft | yes | marked, no number |
+| `real` | "ONLY real Bitcoin" | yes | marked, no number |
+| `breathe` | Floyd's hoodie, 2020-05-25 | **no** | not a BIP-39 word at all |
+| `black` | BLM, 2020 | **no** | WEAK, never promoted |
+
+Two independent lines — a chronological argument and a wordlist fact — pick out
+the same two failures. That is the strongest support the confirmed word set has
+had.
+
+### A correction: the wallet's "creation date" is folklore
+
+This repo carried `wallet_created: 2020-05-05` from the community notes. **It
+is not on-chain and not verifiable.** A Bitcoin address has no creation event;
+it becomes visible only when first used, and this one's first appearance
+anywhere is the funding transaction on 2020-05-10.
+
+That matters for one live reading: 2020-05-05 was a Tuesday, which made "rune
+3's `TUESDAY` names the wallet's birthday" attractive. It rests on an
+unverifiable date and should not be leaned on. The `TUESDAY → 2` reading in
+section 3 is unaffected — it never depended on this.
+
+### Rune 1's wish, answered by the ledger
+
+Rune 1 reads *"I hope that many bitcoins will be sent here."* The chain records
+that **four separate people did**, between 2023 and 2025 — 0.00001, 0.001,
+0.00000557 and 0.00005727 BTC. The balance is **0.20107284 BTC**, not 0.2, and
+nothing has ever been spent.
+
+A decoded cipher and a public ledger agreeing is as direct as tracing gets.
+
+### What funded it
+
+Four P2SH inputs of 0.059–0.073 BTC, consolidated into 0.2 BTC plus 0.0508 BTC
+change. Each input address has exactly two transactions — one receive, one
+spend — the signature of an HD wallet's single-use receive addresses, not an
+exchange. **The change output has never moved in six years.**
+
+One detail is worth keeping: the funder's own wallet is **P2SH-SegWit** while
+the puzzle address is **legacy P2PKH**. Different software — so the puzzle key
+was generated deliberately for the purpose, not simply reused from the wallet
+that paid it.
+
+### Media provenance, settled
+
+*Gravity Falls* contributes exactly one thing: the **Journal 3 "Author's"
+symbol substitution cipher**, which is what rune 3 is written in, and which is
+why the Great Seal's pyramid is drawn as Bill Cipher. The show's other famous
+ciphers — the per-episode Caesar, Atbash, A1Z26 and Vigenère cryptograms — are
+**not** in play: the strip sweep in section 3 finds no further cipher text, and
+none of the artwork's 60 identified text strips is gibberish that would want
+decoding.
+
+The other references are literary and documentary rather than cryptographic:
+Huxley's *Brave New World* (1932) supplies the acrostic spelled by the
+whitepaper calligram's first letters; the Latin *Esse quam niger es, sic dixit
+caccabus ollae* is the pot calling the kettle black; and `НА ЧЁРНЫЙ ДЕНЬ` is a
+fixed Russian idiom for "for a rainy day".
+
 ## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
