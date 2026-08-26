@@ -16,6 +16,7 @@ import json
 import os
 import sys
 import time
+import textwrap
 from pathlib import Path
 
 from puzzle import brainwallet, candidates, feasibility
@@ -230,6 +231,61 @@ def cmd_selftest(args) -> int:
                             str(here / "tests"), "-t", str(here), "-v"])
 
 
+def cmd_references(args) -> int:
+    """Test the date and numbered-source readings of the numbers."""
+    from puzzle import references as ref
+
+    print("anchors the artwork supplies (a scheme must reproduce all three):")
+    for n, w in ref.ANCHORS.items():
+        print(f"  {n:>2} -> {w:<8s} (wordlist index {ref.ANCHOR_INDICES[n]})")
+
+    print("\nindexing the wordlist returns a BIP-39 word for every input, so a")
+    print("forward sweep cannot discriminate. These run backwards, off the anchors.\n")
+
+    for sweep in ref.run_all().values():
+        print(f"  {sweep}")
+        for hit in sweep.hits:
+            print(f"      FIT: {hit}")
+
+    print("\nnear-miss worth knowing about:")
+    for a, b, got in ref.affine_near_miss():
+        print(f"  a={a} b={b} fits 1 and 3, sends 13 to {got!r}, not 'moon'")
+
+    print(f"\n{ref.artwork_date_index_scheme()}")
+
+    print("\nnumbered-source references:")
+    for name, why in ref.source_reference_verdict().items():
+        print(f"  {name}:")
+        for line in textwrap.wrap(why, 74):
+            print(f"      {line}")
+    return 0
+
+
+def cmd_extract(args) -> int:
+    """Test whether the confirmed numbers index text rather than positions."""
+    from puzzle import extraction as ex
+
+    nums = ([int(v) for v in args.numbers.split(",")] if args.numbers
+            else list(ex.CONFIRMED_NUMBERS))
+    print(f"indices: {nums}\ncorpus : {len(ex.CORPUS)} passages read off the artwork\n")
+    res = ex.sweep(nums)
+    print(f"{'passage':20s} {'unit':8s} {'b':>1} {'rev':>5} {'hits':>5} {'null':>6}  extracted")
+    for r in res:
+        if r.bip39_hits == 0 and not args.all:
+            continue
+        null = ex.null_rate(ex.CORPUS[r.passage][0], r.unit, len(r.extracted))
+        print(f"{r.passage:20s} {r.unit:8s} {r.base:>1} {str(r.reverse):>5} "
+              f"{r.bip39_hits}/{len(r.extracted)} {null:6.2f}  {r.extracted}")
+    perfect = sum(1 for r in res if r.bip39_hits == len(r.extracted))
+    print(f"\n{perfect} of {len(res)} attempts extracted all-BIP-39 tokens")
+    for name, rec in ex.REFUTED.items():
+        print(f"\n{name}: {rec['verdict']}")
+        for k, v in rec.items():
+            if k != "verdict":
+                print(f"    {k}: {v}")
+    return 0
+
+
 def cmd_positions(args) -> int:
     """Show or export the word-plus-number position map."""
     import json as _json
@@ -390,6 +446,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = sub.add_parser("selftest", help="run the crypto test vectors")
     sp.set_defaults(func=cmd_selftest)
+
+    sp = sub.add_parser("extract",
+                        help="test whether the numbers index text, not positions")
+    sp.add_argument("--numbers", help="comma-separated, default 1,3,13,21")
+    sp.add_argument("--all", action="store_true", help="show zero-hit attempts too")
+    sp.set_defaults(func=cmd_extract)
+
+    sp = sub.add_parser("references",
+                        help="test the date and numbered-source readings of the numbers")
+    sp.set_defaults(func=cmd_references)
 
     sp = sub.add_parser("positions", help="show the word-plus-number position map")
     sp.add_argument("--length", type=int, default=24, choices=(21, 24))

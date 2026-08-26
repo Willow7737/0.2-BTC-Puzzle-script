@@ -33,6 +33,48 @@ except ImportError:  # pragma: no cover
     sys.exit("forensics needs pillow and numpy:  pip install pillow numpy")
 
 
+#: Provenance of the artwork file, and why no better one exists.
+#:
+#: Three independent sources serve **byte-identical** content
+#: (sha256 ``d0b04378f75d63997b8034ec2ef1bdd108178e4546de78237bd35abf4189a782``,
+#: 2,383,395 bytes, 1600x1200):
+#:
+#:   * ``privatekeys.pw/images/puzzles/0.2-btc-puzzle.png``
+#:   * ``i.redd.it/n1x7g8ceaur51.png``
+#:   * ``HomelessPhD/BLM_0.2BTC`` at ``pictures/n1x7g8ceaur51.png``
+#:
+#: The middle one settles it. Reddit serves the **original upload** from
+#: i.redd.it and puts downscaled variants on preview.redd.it, so a
+#: byte-identical i.redd.it response means 1600x1200 is what was published.
+#: The BitcoinTalk thread links only to the GitHub repo, which holds the same
+#: bytes again - there is no second upload anywhere in the chain.
+#:
+#: And the file is **not** a downscale of something larger. Measured on it:
+#:
+#:   * edge-run widths average 1.61 px with **54.5% single-pixel** edges;
+#:     downscaling smears every edge across two or more pixels;
+#:   * spectral energy persists to Nyquist - tail/mid ratio **0.526**, where a
+#:     downscaled image collapses well below ~0.3.
+#:
+#: So the published raster is at or near its native rendering resolution. The
+#: only route to more detail is the artist's own source file. This closes what
+#: earlier analysis called the highest-value next step: the runes, the clock
+#: bearings and the claimed neck text are limited by the artwork as published,
+#: not by a poor scan.
+PROVENANCE = {
+    "sha256": "d0b04378f75d63997b8034ec2ef1bdd108178e4546de78237bd35abf4189a782",
+    "bytes": 2383395,
+    "size": (1600, 1200),
+    "identical_sources": ("privatekeys.pw", "i.redd.it/n1x7g8ceaur51.png",
+                          "github:HomelessPhD/BLM_0.2BTC"),
+    "edge_run_mean_px": 1.61,
+    "single_pixel_edge_share": 0.545,
+    "spectral_tail_mid_ratio": 0.526,
+    "downscaled_from_larger": False,
+    "verdict": "1600x1200 is the published original and is near-native; only "
+               "the artist's source file could yield more detail",
+}
+
 #: Places in the 1600x1200 artwork that carry recovered or claimed text.
 #: (x0, y0, x1, y1, scale, mode, rotate, note)
 REGIONS: dict[str, tuple] = {

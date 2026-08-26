@@ -348,6 +348,35 @@ class TestForensicsRegions(unittest.TestCase):
             self.assertIn(rot, (0, 90, -90, 180), name)
             self.assertTrue(note, f"{name} needs a note saying what is there")
 
+    def test_provenance_records_a_single_original(self):
+        """Three sources, byte-identical - there is no better file."""
+        import forensics
+        p = forensics.PROVENANCE
+        self.assertEqual(p["size"], (1600, 1200))
+        self.assertEqual(len(p["sha256"]), 64)
+        self.assertGreaterEqual(len(p["identical_sources"]), 3)
+        self.assertIn("i.redd.it/n1x7g8ceaur51.png", p["identical_sources"])
+
+    def test_artwork_is_not_a_downscale(self):
+        """Sharp edges and energy to Nyquist: near-native resolution."""
+        import forensics
+        p = forensics.PROVENANCE
+        self.assertFalse(p["downscaled_from_larger"])
+        self.assertLess(p["edge_run_mean_px"], 2.0)
+        self.assertGreater(p["single_pixel_edge_share"], 0.5)
+        self.assertGreater(p["spectral_tail_mid_ratio"], 0.3)
+
+    def test_provenance_matches_the_artwork_when_present(self):
+        """If the file is here, its hash must match the recorded one."""
+        import hashlib, os
+        import forensics
+        img = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+        if not os.path.exists(img):
+            self.skipTest("artwork not present")
+        got = hashlib.sha256(open(img, "rb").read()).hexdigest()
+        self.assertEqual(got, forensics.PROVENANCE["sha256"])
+        self.assertEqual(os.path.getsize(img), forensics.PROVENANCE["bytes"])
+
     def test_key_regions_present(self):
         import forensics
         for name in ("clock", "plinth", "needle", "statue-base", "vertical"):
@@ -723,6 +752,83 @@ class TestPositionMap(unittest.TestCase):
                                  positions.Evidence.WEAK, "x")
 
 
+class TestExtractionHypothesis(unittest.TestCase):
+    """Do 1, 3, 13, 21 index text instead of mnemonic positions? No."""
+
+    def test_corpus_is_real_artwork_text(self):
+        from puzzle import extraction as ex
+        self.assertGreaterEqual(len(ex.CORPUS), 12)
+        for name, (text, prov) in ex.CORPUS.items():
+            self.assertTrue(text.strip(), name)
+            self.assertTrue(prov.strip(), f"{name} needs provenance")
+
+    def test_subject_is_not_word_one_of_the_amendment(self):
+        """The decisive case: a number and a word marked in one passage."""
+        from puzzle import extraction as ex
+        words = ex.CORPUS["amendment"][0].split()
+        self.assertEqual(words.index("subject") + 1, 29)
+        self.assertNotEqual(words[0].lower(), "subject")
+
+    def test_no_extraction_yields_all_bip39(self):
+        """A seed phrase is all BIP-39; no convention produces that."""
+        from puzzle import extraction as ex
+        res = ex.sweep()
+        self.assertTrue(res)
+        for r in res:
+            self.assertLess(r.bip39_hits, len(r.extracted),
+                            f"{r.passage}/{r.unit} unexpectedly all-BIP-39")
+
+    def test_null_model_is_nonzero(self):
+        """Without a null the sweep would be meaningless."""
+        from puzzle import extraction as ex
+        n = ex.null_rate(ex.CORPUS["amendment"][0], "word", 4)
+        self.assertGreater(n, 0.0)
+        self.assertLess(n, 1.0)
+
+    def test_extract_rejects_out_of_range(self):
+        from puzzle import extraction as ex
+        self.assertIsNone(ex.extract("two words", (1, 99), "word"))
+
+    def test_source_texts_are_quoted_by_the_artwork(self):
+        """Pre-registered: only texts the artwork actually references."""
+        from puzzle import extraction as ex
+        self.assertGreaterEqual(len(ex.SOURCE_TEXTS), 5)
+        for name, (text, prov) in ex.SOURCE_TEXTS.items():
+            self.assertTrue(text.strip(), name)
+            self.assertTrue(prov.strip(), f"{name} needs provenance")
+
+    def test_no_source_convention_yields_all_bip39(self):
+        from puzzle import extraction as ex
+        res = ex.source_sweep()
+        self.assertTrue(res)
+        for r in res:
+            self.assertLess(r.bip39_hits, len(r.extracted),
+                            f"{r.passage}/{r.unit} unexpectedly all-BIP-39")
+
+    def test_underdetermined_classification(self):
+        """The honest stopping point, with its arithmetic pinned."""
+        from puzzle import extraction as ex, positions
+        u = ex.UNDERDETERMINED
+        self.assertEqual(u["all_bip39_results"], 0)
+        self.assertEqual(u["attempts_total"],
+                         u["attempts_artwork_text"] + u["attempts_source_text"])
+        self.assertEqual(u["attempts_artwork_text"], len(ex.sweep()))
+        self.assertEqual(u["attempts_source_text"], len(ex.source_sweep()))
+        self.assertEqual(u["confirmed_positions"], len(positions.CONFIRMED))
+        self.assertEqual(u["mechanism_capacity"],
+                         positions.MECHANISM_CAPACITY["total_reachable"])
+        self.assertLess(u["mechanism_capacity"], u["positions_needed"])
+
+    def test_refutations_recorded(self):
+        from puzzle import extraction as ex
+        self.assertEqual(sorted(ex.REFUTED),
+                         ["derivation_path", "source_text_indexing",
+                          "text_indexing", "wordlist_indices"])
+        self.assertEqual(ex.REFUTED["source_text_indexing"]["four_of_four"], 0)
+        self.assertEqual(ex.REFUTED["derivation_path"]["matches"], 0)
+        self.assertEqual(ex.REFUTED["text_indexing"]["four_of_four"], 0)
+
+
 class TestRuneAnalysis(unittest.TestCase):
     """Rune-4 crib verification. Skipped unless the artwork is available."""
 
@@ -887,3 +993,107 @@ class TestSearchEngine(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TestReferenceReadings(unittest.TestCase):
+    """The date and numbered-source readings of 1, 3, 13, 21."""
+
+    @classmethod
+    def setUpClass(cls):
+        from puzzle import references
+        cls.ref = references
+
+    def test_anchor_indices_match_the_wordlist(self):
+        """Guards the whole module: every sweep is measured against these."""
+        self.assertEqual(self.ref.ANCHOR_INDICES, {1: 1727, 3: 1841, 13: 1148})
+        for n, w in self.ref.ANCHORS.items():
+            self.assertEqual(self.ref._W[self.ref.ANCHOR_INDICES[n]], w)
+
+    def test_affine_sweep_is_complete_and_refutes(self):
+        sweep = self.ref.affine_sweep()
+        self.assertEqual(sweep.tested, 2048, "must cover the whole affine family")
+        self.assertEqual(sweep.hits, [])
+        self.assertTrue(sweep.refuted)
+
+    def test_affine_sweep_finds_a_fit_when_one_exists(self):
+        """Positive control. A test that can only ever refute proves nothing."""
+        ref = self.ref
+        a, b = 37, 900
+        planted = {n: (a * n + b) % 2048 for n in (1, 3, 13)}
+        real = ref.ANCHOR_INDICES
+        try:
+            ref.ANCHOR_INDICES = planted
+            sweep = ref.affine_sweep()
+            self.assertIn((a, b), sweep.hits,
+                          "the sweep must recover a scheme that really is there")
+        finally:
+            ref.ANCHOR_INDICES = real
+        self.assertEqual(ref.affine_sweep().hits, [], "anchors must be restored")
+
+    def test_affine_near_miss_is_exactly_two_schemes_naming_coin(self):
+        """Pin the seductive wrong answer so it stays refuted in writing."""
+        near = self.ref.affine_near_miss()
+        self.assertEqual(len(near), 2)
+        self.assertEqual({got for _, _, got in near}, {"coin"})
+
+    def test_date_sweep_refutes_over_the_recorded_space(self):
+        sweep = self.ref.date_sweep()
+        self.assertEqual(sweep.hits, [])
+        recorded = int(self.ref.REFUTED["date_reference"]["tested"]
+                       .split()[0].replace(",", ""))
+        self.assertEqual(sweep.tested, recorded,
+                         "recompute the count; do not trust the constant")
+
+    def test_date_sweep_finds_a_planted_date_scheme(self):
+        """Positive control for the date family."""
+        ref = self.ref
+        y, m, how, base = 1900, 6, "MMDD", 0
+        planted = {n: ref.date_index(y, m, n, how) - base for n in (1, 3, 13)}
+        real = ref.ANCHOR_INDICES
+        try:
+            ref.ANCHOR_INDICES = planted
+            sweep = ref.date_sweep(years=range(1899, 1902))
+            self.assertIn(("day=n", y, m, how, base), sweep.hits)
+        finally:
+            ref.ANCHOR_INDICES = real
+
+    def test_combined_date_names_no_marked_word(self):
+        sweep = self.ref.combined_date_sweep()
+        self.assertEqual(sweep.hits, [])
+        self.assertGreater(sweep.tested, 500, "the reading space must be real")
+
+    def test_chance_floor_is_reported_and_nonzero_for_the_big_sweep(self):
+        """A sweep big enough to find something by luck must say so."""
+        big = self.ref.date_sweep()
+        self.assertGreater(big.expected_by_chance, 0.1,
+                           "this sweep is at the noise floor; the module must "
+                           "record that a single hit would not be evidence")
+        self.assertLess(self.ref.affine_sweep().expected_by_chance, 0.001)
+
+    def test_amendment_vocabulary_claim_holds_on_the_vendored_text(self):
+        """Offline slice of the primary-source check: the 13th Amendment."""
+        from puzzle import extraction
+        text = extraction.SOURCE_TEXTS["amendment_full"][0].lower()
+        self.assertIn("subject", text)
+        self.assertNotIn("tower", text)
+        self.assertNotIn("moon", text)
+        recorded = self.ref.SOURCE_VOCABULARY["us_amendments"]
+        self.assertIn(13, recorded["subject_appears_in"])
+        self.assertNotIn(1, recorded["subject_appears_in"],
+                         "f(1)=subject is what the Amendment reading needs")
+
+    def test_recorded_total_matches_the_sweeps(self):
+        """extraction.UNDERDETERMINED must be recomputed, not trusted."""
+        from puzzle import extraction
+        total = sum(s.tested for s in self.ref.run_all().values())
+        self.assertEqual(
+            total, extraction.UNDERDETERMINED["reference_schemes_tested"])
+        self.assertEqual(
+            0, extraction.UNDERDETERMINED["reference_schemes_fitting_anchors"])
+
+    def test_word_at_rejects_out_of_range(self):
+        self.assertIsNone(self.ref.word_at(2048))
+        self.assertIsNone(self.ref.word_at(-1))
+        self.assertEqual(self.ref.word_at(0), "abandon")
+
+

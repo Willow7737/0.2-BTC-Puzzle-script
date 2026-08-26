@@ -201,6 +201,66 @@ track (a real building feature, not a count); the Statue's tablet — which on
 the real monument bears the date `JULY IV MDCCLXXVI` — has been replaced by a
 BLM phone, so where a number would sit there is a symbol instead.
 
+### If they aren't positions, what are they?
+
+Five alternative readings tested, all refuted:
+
+```bash
+./solve.py extract          # 58 extractions across 15 artwork passages
+./solve.py references       # 1.17M date and source-reference schemes
+```
+
+* **Text indexing** — 0 of 58 attempts produced all-BIP-39 tokens. Decisively:
+  in the Amendment, the one passage carrying both a marked number and a marked
+  word, `subject` is **word 29 of 32**, not word 1.
+* **Wordlist indices** — `WORDS[1,3,13,21]` is `abandon able account action`,
+  the head of the alphabetical list. No signal.
+* **Derivation path** — 568,800 derivations (900 candidate seeds × 632 paths
+  from 1/3/13/21, hardened and soft, both key formats). **Zero matches.**
+* **Source-text indexing** — 25 attempts over 5 pre-registered sources the
+  artwork quotes verbatim (the Amendment, the whitepaper abstract and §2, the
+  Seal's Latin). Zero all-BIP-39.
+
+**83 pre-registered attempts in total, zero producing a complete BIP-39 set.**
+A correct convention gives 4 of 4 by construction — a seed phrase has no
+non-BIP-39 members — so this is discriminating, not merely unlucky.
+
+Two more readings, which need a *different* test:
+
+* **Date references** — 1,167,608 schemes (affine, number-as-day-of-month,
+  number-as-year-offset, and all four numbers read as one date). **Zero fit.**
+* **Numbered-source references** — Amendments, whitepaper sections, BIPs, the
+  Great Seal. `tower` and `moon` appear in **no** US Amendment; `subject`
+  appears in the 5th, 13th, 14th and 21st but **never the 1st**; BIP-3 was
+  never published. Refuted.
+
+Why a different test: resolving a number to a *wordlist index* returns a BIP-39
+word for every input, so the all-BIP-39 bar is vacuous there. Instead these are
+measured backwards against the three pairings the artwork actually shows —
+`f(1)=subject`, `f(3)=tower`, `f(13)=moon`. A scheme missing any anchor is
+refuted however good its answer for 21 looks. Two affine schemes fit 1 and 3
+and send 13 to `coin` — perfect for a Bitcoin puzzle, and wrong.
+
+### Verdict: underdetermined
+
+The honest classification is that the puzzle is **underdetermined by its
+artwork** — what can be recovered does not determine a phrase. Three positions
+are established, the mechanism caps at four, and twenty-four are needed. What
+would change that is a fourth number-bearing mechanism, which the capacity
+bound says must exist if the position reading is right.
+
+**A higher-resolution original does not exist.** privatekeys.pw,
+`i.redd.it/n1x7g8ceaur51.png` and the `HomelessPhD/BLM_0.2BTC` repository all
+serve byte-identical content (`d0b04378…`, 1600×1200) — and i.redd.it is
+Reddit's *original-upload* endpoint, so that is the published file. Forensics
+say it is near-native, not a downscale: 54.5% single-pixel edges and spectral
+energy persisting to Nyquist (tail/mid 0.526). So runes 1–2, the clock
+bearings and the claimed neck text are limited by the artwork itself; only the
+artist's source file could unblock them.
+
+**More CPU will not help either**: the engine exhausted 479M orderings in 33
+minutes and has never been the constraint.
+
 That gives a **capacity bound**: the bearing mechanism needs the object to
 *be* a clock hand, and there are exactly three. Plus one explicit numeral
 pairing (`Section 1`). Four positions, against 21–24 needed — a shortfall of
@@ -311,9 +371,10 @@ puzzle/search.py         parallel, checkpointed search engine
 puzzle/feasibility.py    search-space arithmetic and time estimates
 puzzle/candidates.py     curated candidate tiers
 puzzle/positions.py      word-plus-number position map and its evidence scale
+puzzle/extraction.py     tests whether the numbers index text instead
 puzzle/runes.py          rune segmentation and crib-driven cipher recovery
 data/english.txt         BIP-39 wordlist (SHA-256 pinned)
-tests/test_vectors.py    96 tests: published vectors + planted targets
+tests/test_vectors.py    105 tests: published vectors + planted targets
 legacy/                  the original script, kept for reference
 ```
 
@@ -380,7 +441,7 @@ worth starting — so you spend CPU only where it can pay off.
 The best available lead is not more compute. It is decoding what the runes
 mean: three of the four refer to numbers or ordinals, and if they encode word
 *positions*, the search collapses from intractable to trivial. See
-[ANALYSIS.md §11](ANALYSIS.md#11-open-questions).
+[ANALYSIS.md §12](ANALYSIS.md#12-open-questions).
 
 ## Safety
 

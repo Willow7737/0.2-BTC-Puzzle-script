@@ -592,7 +592,200 @@ starting.
 That is the whole game now. One more decoded clue is worth more than any
 amount of hardware, and no amount of CPU substitutes for it.
 
-## 4. Negative results
+## 4. If the numbers are not positions, what are they?
+
+The capacity bound in section 3 makes the *inference* — that 1, 3, 13 and 21
+are mnemonic positions — the weakest link, so the numbers were tested against
+the obvious alternatives. All three are cheap, bounded and falsifiable, and
+all three failed.
+
+### Text indexing — refuted
+
+Fifteen passages actually read off the artwork (the Amendment, the display
+text, the Great Seal's three replaced inscriptions, the BLM slogans, the
+decoded rune 4, the whitepaper strip, and so on), extracted under every
+combination of unit (word / character / initial), 0- and 1-based indexing, and
+both directions. **58 attempts.** Each scored by how many extracted tokens are
+BIP-39 words, against a null of random indices drawn from the same passage.
+
+```console
+$ ./solve.py extract
+0 of 58 attempts extracted all-BIP-39 tokens
+```
+
+Best result was 2 of 4 against a null of 1 of 4 — and with 58 attempts, the
+best one beating the null is exactly what chance produces. A seed phrase is
+*entirely* BIP-39, so any correct convention should give 4 of 4. None did.
+
+The decisive point needs no statistics. The Amendment is the one passage
+carrying **both** a marked number and a marked word. If the underlined `1`
+indexed that text, `subject` would be word 1. It is **word 29 of 32**.
+
+### Numbers as wordlist indices — no signal
+
+`WORDS[1,3,13,21]` gives `abandon able account action` (1-based) or
+`ability about accuse actor` (0-based) — the head of the alphabetical list,
+not a phrase. Nothing to test further.
+
+### Numbers as a derivation path — refuted
+
+The most promising alternative: if 1/3/13/21 are path components, the seed
+could be simple and the *path* is the secret. Tested exhaustively:
+
+* **900 candidate seeds** — the five marked words (`subject tower moon food
+  real`) in every ordering of length 3, 4 and 5, each as a BIP-39 seed, a
+  BIP-39 seed with the `breathe` passphrase, and an Electrum seed;
+* **632 candidate paths** — every ordering of 1/3/13/21, every
+  hardened/soft combination, and every prefix;
+* both compressed and uncompressed public keys.
+
+**568,800 derivations, zero matches.**
+
+### Source-text indexing — refuted
+
+The last reading standing: the numbers select from a text the artwork
+*references* rather than one it renders. Bounded deliberately — only sources
+the artwork quotes or references verbatim, chosen and written down before the
+run, because with enough source texts something always fits.
+
+| Source | Why it qualifies |
+|---|---|
+| 13th Amendment, Section 1 and full | printed verbatim on the plinth |
+| Bitcoin whitepaper abstract | whitepaper prose is rendered twice in the artwork |
+| Whitepaper §2 (Transactions) | the text the `BRAVE NEW WORLD` calligram is built from |
+| The Great Seal's three Latin inscriptions | all three replaced by the artist |
+
+Six pre-registered conventions × 5 sources = **25 attempts. Zero produced a
+complete BIP-39 set.** Best was 2 of 4, against nulls of 0.24–0.30 — the noise
+floor.
+
+### Date and numbered-source references — refuted
+
+The two readings people reach for once text indexing is gone: each number
+**references a date** (1/3 for the genesis block, 13 for the Amendment), or
+**references a numbered source** (Amendment 13, whitepaper §3, BIP-21), with
+the reference then naming a word.
+
+**These need a different test, and the reason matters.** Every earlier sweep
+scored a hypothesis by "are all four extracted tokens BIP-39 words?" That works
+when tokens are pulled from English prose, where landing on a wordlist entry is
+informative. It is *vacuous* for any scheme that resolves a number to a
+wordlist index: such a scheme returns a BIP-39 word for every input, always. A
+forward sweep of "what word does 13 give?" therefore passes everything and
+proves nothing, however good the word looks.
+
+**The test that discriminates runs backwards, off the anchors.** The artwork
+pairs three numbers with three words. The position model reads that as "this
+word sits at that position"; the reference model reads the same evidence as
+"this number names that word." So any reference scheme `f` is pinned by three
+simultaneous constraints:
+
+    f(1) = subject      f(3) = tower      f(13) = moon
+
+| Family | Schemes tested | Fitting all three anchors |
+|---|---|---|
+| Affine — `f(n) = WORDS[(a·n + b) mod 2048]` | 2,048 (**complete**, not sampled) | **0** |
+| Date — number as day-of-month, or as year offset | 1,164,504 | **0** |
+| Combined — all four numbers as one date | 1,056 | **0** |
+
+The affine sweep is complete over its family: fixing `a` and the `f(1)` anchor
+determines `b`. It subsumes every linear number-to-index reading in one pass.
+
+**The near-miss is worth writing down.** Exactly two affine schemes fit anchors
+1 and 3. Both send 13 to `coin` — thematically perfect for a Bitcoin puzzle,
+and contradicted by the artwork, which puts `moon` there. Anyone re-deriving
+this will hit the same seductive wrong answer.
+
+**Numbered sources collapse to a vocabulary question.** A source-reference
+scheme must select its word *from the referenced text*, so a word absent from
+that text is unreachable under any selection rule:
+
+| Source | Verdict |
+|---|---|
+| All 27 US Amendments (archives.gov) | `tower` and `moon` occur in **none** of them. `subject` does occur — in Amendments 5, 13, 14 and 21, **never the 1st**. So `f(1) = subject` fails too. |
+| Whitepaper sections | 12 sections; 13 and 21 out of range |
+| BIP-1 / 3 / 13 / 21 | **BIP-3 was never published**, so `f(3)` has no text; BIP-13 and BIP-21 contain none of the anchor words |
+| Great Seal inscriptions | three of them; 13 and 21 out of range |
+| "the n-th datable reference in the artwork" | eight exist; 13 and 21 overrun them |
+
+**A fit found by sweeping would not have been evidence.** Fitting on one anchor
+and checking two leaves a chance pass rate of 1/2048² per scheme, so the date
+sweep *expects* 0.28 accidental fits. Zero is the informative outcome, and only
+because the schemes were fixed before running. The test suite carries positive
+controls — a planted affine scheme and a planted date scheme, both recovered —
+so the refutations are not an artefact of machinery that can never pass.
+
+Reproduce with `./solve.py references`.
+
+## The responsible stopping point: underdetermined
+
+Across **83 pre-registered attempts** — 58 over text rendered in the artwork,
+25 over the sources it quotes — under every reasonable indexing convention,
+**not one produced a complete BIP-39 set.**
+
+That is the discriminating test, and it is worth being precise about why. A
+seed phrase has no non-BIP-39 members, so a *correct* convention yields 4 of 4
+by construction. It does not merely score well against a null; it is perfect.
+None was. So either the convention lies outside a fairly exhaustive tested
+set, or the numbers do not index text at all.
+
+Combined with the capacity bound, the honest classification is that this
+puzzle is **underdetermined by its artwork**: what can be recovered does not
+determine a phrase.
+
+**What is established, and is not in doubt:**
+
+* three clock hands encode 3, 13 and 21 by the midpoint rule — about 1 in
+  2,500 by chance, and captioned by rune 2's "sum of two numbers" drawn inside
+  the dial;
+* the plinth pairs an underlined `subject` with an underlined `1`;
+* five words are deliberately marked: `moon`, `tower`, `food`, `subject`, `real`.
+
+**What is closed:** ray-matching as a way to name words; text indexing;
+wordlist indices; derivation paths; source-text indexing; date references
+and numbered-source references; steganography; brainwallet to six words;
+`BEST_12` as an Electrum seed.
+
+**What would change the picture,** in descending order of value:
+
+1. ~~**A higher-resolution original.**~~ **Closed — no better file exists.**
+   Three independent sources serve byte-identical content
+   (`d0b04378…`, 2,383,395 bytes, 1600×1200): privatekeys.pw,
+   **`i.redd.it/n1x7g8ceaur51.png`**, and the `HomelessPhD/BLM_0.2BTC`
+   repository. The middle one settles it — Reddit serves the *original upload*
+   from i.redd.it and puts downscaled variants on preview.redd.it, so
+   byte-identical content there means 1600×1200 is what was published. The
+   BitcoinTalk thread links only to that repository, which holds the same
+   bytes again.
+
+   And the file is **not** a downscale of something larger: edge runs average
+   1.61 px with **54.5% single-pixel edges** (downscaling smears every edge
+   across two or more), and spectral energy persists to Nyquist with a
+   tail/mid ratio of **0.526** (a downscale collapses well below ~0.3). The
+   published raster is at or near native rendering resolution.
+
+   This is worse news than it sounds. Runes 1 and 2, the clock bearings and
+   the claimed neck text are limited by **the artwork as published**, not by a
+   poor scan — so no amount of hunting for a better copy will unblock them.
+   Only the artist's own source file could.
+2. **A fourth number-bearing mechanism.** The capacity bound says one *must*
+   exist if the position reading is right. Three attempts to find one have
+   failed.
+3. **The author's own account** of the construction.
+
+**What will not help: more CPU.** Every remaining search is unbounded because
+the word set is unknown, and a negative from guessed fillers is not a result.
+The engine has never been the constraint — it exhausted 479M orderings of a
+12-word pool in 33 minutes.
+
+### Where that leaves the numbers
+
+Three readings closed, and the position reading capacity-bounded at four. The
+numbers are real — the clock measurement is ~1 in 2,500 by chance — but what
+they index is now genuinely open. That is a more honest place to stand than a
+24-position table with twenty guesses in it.
+
+## 5. Negative results
 
 Recorded so nobody re-treads them. Each of these looked promising and is now
 closed.
@@ -631,7 +824,7 @@ Both compressed and uncompressed public keys were tested for every candidate.
 **A brainwallet of up to six words from this vocabulary is ruled out.** That is
 a real closure, not a sample: the space was covered completely.
 
-## 5. Electrum seeds: a whole search space nobody had checked
+## 6. Electrum seeds: a whole search space nobody had checked
 
 Everything above assumes BIP-39. **Electrum does not use BIP-39**, and the
 differences are not cosmetic:
@@ -680,7 +873,7 @@ scans 26 addresses per seed to Electrum's 10.
 That changes the strategy: word *sets* can be swept, not just sampled. Where BIP-39 lets four cores exhaust roughly one set per working day,
 Electrum lets them do a dozen.
 
-## 6. Why the original script could not have worked
+## 7. Why the original script could not have worked
 
 The script this repository shipped with did:
 
@@ -738,7 +931,7 @@ words is a tractable search; sixteen is not.
 
 ---
 
-## 7. What this toolkit does instead
+## 8. What this toolkit does instead
 
 | Problem | Fix | Measured effect |
 |---|---|---|
@@ -765,7 +958,7 @@ keeps it off 15 of every 16 candidates.
 
 ---
 
-## 8. Recommended search order
+## 9. Recommended search order
 
 Ranked by probability-per-CPU-hour.
 
@@ -803,7 +996,7 @@ pushes the run past a year.
 
 ---
 
-## 9. Coverage so far
+## 10. Coverage so far
 
 Two runs, both against the target's HASH160, both checkpointed and resumable.
 
@@ -867,7 +1060,7 @@ each chain were scanned.
 Runs 2 and 3 sample one derivation path each; runs 4 and 5 close their spaces
 completely. None has found the key.
 
-## 10. The passphrase hypothesis
+## 11. The passphrase hypothesis
 
 BIP-39 and Electrum both support an optional **passphrase** — the "13th word"
 — which is mixed into the PBKDF2 salt. It can be any string, so it is not
@@ -909,7 +1102,7 @@ passphrase, and against the same target with the correct passphrase removed
 from the list — the second case guards against the passphrase being silently
 ignored, which would otherwise produce a false negative across an entire run.
 
-## 11. Open questions
+## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
   accepts 15/18/21/24, and brainwallet mode accepts any length. A 24-word
@@ -946,7 +1139,7 @@ ignored, which would otherwise produce a false negative across an entire run.
 
 ---
 
-## 12. Verification
+## 13. Verification
 
 Every cryptographic primitive is pinned to a published test vector, and the
 search engine is tested against planted targets it must find:
