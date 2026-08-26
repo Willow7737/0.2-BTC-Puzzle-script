@@ -1759,3 +1759,44 @@ class TestChronology(unittest.TestCase):
         self.assertEqual(got["block_height"], self.c.FUNDING["block_height"])
         self.assertEqual(got["block_time_utc"], self.c.FUNDING["block_time_utc"])
         self.assertEqual(got["spent_txo_sum"], 0, "the prize must be unspent")
+
+
+class TestWhitepaperTypos(unittest.TestCase):
+    """A known source text plus deliberate errors is a classic carrier.
+    Here it is noise, and the control is what shows it."""
+
+    def setUp(self):
+        from puzzle import extraction
+        self.rec = extraction.WHITEPAPER_TYPOS
+
+    def test_typos_hit_bip39_below_the_control_rate(self):
+        r = self.rec
+        typo_rate = r["typo_words_in_bip39"] / r["typo_words_total"]
+        ctrl_rate = r["control_words_in_bip39"] / r["control_words_total"]
+        self.assertLess(typo_rate, ctrl_rate,
+                        "if typos beat the control this verdict must be revisited")
+
+    def test_the_control_words_really_are_bip39(self):
+        """Recomputed, so the control cannot rot."""
+        from puzzle import wordlist
+        ctrl = ["problem", "solution", "transaction", "history", "earliest",
+                "purposes", "company", "trusted", "system", "single"]
+        hits = sum(1 for w in ctrl if wordlist.is_valid(w))
+        self.assertEqual(hits, self.rec["control_words_in_bip39"])
+        typo = [d["source"] for d in self.rec["deviations"]]
+        self.assertEqual(sum(1 for w in typo if wordlist.is_valid(w)),
+                         self.rec["typo_words_in_bip39"])
+
+    def test_none_of_the_artwork_spellings_is_correct_english(self):
+        """Each deviation must actually differ from the source."""
+        for d in self.rec["deviations"]:
+            self.assertNotEqual(d["artwork"], d["source"])
+
+    def test_verdict_is_noise(self):
+        self.assertTrue(self.rec["verdict"].startswith("noise"))
+
+    def test_the_earlier_calligram_claim_is_corrected(self):
+        from puzzle import extraction
+        c = extraction.CALLIGRAM_CLAIM_CORRECTED
+        self.assertIn("no word emphasised or altered", c["was"])
+        self.assertIn("six words altered", c["now"])

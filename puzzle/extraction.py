@@ -335,3 +335,69 @@ UNDERDETERMINED = {
     "verdict": "underdetermined - insufficient recoverable structure, "
                "not insufficient compute",
 }
+
+
+#: **The whitepaper typos are hand-lettering noise, not a cipher.**
+#:
+#: The artwork hand-copies ~1180 characters of the whitepaper's section 2 into
+#: the ``BRAVE NEW WORLD`` calligram and the bottom strip. Six words deviate
+#: from the source, and the deviations are tempting: a known source text plus
+#: deliberate errors is a classic carrier, and the whitepaper (2008) sits
+#: comfortably inside the pre-2020-05-10 window the chronology requires.
+#:
+#: They do not survive testing. Four independent reasons:
+#:
+#: 1. **Every one is a canonical copying slip.** A dropped letter twice, a
+#:    doubled letter, two transpositions, and a ``b``/``d`` confusion - which
+#:    is the single most common error in hand lettering.
+#: 2. **The rate is uniform, not sparse.** The ~240 characters the community
+#:    transcribed in full contain two typos: 0.8%. Across 1180 characters that
+#:    projects to about nine, and six were found. A deliberate payload would
+#:    be sparse and placed; this is a flat error rate.
+#: 3. **The deviation letters spell nothing.** In the order the passage
+#:    presents them, deleted letters give ``cnncet`` and inserted letters give
+#:    ``ncenr``.
+#: 4. **The marked words are not BIP-39 words**, and a control settles it:
+#:    2 of the 6 typo-bearing words are in the wordlist (``double``, ``sign``),
+#:    against **5 of 10** ordinary words drawn from the same passage
+#:    (``problem``, ``solution``, ``history``, ``company``, ``system``). The
+#:    typos point at BIP-39 words *less* often than chance.
+#:
+#: The control is the part that matters. Without it, "two of the six typo
+#: words are BIP-39" reads as a hit.
+WHITEPAPER_TYPOS = {
+    "source": "Bitcoin whitepaper section 2, ~1180 characters",
+    "deviations": (
+        {"artwork": "doudle", "source": "double", "kind": "b/d confusion"},
+        {"artwork": "introdue", "source": "introduce", "kind": "dropped letter"},
+        {"artwork": "sing", "source": "sign", "kind": "transposition"},
+        {"artwork": "abcense", "source": "absence", "kind": "transposition"},
+        {"artwork": "arrrived", "source": "arrived", "kind": "doubled letter"},
+        {"artwork": "participans", "source": "participants",
+         "kind": "dropped letter"},
+    ),
+    "deleted_letters_in_order": "cnncet",
+    "inserted_letters_in_order": "ncenr",
+    "typo_words_in_bip39": 2,
+    "typo_words_total": 6,
+    "control_words_in_bip39": 5,
+    "control_words_total": 10,
+    "observed_rate": 0.008,
+    "verdict": "noise - all six are canonical copying slips occurring at a "
+               "flat rate, the deviation letters spell nothing, and the "
+               "marked words hit BIP-39 below the control rate",
+}
+
+#: A correction. Section 10 of ANALYSIS.md described the calligram as
+#: "uniform whitepaper prose, no word emphasised or altered". The first half
+#: stands - nothing is emphasised - but the second half is **wrong**: six
+#: words are altered. They were missed because that sweep looked for
+#: *emphasis* (underlining, weight, colour) rather than for *spelling*.
+#: The conclusion is unchanged, and now rests on a test instead of an
+#: oversight.
+CALLIGRAM_CLAIM_CORRECTED = {
+    "was": "uniform whitepaper prose, no word emphasised or altered",
+    "now": "no word emphasised; six words altered, and the alterations are "
+           "hand-lettering noise (see WHITEPAPER_TYPOS)",
+    "why_missed": "the sweep looked for emphasis, not for spelling",
+}

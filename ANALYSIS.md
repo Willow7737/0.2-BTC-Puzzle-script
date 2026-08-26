@@ -1197,7 +1197,7 @@ closed.
 | Rune 4's "number X" | a placeholder asterisk, not a digit |
 | `breathe` on the Statue's neck | **no lettering at 16x** — only robe drapery. It is plain visible text on Floyd's hoodie and nothing more |
 | Flag stripes | clean; no text along any stripe |
-| Whitepaper calligram | uniform whitepaper prose, no word emphasised or altered |
+| Whitepaper calligram | no word emphasised — but **six words are altered**; see §11c, where the alterations test out as hand-lettering noise |
 | Fine-detail sweep of unexamined regions | no further text cache — the marked-word list is likely complete for this scan |
 | **Brainwallet, phrases of 3–6 words** | **exhausted, no match** (see below) |
 | Blockchain history | funded 2020-05-10 08:01 UTC, 0.20000000 BTC, from four P2SH inputs; never spent; no OP_RETURN. Later deposits are third-party dust |
@@ -1626,6 +1626,56 @@ Huxley's *Brave New World* (1932) supplies the acrostic spelled by the
 whitepaper calligram's first letters; the Latin *Esse quam niger es, sic dixit
 caccabus ollae* is the pot calling the kettle black; and `НА ЧЁРНЫЙ ДЕНЬ` is a
 fixed Russian idiom for "for a rainy day".
+
+## 11c. The whitepaper typos: a tempting carrier that isn't one
+
+The artwork hand-copies about **1,180 characters of the whitepaper's section 2**
+into the `BRAVE NEW WORLD` calligram and the bottom strip, and six words deviate
+from the source. That is an attractive lead: a known source text plus deliberate
+errors is a classic carrier, and the whitepaper (2008) sits comfortably inside
+the pre-2020-05-10 window §11b requires.
+
+`INTRODUE` is real — verified against the image, which reads
+`A COMMON SOLUTION IS TO INTRODUE CENT/RAL AU/THORITY, OR MINT, THAT CHECKS
+EVERY TRAN…` where the whitepaper has *introduce*. None of the six spellings
+occurs anywhere in the real whitepaper.
+
+| Artwork | Source | Kind of error |
+|---|---|---|
+| `doudle` | double | `b`/`d` confusion |
+| `introdue` | introduce | dropped letter |
+| `sing` | sign | transposition |
+| `abcense` | absence | transposition |
+| `arrrived` | arrived | doubled letter |
+| `participans` | participants | dropped letter |
+
+**They are noise.** Four independent reasons:
+
+1. **Every one is a canonical copying slip** — two dropped letters, one doubled
+   letter, two transpositions, and a `b`/`d` confusion, which is the single most
+   common error in hand lettering. Not one is the kind of substitution a cipher
+   would need.
+2. **The rate is flat, not sparse.** The ~240 characters the community
+   transcribed in full contain two typos — 0.8%. Across 1,180 characters that
+   projects to about nine, and six were found. A deliberate payload would be
+   sparse and placed; this is a uniform error rate.
+3. **The deviation letters spell nothing.** In the order the passage presents
+   them, deleted letters give `cnncet` and inserted letters give `ncenr`.
+4. **The marked words miss BIP-39 below chance.** Two of the six typo-bearing
+   words are in the wordlist (`double`, `sign`) — but **five of ten** ordinary
+   words from the same passage are (`problem`, `solution`, `history`, `company`,
+   `system`). The typos point at BIP-39 words *less* often than the control.
+
+The control is the load-bearing part. Without it, "two of six typo words are
+BIP-39" reads as a hit.
+
+### A correction
+
+Section 10 recorded the calligram as "uniform whitepaper prose, no word
+emphasised or altered". The first half stands; **the second half was wrong** —
+six words are altered. They were missed because that sweep looked for
+*emphasis* — underlining, weight, colour — and not for *spelling*. The verdict
+is unchanged, but it now rests on a test rather than on an oversight.
 
 ## 12. Open questions
 
