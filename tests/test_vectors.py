@@ -890,6 +890,63 @@ class TestFourthMechanismSearch(unittest.TestCase):
         self.assertEqual({h["position"] for h in got["hands"]}, {3, 13, 21})
 
 
+class TestRune2Verification(unittest.TestCase):
+    """Rune 2 captions the clock. Read it with the alphabet from rune 4."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def setUp(self):
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+
+    def test_word_structure_matches_the_crib(self):
+        from puzzle.runes import verify_rune2
+        r = verify_rune2(self.IMAGE)
+        self.assertEqual(r["word_lengths"], r["crib_word_lengths"])
+
+    def test_crib_letter_wins_at_most_known_positions(self):
+        """The decisive check, recomputed from the artwork."""
+        from puzzle.runes import verify_rune2
+        r = verify_rune2(self.IMAGE)
+        self.assertGreaterEqual(r["top_matches"], 8)
+        self.assertEqual(r["known_positions"], 10)
+        self.assertEqual(r["alphabet_size"], 21)
+
+    def test_clean_positions_sit_at_the_same_letter_baseline(self):
+        from puzzle.runes import verify_rune2
+        r = verify_rune2(self.IMAGE)
+        self.assertLess(r["mean_distance_clean_positions"],
+                        r["same_letter_baseline"] * 1.1)
+        self.assertLess(r["mean_distance_clean_positions"],
+                        r["different_letter_baseline"] * 0.5)
+
+    def test_the_two_misses_are_declared_unreliable(self):
+        """Positions 5 and 6 are a segmentation artefact and must be flagged."""
+        from puzzle.runes import verify_rune2
+        r = verify_rune2(self.IMAGE)
+        misses = [e for e in r["letters"]
+                  if "crib_distance" in e and e["nearest"] != e["crib"]]
+        for e in misses:
+            self.assertFalse(e["reliable"],
+                             f"position {e['pos']} missed but is not flagged")
+
+    def test_significance_recomputed_not_trusted(self):
+        from math import comb
+        from puzzle.runes import verify_rune2, RUNE2_VERIFICATION
+        r = verify_rune2(self.IMAGE)
+        n, k, a = r["known_positions"], r["top_matches"], r["alphabet_size"]
+        p = sum(comb(n, j) * (1 / a) ** j * (1 - 1 / a) ** (n - j)
+                for j in range(k, n + 1))
+        self.assertLess(p, 1e-8)
+        self.assertAlmostEqual(p, RUNE2_VERIFICATION["p_value"], places=11)
+
+    def test_runes_supply_no_new_mechanism(self):
+        from puzzle import positions
+        from puzzle.runes import RUNES_AS_MECHANISM_SOURCE
+        self.assertEqual(RUNES_AS_MECHANISM_SOURCE["new_mechanisms_found"], 0)
+        self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
+
+
 class TestDscriptHypothesis(unittest.TestCase):
     """Are the rune strips Dscript? If so its base-100 numerals would read
     out rune 4's trailing 'number X'."""

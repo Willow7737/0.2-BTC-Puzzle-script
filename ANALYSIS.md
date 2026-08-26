@@ -782,6 +782,78 @@ the word set is unknown, and a negative from guessed fillers is not a result.
 The engine has never been the constraint — it exhausted 479M orderings of a
 12-word pool in 33 minutes.
 
+### Reading the runes for a fourth mechanism
+
+Rune 2 sits *inside* the clock dial, and its reading — "sum of two numbers" —
+is what licenses the midpoint rule and therefore the three confirmed
+positions. This repository had taken that reading on trust from the community
+analysis. If the runes caption mechanisms, then a fourth mechanism should have
+a caption too, so all four strips were read.
+
+#### Rune 2 verified — and the check is strong
+
+The alphabet used to read it was recovered from **rune 4's** crib and had
+never seen rune 2.
+
+**Structure.** The column-projection runs separate into **5 / 4 / 5** glyphs
+around two narrow separators. `СУММА`(5) `ДВУХ`(4) `ЧИСЕЛ`(5) is 5, 4, 5.
+
+**Letters.** At **8 of the 10** positions whose crib letter also occurs in
+rune 4, that letter is the *nearest* of 21 candidates:
+
+| Word | Positions | Distances |
+|---|---|---|
+| `СУММА` | С, М, М, А | 28, 41, 26, 14 |
+| `ЧИСЕЛ` | Ч, И, С, Е | 24, 21, 25, 28 |
+
+Those eight average **25.9**, sitting on the same-letter baseline of **27.2**
+— against a different-letter baseline of 66.4. Against a null of random
+assignment, 8 of 10 top-matches in a 21-letter alphabet is **p ≈ 1.1 × 10⁻⁹**.
+
+The two misses are positions 5 and 6, both inside `ДВУХ` — the one word whose
+glyphs cannot be separated at any threshold. The run stays merged at 150–185
+and shatters into eight fragments at 215. Dividing it in three keeps the crib
+positionally aligned but cannot land on true boundaries, so those positions
+are a **segmentation artefact, not a failed decode**. They are reported and
+excluded rather than dropped, and a test asserts that every miss is flagged
+unreliable.
+
+**Why this matters beyond rune 2.** The midpoint rule rests on this caption
+saying "sum of two numbers". That is no longer an assumption carried from
+elsewhere — it is verified against pixels with an independent key. The three
+confirmed positions stand on firmer ground than they did.
+
+#### Rune 3 does not decode in this alphabet
+
+Mirrored, rune 3 resolves into seven legible glyphs: a triad of dots joined
+into a `<`, an oval beneath a smaller oval, a hooked stroke with a dot, an
+outline `▽`, an `N`, an `E`, and two stacked triangles.
+
+Matched against the rune-4 alphabet they average **44.8** — between the
+same-letter band (27.2) and the different-letter band (66.4) — with incoherent
+assignments and no word emerging. Unmirrored is worse, 48.6. Its inventory
+contains shapes rune 4 never uses, and it is drawn in thin precise outlines
+where rune 4 is thick and hand-drawn.
+
+So rune 3 is not a mechanism caption in the script the other runes use. It is
+either a different sign system or not text, and is recorded as open rather
+than forced into a reading.
+
+#### The runes as a source of mechanisms
+
+| Strip | Content | Mechanism? |
+|---|---|---|
+| Rune 1 | "I hope many bitcoins will be sent here" | no — a wish |
+| Rune 2 | **"sum of two numbers"**, inside the dial | **yes — the clock, already counted** |
+| Rune 3 | does not decode in this alphabet | open |
+| Rune 4 | the framing statement, ending `НОМЕР` + one glyph | no — and that glyph resolves to no letter and is not a Dscript numeral |
+
+Four strips, exactly one mechanism caption, and it captions the mechanism
+already in hand. **No fourth mechanism in the runes.** The capacity bound is
+unchanged at four.
+
+Reproduce with `runes.verify_rune2(image)`.
+
 ### Is the rune script Dscript? — refuted
 
 Dscript ("Dimensional Script", dscript.org) is a constructed 2D writing system
