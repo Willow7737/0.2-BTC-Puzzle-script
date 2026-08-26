@@ -428,7 +428,13 @@ Verified against Electrum's own test vectors.
 Negative results, so nobody re-treads them:
 
 * **Steganography** — no metadata, uniform alpha, clean LSB planes.
-* **Rune 4's "number X"** — a placeholder asterisk, not a digit.
+* **Rune 4's "number X"** — a placeholder asterisk, not a digit. It cannot be
+  resolved as a letter either: it encodes one that appears nowhere else in the
+  strip, so the crib supplies no reference for it.
+* **Rune 3's alphabet** — *identified*: it reads **`TUESDAY`** in the Gravity
+  Falls cipher. Six earlier "exclusions" of other alphabets are **withdrawn** —
+  they were produced by a wrong mirror transform and a metric with no
+  cross-source power (it ranks the true letter at chance, 13.7 of 26).
 * **`breathe` on the Statue's neck** — no lettering at 16×; it is plain
   visible text on Floyd's hoodie and nothing more.
 * **Brainwallet phrases of 3–6 words** — *exhausted*, no match, over a
@@ -451,7 +457,9 @@ worth starting — so you spend CPU only where it can pay off.
 
 The best available lead is not more compute. It is decoding what the runes
 mean: three of the four refer to numbers or ordinals, and if they encode word
-*positions*, the search collapses from intractable to trivial. See
+*positions*, the search collapses from intractable to trivial. All four are
+now read — rune 3 was the last, and it says `TUESDAY` — but none of them names
+a rule beyond rune 2's "sum of two numbers". See
 [ANALYSIS.md §12](ANALYSIS.md#12-open-questions).
 
 ## Safety

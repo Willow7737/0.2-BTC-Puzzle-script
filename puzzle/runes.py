@@ -547,6 +547,9 @@ RUNE3_NOT_THIS_ALPHABET = {
     "style": "thin outline strokes; rune 4 is thick and solid",
     "verdict": "does not decode in the rune-4 alphabet; not a mechanism "
                "caption in that script - open",
+    "SUPERSEDED": "rune 3 reads TUESDAY in the Gravity Falls cipher; see "
+                  "RUNE3_DECODE. This record's conclusion was right for the "
+                  "wrong reason - see RUNE3_NOT_THE_ARTWORK_SCRIPT.",
 }
 
 #: The runes, taken together, as a source of number-bearing mechanisms.
@@ -567,6 +570,11 @@ RUNES_AS_MECHANISM_SOURCE = {
     "which": "rune 2, captioning the clock",
     "new_mechanisms_found": 0,
     "capacity_bound_unchanged": True,
+    "rune3_now_decoded": "TUESDAY, in the Gravity Falls cipher - see "
+                         "RUNE3_DECODE. It names no mechanism and is not a "
+                         "BIP-39 word, so the capacity bound is untouched; "
+                         "what it establishes is that a *second* cipher is "
+                         "in play in this artwork.",
 }
 
 
@@ -731,8 +739,10 @@ RUNE3_ALPHABET_SEARCH = {
                    "match is 14; 2 of 7 is a thin result",
     },
     "also_tested": ("aurebesh", "sga"),   # see AUREBESH_AND_SGA
-    "verdict": "unidentified - six candidates excluded with controls, no "
-               "positive identification",
+    "verdict": "WITHDRAWN - rune 3 reads TUESDAY in the Gravity Falls "
+               "cipher (RUNE3_DECODE). Every exclusion here was produced by "
+               "a wrong mirror transform and a metric with no cross-source "
+               "power; see RUNE3_SEARCH_WITHDRAWN.",
 }
 
 
@@ -798,4 +808,238 @@ AUREBESH_AND_SGA = {
                         "contain no circle; rune 3 opens with three joined "
                         "circles and a pair of stacked ovals",
     "noise_band": "three unrelated strips all score 44-49 against both",
+    "SUPERSEDED": "the numeric verdicts are withdrawn - the metric that "
+                  "produced them has no cross-source power "
+                  "(RUNE3_SEARCH_WITHDRAWN). The structural check survives "
+                  "on its own terms, and rune 3 is in fact the Gravity Falls "
+                  "alphabet (RUNE3_DECODE), which does contain circles.",
 }
+
+
+# ---------------------------------------------------------------------------
+# Rune 3 decoded: the Gravity Falls cipher
+# ---------------------------------------------------------------------------
+
+#: Rune 3 reads **TUESDAY**, in the *Gravity Falls* "strange symbols"
+#: substitution alphabet, left to right, as drawn.
+#:
+#: The artwork points at this cipher twice over: the Great Seal's pyramid is
+#: drawn as Bill Cipher, the show's triangular antagonist, and rune 3 is the
+#: one strip that floats free of any object, beside a question mark. It is the
+#: only strip in English and the only one *not* in the artwork's own Cyrillic
+#: runic script.
+#:
+#: The mapping, glyph by glyph:
+#:
+#: ======  =========================================  ========
+#: letter  glyph                                      position
+#: ======  =========================================  ========
+#: T       a small triangle above a larger triangle          1
+#: U       ``Ǝ`` - three bars                                2
+#: E       ``И`` - a zigzag                                  3
+#: S       ``▽`` - an outline down-triangle                  4
+#: D       a hooked stroke with dots                         5
+#: A       a small oval above a larger oval, with a tail     6
+#: Y       three circles joined by two lines                 7
+#: ======  =========================================  ========
+RUNE3_DECODE = {
+    "reads": "TUESDAY",
+    "cipher": "Gravity Falls 'strange symbols' substitution alphabet",
+    "orientation": "left to right, as drawn - NOT mirrored",
+    "language": "English",
+    "glyphs": 7,
+    "source": "the community's own notes (HomelessPhD/BLM_0.2BTC, section 11, "
+              "'Runes (above Trump head)'), verified here against the chart",
+    "artwork_pointer": "the Great Seal's pyramid is drawn as Bill Cipher",
+    "is_bip39": False,
+}
+
+#: **Two errors made the earlier search fail, and both are now demonstrated.**
+#:
+#: 1. *The mirror.* Rune 3 was recorded as "drawn mirrored" and every
+#:    comparison was run with ``transform=ImageOps.mirror``. It is not
+#:    mirrored. The chart's ``E`` *is* a ``И`` and its ``U`` *is* a ``Ǝ``;
+#:    mirroring the strip turned those into a Latin-looking ``N`` and ``E``
+#:    and reversed the reading order. The "weak positive" of glyphs 5 and 6
+#:    matching Latin ``N`` at 24 and ``E`` at 21 was this artefact - real
+#:    signal, misread.
+#:
+#: 2. *The metric.* The 12x12 binary fingerprint has **no cross-source
+#:    power**. Against known ground truth it ranks the correct letter at a
+#:    mean of 13.7 out of 26; chance is 13.5. It recovers ``OVYRLVG``.
+#:
+#: The fingerprint works *within* a source - rune 2 against rune 4's own
+#: alphabet is 8/14 under 32, p ~ 1e-09 - because line weight, rendering and
+#: aliasing are then shared. Comparing an artwork glyph to a screenshot of a
+#: television chart shares none of that.
+#:
+#: **Consequence: the six earlier exclusions do not stand.** Dscript, Latin,
+#: Cyrillic, Aurebesh and the Standard Galactic Alphabet were each "excluded"
+#: by a detector that cannot see the answer when it is placed in front of it.
+#: Those verdicts are withdrawn, not reversed - nothing says rune 3 *is* any
+#: of them, only that this instrument never had the power to say otherwise.
+RUNE3_SEARCH_WITHDRAWN = {
+    "withdrawn": ("artwork_rune_alphabet", "dscript", "latin", "cyrillic",
+                  "aurebesh", "sga"),
+    "reason": "tested with a wrong mirror transform, by a metric with no "
+              "cross-source discriminating power",
+    "ground_truth_rank_of_correct_letter": (13, 7, 7, 6, 26, 26, 11),
+    "ground_truth_mean_rank": 13.7,
+    "chance_mean_rank": 13.5,
+    "reading_the_metric_returns": "OVYRLVG",
+    "verdict": "withdrawn - the instrument fails its own positive control",
+}
+
+#: The one comparison that remains sound is same-source, and it got *stronger*
+#: on re-examination. Rune 3 against the artwork's own recovered alphabet
+#: scores 0 of 7 glyphs under 32 (minimum 35) where rune 2 - verified same
+#: script - puts 8 of 14 under 32 (minimum 14).
+#:
+#: That reference covers only the 21 Cyrillic letters rune 4's text uses, so
+#: 12 letters have no entry and *cannot* match. For the coverage hole to
+#: explain the null, all seven of rune 3's letters would have to come from
+#: those 12 - about 17% of Russian text by letter frequency, so ~5e-06.
+#: The exclusion stands, and it never mattered: rune 3 is not Cyrillic at all.
+RUNE3_NOT_THE_ARTWORK_SCRIPT = {
+    "rune3_glyphs_under_32": 0,
+    "rune3_min_distance": 35,
+    "rune2_control_under_32": 8,
+    "rune2_control_min_distance": 14,
+    "reference_letter_coverage": "21 of 33 Cyrillic letters",
+    "coverage_hole_rescue_probability": 5e-06,
+    "verdict": "sound - same-source comparison, and confirmed by the decode",
+}
+
+#: Rune 4's trailing glyph, after ``НОМЕР``.
+#:
+#: There are two components past the crib. Index 49 spans the full height of
+#: the strip at its extreme right edge: it is the strip's border, not a glyph.
+#: Index 48 is the real trailing symbol.
+#:
+#: It resolves to no letter because the alphabet recovered from rune 4 covers
+#: only the letters rune 4 itself uses - and this one appears nowhere else in
+#: the strip, so it has no reference. Shape carries no information here: the
+#: script is a *substitution*, so a glyph need not resemble the letter it
+#: stands for, and the mirror-symmetry test accordingly separates nothing
+#: (0.63, z = -0.89 against the known letters' 0.749 +/- 0.132).
+RUNE4_TAIL = {
+    "glyphs_past_crib": (48, 49),
+    "index_49": "the strip's right border, full strip height - not a glyph",
+    "index_48": "the trailing symbol proper",
+    "why_unresolved": "encodes a letter that appears nowhere else in rune 4, "
+                      "so the crib supplies no reference for it",
+    "symmetry": 0.631,
+    "symmetry_z_vs_known_letters": -0.89,
+    "looks_like": "an asterisk or star - the reading recorded elsewhere in "
+                  "this repo as 'a placeholder asterisk, not a digit'. That "
+                  "remains the best visual reading and is consistent with "
+                  "this record; it is simply not evidence, for the reason "
+                  "below.",
+    "verdict": "unresolvable from internal evidence; shape is uninformative "
+               "because the cipher is a substitution",
+}
+
+
+#: Vendored descriptors for the Gravity Falls alphabet, so the check runs
+#: without the chart present. These are 12x12 binary signatures and hole
+#: counts *derived from* the community's reference chart - measurements, not
+#: a reproduction of the artwork they were taken from.
+GRAVITY_FALLS = _Path(__file__).resolve().parent.parent / "data" / "gravity_falls.npz"
+
+
+def gravity_falls_alphabet(chart_path) -> dict:
+    """Extract the 26 'strange symbols' from the community's reference chart.
+
+    The chart lays the alphabet out on a pyramid in rows of 1, 2, 6, 8 and 9
+    cells. Cell separators are the only near-full-height columns in a row, so
+    they locate the grid without any hand-placed boxes.
+    """
+    from PIL import Image
+
+    a = np.asarray(Image.open(chart_path).convert("L")).astype(float)
+    rows = (("A", (176, 204), [472, 520]),
+            ("BC", (214, 243), [463, 500, 537]),
+            ("DEFGHI", (358, 388), [384, 420, 456, 493, 529, 565, 601]),
+            ("JKLMNOPQ", (395, 423),
+             [353, 389, 425, 462, 498, 534, 570, 607, 643]),
+            ("RSTUVWXYZ", (431, 460),
+             [333, 369, 405, 441, 477, 514, 550, 586, 622, 658]))
+    out = {}
+    for letters, (y0, y1), bounds in rows:
+        for i, ch in enumerate(letters):
+            sub = a[y0:y1, bounds[i] + 3:bounds[i + 1] - 3] < 120
+            ys = np.nonzero(sub.any(axis=1))[0]
+            xs = np.nonzero(sub.any(axis=0))[0]
+            if len(ys) and len(xs):
+                out[ch] = sub[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    return out
+
+
+def rune3_masks(image_path):
+    """Rune 3's seven glyph masks, as drawn - no mirror."""
+    from PIL import Image, ImageChops, ImageFilter, ImageOps
+
+    crop = Image.open(image_path).convert("L").crop(RUNE3_BOX)
+    hp = ImageChops.subtract(crop.filter(ImageFilter.GaussianBlur(5)), crop,
+                             scale=1, offset=0)
+    hp = ImageOps.autocontrast(hp, cutoff=0)
+    up = hp.resize((hp.width * RUNE3_UPSCALE, hp.height * RUNE3_UPSCALE),
+                   Image.LANCZOS)
+    arr = np.asarray(up)
+    out = []
+    for x0, x1 in column_runs(arr, RUNE3_THRESHOLD, 6):
+        sub = arr[:, x0:x1 + 1] > RUNE3_THRESHOLD
+        ys = np.nonzero(sub.any(axis=1))[0]
+        if len(ys):
+            out.append(sub[ys.min():ys.max() + 1])
+    return out
+
+
+def _holes(mask, close: int = 2) -> int:
+    """Number of enclosed holes - a topological feature, robust to weight."""
+    from scipy import ndimage
+
+    m = ndimage.binary_closing(mask, np.ones((close, close)))
+    padded = np.pad(~m, 1, constant_values=True)
+    return ndimage.label(padded)[1] - 1
+
+
+def verify_rune3(image_path, claim: str = "TUESDAY") -> dict:
+    """Check rune 3 against the vendored Gravity Falls descriptors.
+
+    The 12x12 fingerprint is useless across sources, so the check uses hole
+    count instead: a topological feature that survives the difference in line
+    weight between a pale artwork wash and a television screenshot.
+
+    Significance is exact, not sampled. Each position contributes the fraction
+    of the 26 letters sharing its observed hole count; the number of agreeing
+    positions is Poisson-binomial, and the tail is summed directly.
+    """
+    data = np.load(GRAVITY_FALLS, allow_pickle=False)
+    letters = "".join(str(c) for c in data["letters"])
+    holes = {c: int(h) for c, h in zip(letters, data["holes"])}
+
+    observed = [_holes(m) for m in rune3_masks(image_path)]
+    agree = [i for i, ch in enumerate(claim)
+             if i < len(observed) and observed[i] == holes[ch]]
+
+    # exact Poisson-binomial tail
+    probs = [sum(1 for h in holes.values() if h == o) / 26.0 for o in observed]
+    dist = [1.0]
+    for p in probs:
+        nxt = [0.0] * (len(dist) + 1)
+        for k, v in enumerate(dist):
+            nxt[k] += v * (1 - p)
+            nxt[k + 1] += v * p
+        dist = nxt
+    p_value = sum(dist[len(agree):])
+
+    return {
+        "claim": claim,
+        "glyphs": len(observed),
+        "observed_holes": observed,
+        "claim_holes": [holes[c] for c in claim],
+        "agreeing_positions": len(agree),
+        "p_value": p_value,
+        "expected_agreements_by_chance": sum(probs),
+    }

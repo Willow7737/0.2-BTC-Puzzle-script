@@ -1089,12 +1089,18 @@ class TestRune3Alphabet(unittest.TestCase):
         self.assertLess(r["control_min"], 30,
                         "accidental close matches happen; the record must show it")
 
-    def test_record_reports_no_identification(self):
+    def test_record_marks_every_exclusion_withdrawn(self):
+        """These verdicts were produced by an instrument that fails its own
+        positive control. The record must say so, not quietly keep them."""
         rec = self.runes.RUNE3_ALPHABET_SEARCH
-        self.assertTrue(rec["verdict"].startswith("unidentified"))
+        self.assertTrue(rec["verdict"].startswith("WITHDRAWN"))
         self.assertEqual(len(rec["tested"]), 4)
         for name, entry in rec["tested"].items():
             self.assertIn("control", entry, f"{name} recorded without a control")
+        w = self.runes.RUNE3_SEARCH_WITHDRAWN
+        for cand in ("dscript", "latin", "cyrillic", "aurebesh", "sga",
+                     "artwork_rune_alphabet"):
+            self.assertIn(cand, w["withdrawn"])
 
     def test_aurebesh_and_sga_are_refuted_by_their_controls(self):
         """Recomputed from vendored fingerprints, not trusted as constants."""
@@ -1466,3 +1472,92 @@ class TestReferenceReadings(unittest.TestCase):
         self.assertEqual(self.ref.word_at(0), "abandon")
 
 
+
+
+class TestRune3Decoded(unittest.TestCase):
+    """Rune 3 reads TUESDAY in the Gravity Falls 'strange symbols' cipher."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+    CHART = "/home/user/homelessphd/blm_0.2btc/pictures/11_1.png"
+
+    def setUp(self):
+        from puzzle import runes
+        self.runes = runes
+
+    def test_decode_is_recorded(self):
+        d = self.runes.RUNE3_DECODE
+        self.assertEqual(d["reads"], "TUESDAY")
+        self.assertEqual(d["glyphs"], 7)
+        self.assertIn("Gravity Falls", d["cipher"])
+        self.assertIn("NOT mirrored", d["orientation"])
+
+    def test_tuesday_is_not_a_bip39_word(self):
+        """It cannot be a seed word, whatever else it is."""
+        from puzzle import wordlist
+        self.assertFalse(wordlist.is_valid("tuesday"))
+        self.assertFalse(self.runes.RUNE3_DECODE["is_bip39"])
+
+    def test_vendored_alphabet_has_26_letters(self):
+        import numpy as np
+        data = np.load(self.runes.GRAVITY_FALLS, allow_pickle=False)
+        letters = "".join(str(c) for c in data["letters"])
+        self.assertEqual(letters, "".join(chr(ord("A") + i) for i in range(26)))
+        self.assertEqual(len(data["holes"]), 26)
+
+    def test_hole_counts_confirm_the_reading(self):
+        """Six of seven positions agree topologically; p is computed exactly."""
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        r = self.runes.verify_rune3(self.IMAGE)
+        self.assertEqual(r["glyphs"], 7)
+        self.assertGreaterEqual(r["agreeing_positions"], 6)
+        self.assertLess(r["p_value"], 0.01)
+        self.assertLess(r["expected_agreements_by_chance"], 3)
+
+    def test_a_wrong_word_does_not_verify(self):
+        """The check must be able to fail, or it checks nothing."""
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        good = self.runes.verify_rune3(self.IMAGE, "TUESDAY")
+        for decoy in ("MONDAYS", "FRIDAYS", "SUNDAYS"):
+            bad = self.runes.verify_rune3(self.IMAGE, decoy)
+            self.assertLess(bad["agreeing_positions"],
+                            good["agreeing_positions"],
+                            f"{decoy} scored as well as TUESDAY")
+
+    def test_extraction_from_the_chart_reproduces_the_vendored_data(self):
+        """If the chart is present, the vendored descriptors must match it."""
+        if not os.path.exists(self.CHART):
+            self.skipTest("Gravity Falls reference chart not present")
+        import numpy as np
+        glyphs = self.runes.gravity_falls_alphabet(self.CHART)
+        self.assertEqual(len(glyphs), 26)
+        data = np.load(self.runes.GRAVITY_FALLS, allow_pickle=False)
+        letters = "".join(str(c) for c in data["letters"])
+        for i, ch in enumerate(letters):
+            self.assertEqual(self.runes._holes(glyphs[ch], close=1),
+                             int(data["holes"][i]), f"letter {ch}")
+
+    def test_the_metric_that_excluded_six_alphabets_has_no_power(self):
+        """The negative control that was missing: against known ground truth
+        the 12x12 fingerprint ranks the right letter at chance."""
+        w = self.runes.RUNE3_SEARCH_WITHDRAWN
+        self.assertAlmostEqual(w["ground_truth_mean_rank"], 13.7, places=1)
+        self.assertAlmostEqual(w["chance_mean_rank"], 13.5, places=1)
+        self.assertGreater(w["ground_truth_mean_rank"], w["chance_mean_rank"])
+        self.assertTrue(w["verdict"].startswith("withdrawn"))
+
+    def test_rune4_tail_is_two_components_one_being_the_border(self):
+        t = self.runes.RUNE4_TAIL
+        self.assertEqual(t["glyphs_past_crib"], (48, 49))
+        self.assertIn("border", t["index_49"])
+        self.assertTrue(t["verdict"].startswith("unresolvable"))
+
+    def test_capacity_bound_is_not_inflated_by_the_decode(self):
+        """TUESDAY names no mechanism. The bound must stay at four."""
+        from puzzle import positions
+        self.assertTrue(
+            self.runes.RUNES_AS_MECHANISM_SOURCE["capacity_bound_unchanged"])
+        self.assertEqual(
+            self.runes.RUNES_AS_MECHANISM_SOURCE["new_mechanisms_found"], 0)
+        self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)

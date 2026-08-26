@@ -22,6 +22,13 @@ the BIP-39 English wordlist**:
 | "'Breathe' can be found on George Floyd's chest as well as the Statue's Neck" | `breathe` | **No** | `bread`, `breeze` |
 | Rune 3 (above Trump), Bill Cipher, translates to "Tuesday" | `tuesday` | **No** | *(no weekday is in BIP-39)* |
 
+This second hint is no longer a claim taken on trust. Rune 3 is **decoded and
+verified** in section 3: seven glyphs, the Gravity Falls "strange symbols"
+alphabet, reading `TUESDAY` left to right as drawn, at p = 0.0039. Worth
+recording plainly: **this table had the answer while section 3 spent six tests
+failing to find it**, because the search was run under an instruction from
+section 12 that turned out to be false.
+
 Verify it yourself:
 
 ```console
@@ -823,71 +830,113 @@ saying "sum of two numbers". That is no longer an assumption carried from
 elsewhere — it is verified against pixels with an independent key. The three
 confirmed positions stand on firmer ground than they did.
 
-#### Rune 3: which alphabet?
+#### Rune 3 decoded: `TUESDAY`, in the Gravity Falls cipher
 
-Rune 3 floats free above Trump, drawn mirrored in a pale wash, attached to no
-object — so it is meant to be read. Its segmentation is **seven glyphs, stable
-across thresholds 80–100**:
+Rune 3 floats free above Trump, attached to no object, beside a large question
+mark — so it is meant to be read. It reads **`TUESDAY`**, left to right, as
+drawn, in the *Gravity Falls* "strange symbols" substitution alphabet.
 
-| # | Glyph |
-|---|---|
-| 1 | three small circles joined by two lines into a `<` |
-| 2 | a small oval above a larger oval |
-| 3 | a hooked stroke with two dots |
-| 4 | an outline `▽` with a dot |
-| 5 | `N` |
-| 6 | `E` |
-| 7 | a small triangle above a larger triangle |
+| Position | Glyph | Letter |
+|---:|---|:--:|
+| 1 | a small triangle above a larger triangle | **T** |
+| 2 | `Ǝ` — three bars | **U** |
+| 3 | `И` — a zigzag | **E** |
+| 4 | `▽` — an outline down-triangle | **S** |
+| 5 | a hooked stroke with dots | **D** |
+| 6 | a small oval above a larger oval, with a tail | **A** |
+| 7 | three circles joined by two lines | **Y** |
 
-Two structural regularities constrain what kind of system this is:
-**small-shape-above-large-shape occurs twice** (glyphs 2 and 7 — ovals, then
-triangles), and **three of the seven carry dots**. A plain letter alphabet
-rarely does either.
+The artwork points at this cipher twice: the Great Seal's pyramid is drawn as
+**Bill Cipher**, the show's triangular antagonist, and rune 3 is the only strip
+in English and the only one *not* in the artwork's own Cyrillic runic script.
 
-**Six candidates tested, each against a control.** The control is the part
-that matters: a 12×12 fingerprint always finds *some* nearest neighbour, so a
-mean distance means nothing until you know what an unrelated strip scores —
-and that a control glyph's best *accidental* Latin match is 14.
+**The decode is the community's, not mine.** It is in their notes —
+`HomelessPhD/BLM_0.2BTC`, section 11, "Runes (above Trump head)" — a file that
+was on disk here throughout. What is added is the verification.
 
-| Candidate | Rune 3 | Control | Verdict |
-|---|---|---|---|
-| The artwork's own rune alphabet | **46.3** | rune 2 scores **32.7** by the same pipeline, and is a verified true match (baseline 27.2) | excluded |
-| Dscript | 44.4 (best of four orientations) | rune 4, known *not* Dscript, scores **46.3** | excluded — no signal whatever |
-| Latin | 40.1 | rune 4 scores 42.8 | no aggregate signal |
-| Cyrillic | 41.0 | rune 4 scores 44.0 | no signal |
+##### Verifying it
 
-**Two named candidates, tested on request.** Aurebesh (Star Wars) and the
-Standard Galactic Alphabet (Commander Keen / Minecraft), both from
-freely-licensed Wikimedia Commons reference charts, all four orientations:
+The 26 symbols were extracted from the reference chart without hand-placed
+boxes: the chart lays the alphabet on a pyramid in rows of 1, 2, 6, 8 and 9
+cells, and a row's cell separators are the only near-full-height columns in it.
 
-| Candidate | Rune 3 (best) | Rune 4 (control) | Rune 2 (control) | Verdict |
-|---|---|---|---|---|
-| Aurebesh | 45.4 | 44.7 | 45.7 | **refuted — worse than control** |
-| Standard Galactic | 48.4 | 47.2 | 45.6 | **refuted — worse than control** |
+Line weight cannot be compared across sources — a pale artwork wash against a
+television screenshot — so the check uses **hole count**, a topological feature
+that survives the difference:
 
-Rune 3 scores *worse than the control* against both. Three unrelated strips —
-rune 3, rune 4 and rune 2, the last two known to be a Cyrillic substitution —
-all land in the same 44–49 band. That band **is** the noise floor for
-geometric glyphs against an unrelated geometric alphabet, and rune 3 sits in
-it with nothing to distinguish it.
+| # | Letter | Rune 3 holes | Chart holes | |
+|---:|:--:|---:|---:|:--|
+| 1 | T | 2 | 2 | ✔ |
+| 2 | U | 0 | 0 | ✔ |
+| 3 | E | 0 | 0 | ✔ |
+| 4 | S | 1 | 1 | ✔ |
+| 5 | D | 0 | 0 | ✔ |
+| 6 | A | 2 | 2 | ✔ |
+| 7 | Y | 2 | 3 | ✘ |
 
-A structural check agrees and needs no statistics: **both alphabets are
-entirely straight-edged and contain no circle.** Rune 3 opens with three
-joined circles and a pair of stacked ovals. Whatever it is, it is not written
-in an alphabet with no round forms.
+Six of seven. Hole counts across the 26 letters run `{0: 10, 1: 8, 2: 6, 3: 2}`,
+so chance expects **2.15** agreements; the exact Poisson-binomial tail gives
+**p = 0.0039**. `runes.verify_rune3(image)` recomputes it, and the test suite
+checks that `MONDAYS`, `FRIDAYS` and `SUNDAYS` all score worse — a check that
+cannot fail is not a check.
 
-**One thing does stand out, and it is thin.** Glyphs 5 and 6 match Latin `N`
-at **24** and `E` at **21** — inside the same-letter band of 27.2 — while the
-other five sit at 44–52. But 2 of 7 glyphs landing that low carries
-**p ≈ 0.042** against the control's own rate; the Latin hypothesis was chosen
-*after* seeing those two shapes; and the control's best accidental match is
-14. Suggestive, not established, and recorded that way.
+##### Two errors made the earlier search fail
 
-So **rune 3's alphabet is unidentified.** Six candidates are closed with
-method; no positive identification. What would settle it is a specific
-candidate to test — `runes.compare_to_reference()` makes that cheap, and
-`RUNE3_INVENTORY` describes the glyphs for matching by eye.
+This section previously reported rune 3's alphabet as *unidentified*, with six
+candidates excluded. **Every one of those exclusions is withdrawn.** Two
+independent faults produced them, and the decode exposes both:
 
+1. **The mirror.** Rune 3 was recorded as "drawn mirrored", and every
+   comparison was run with `transform=ImageOps.mirror`. It is not mirrored.
+   The chart's `E` *is* a `И` and its `U` *is* a `Ǝ`; mirroring turned those
+   into a Latin-looking `N` and `E` and reversed the reading order. The "weak
+   positive" of glyphs 5 and 6 matching Latin `N` at 24 and `E` at 21 was
+   exactly this artefact — real signal, misread as a different alphabet.
+
+2. **The metric.** The 12×12 binary fingerprint has **no cross-source power at
+   all.** Given the correct answer as ground truth it ranks the true letter at
+   a mean of **13.7 of 26**; chance is **13.5**. It reads the strip as
+   `OVYRLVG` and scores it 47.3 — indistinguishable from its own controls at
+   47.9 and 52.8.
+
+The fingerprint is sound *within* a source: rune 2 against rune 4's own
+alphabet is 8/14 under 32 at p ≈ 1e-09, because line weight, rendering and
+aliasing are shared there. Across sources it measures nothing.
+
+So the negatives for Dscript, Latin, Cyrillic, Aurebesh and the Standard
+Galactic Alphabet are **withdrawn, not reversed**. Nothing says rune 3 is any
+of them; the point is that the instrument never had the power to say otherwise,
+and it was reported as though it did. The missing piece was a positive control
+— an alphabet known to be right — and it existed all along.
+
+**One comparison survives, and it got stronger.** Rune 3 against the artwork's
+*own* alphabet is same-source, so the metric applies: 0 of 7 glyphs under 32,
+minimum 35, where rune 2 puts 8 of 14 under 32 with a minimum of 14. That
+reference covers only the 21 Cyrillic letters rune 4's text uses, so 12 letters
+have no entry and cannot match — but for that hole to explain the null, all
+seven of rune 3's letters would have to come from those 12, about 17% of
+Russian by letter frequency, so ~5×10⁻⁶.
+
+##### What it is worth
+
+`tuesday` is **not a BIP-39 word**, so it is not a seed word. It names no
+mechanism, so the capacity bound stays at four. What it establishes is
+narrower and still worth having: **a second cipher is in play in this
+artwork**, drawn from a source the artwork separately signposts, and the one
+strip that floats free of every object is the one that carries it.
+
+##### Rune 4's trailing glyph
+
+Two components sit past the crib. Index 49 spans the full height of the strip
+at its extreme right edge — it is the strip's **border**, not a glyph. Index 48
+is the trailing symbol proper, and it resolves to no letter for a plain reason:
+the alphabet recovered from rune 4 covers only the letters rune 4 itself uses,
+and this one appears nowhere else in the strip.
+
+Its shape carries no information. The script is a *substitution*, so a glyph
+need not resemble the letter it stands for — a mirror-symmetry test accordingly
+separates nothing (0.63, z = −0.89 against the known letters' 0.749 ± 0.132).
+It is unresolvable from internal evidence.
 
 #### The runes as a source of mechanisms
 
@@ -895,8 +944,8 @@ candidate to test — `runes.compare_to_reference()` makes that cheap, and
 |---|---|---|
 | Rune 1 | "I hope many bitcoins will be sent here" | no — a wish |
 | Rune 2 | **"sum of two numbers"**, inside the dial | **yes — the clock, already counted** |
-| Rune 3 | does not decode in this alphabet | open |
-| Rune 4 | the framing statement, ending `НОМЕР` + one glyph | no — and that glyph resolves to no letter and is not a Dscript numeral |
+| Rune 3 | **`TUESDAY`**, in the Gravity Falls cipher | no — names no rule, and not a BIP-39 word |
+| Rune 4 | the framing statement, ending `НОМЕР` + one glyph | no — that glyph encodes a letter appearing nowhere else in the strip, so the crib gives it no reference |
 
 Four strips, exactly one mechanism caption, and it captions the mechanism
 already in hand. **No fourth mechanism in the runes.** The capacity bound is
@@ -1356,8 +1405,11 @@ ignored, which would otherwise produce a false negative across an entire run.
   "number X" turned out to be a placeholder, so the remaining numeric hope is
   rune 2's "sum of two numbers". Both runes need a higher-resolution scan
   before the crib method can reach them; the alphabet recovered from rune 4 is
-  already in `puzzle/runes.py` and ready to apply. Rune 3 is written
-  **mirrored** — flip it before transcribing.
+  already in `puzzle/runes.py` and ready to apply. **Rune 3 is settled**: it
+  reads `TUESDAY` in the Gravity Falls cipher (section 3). Note that the
+  earlier instruction here — "rune 3 is written mirrored, flip it before
+  transcribing" — was **wrong**, and it is what made six alphabet tests fail.
+  It is not mirrored.
 - **Where does a higher-resolution original live?** This is now the single
   highest-value thing to find. Three separate leads — runes 1 and 2, the clock
   hand bearings, and the claimed `breathe` on the Statue's neck — are all
