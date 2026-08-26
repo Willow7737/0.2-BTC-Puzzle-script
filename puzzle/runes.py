@@ -567,3 +567,168 @@ RUNES_AS_MECHANISM_SOURCE = {
     "new_mechanisms_found": 0,
     "capacity_bound_unchanged": True,
 }
+
+
+# ---------------------------------------------------------------------------
+# What alphabet does rune 3 use?
+# ---------------------------------------------------------------------------
+
+#: Rune 3 floats free above Trump, drawn mirrored, in a pale wash. Unlike the
+#: other three strips it is attached to no object, so it is meant to be read -
+#: but it does not read in the alphabet the other strips use.
+RUNE3_BOX = (840, 833, 1000, 878)
+RUNE3_THRESHOLD = 90
+RUNE3_UPSCALE = 8
+
+#: The seven glyphs, described so that someone holding a candidate alphabet
+#: can check it by eye without re-running anything. Reading order is the
+#: mirrored one, which is the orientation in which the letter-like glyphs sit
+#: the right way round.
+RUNE3_INVENTORY = (
+    "three small circles joined by two lines into a '<'",
+    "a small oval above a larger oval",
+    "a hooked stroke with two dots",
+    "an outline triangle pointing down, with a dot",
+    "N",
+    "E",
+    "a small triangle above a larger triangle",
+)
+
+#: Two structural regularities worth recording, because they constrain what
+#: kind of system this is: **small-shape-above-large-shape occurs twice**
+#: (glyphs 2 and 7, in ovals and in triangles), and **three of the seven carry
+#: dots** (glyphs 1, 3, 4). A pure letter alphabet rarely does either.
+RUNE3_STRUCTURE = {
+    "stacked_pairs": (2, 7),
+    "glyphs_with_dots": (1, 3, 4),
+    "letter_like": (5, 6),
+}
+
+
+def strip_signatures(image_path, box, threshold: int, upscale: int = 8,
+                     transform=None, min_width: int = 6):
+    """Segment any rune strip by column projection and return glyph signatures.
+
+    The same pipeline used for rune 2, factored out so a strip can be compared
+    against any reference alphabet on equal terms. *transform* is applied to
+    the crop before processing - pass ``PIL.ImageOps.mirror`` for rune 3.
+    """
+    from PIL import ImageChops, ImageFilter, ImageOps
+
+    crop = Image.open(image_path).convert("L").crop(box)
+    if transform is not None:
+        crop = transform(crop)
+    hp = ImageChops.subtract(crop.filter(ImageFilter.GaussianBlur(5)), crop,
+                             scale=1, offset=0)
+    hp = ImageOps.autocontrast(hp, cutoff=0)
+    up = hp.resize((hp.width * upscale, hp.height * upscale), Image.LANCZOS)
+    arr = np.asarray(up)
+    out = []
+    for x0, x1 in column_runs(arr, threshold, min_width):
+        sub = (arr[:, x0:x1 + 1] > threshold).astype(np.uint8)
+        ys = np.nonzero(sub.any(axis=1))[0]
+        if not len(ys):
+            continue
+        sub = sub[ys.min():ys.max() + 1]
+        out.append(signature(sub, Glyph(0, 0, sub.shape[1] - 1,
+                                        sub.shape[0] - 1, int(sub.sum()))))
+    return out
+
+
+def rune4_alphabet(image_path) -> dict:
+    """The recovered alphabet, as ``Cyrillic letter -> [signatures]``."""
+    from collections import defaultdict
+
+    mask, glyphs, _ = load_rune4(image_path)
+    letters = RUNE4_CRIB.replace(" ", "")
+    idx = [i for i in range(48) if i not in RUNE4_SEPARATORS]
+    out = defaultdict(list)
+    for i, ch in zip(idx, letters):
+        out[ch].append(signature(mask, glyphs[i]))
+    return dict(out)
+
+
+def compare_to_reference(sigs, reference, control_sigs) -> dict:
+    """Score a strip against a candidate alphabet, against a control.
+
+    *reference* maps a name to one signature or a list of them. *control_sigs*
+    are glyphs known **not** to belong to that alphabet - rune 4's, normally.
+    Without the control a mean distance is uninterpretable: a 12x12 binary
+    fingerprint will always find *some* nearest neighbour, so the question is
+    never "how close" but "closer than an unrelated strip gets".
+    """
+    def best(sig):
+        out = []
+        for name, ref in reference.items():
+            refs = ref if isinstance(ref, list) else [ref]
+            out.append((min(distance(sig, r) for r in refs), name))
+        return min(out)
+
+    hits = [best(s) for s in sigs]
+    control = [best(s)[0] for s in control_sigs]
+    return {
+        "n": len(hits),
+        "per_glyph": [{"name": n, "distance": d} for d, n in hits],
+        "mean": float(np.mean([d for d, _ in hits])) if hits else None,
+        "control_mean": float(np.mean(control)),
+        "control_min": int(np.min(control)),
+        "signal": float(np.mean(control) - np.mean([d for d, _ in hits]))
+                  if hits else None,
+    }
+
+
+#: Four candidate alphabets tested, each against a control. None fits.
+#:
+#: The control matters more than the score. A 12x12 fingerprint always finds
+#: some nearest neighbour, so "rune 3 matches Latin at 40" means nothing until
+#: you know an unrelated strip matches Latin at 42.8 - and that a control
+#: glyph's *best* accidental Latin match is 14.
+#:
+#: ==========================  =========  ==================================
+#: candidate                    rune 3     control
+#: ==========================  =========  ==================================
+#: the artwork's own alphabet     46.3     rune 2 scores 32.7 by the same
+#:                                         pipeline, and it is a verified
+#:                                         true match; baseline 27.2
+#: Dscript                        44.4     rune 4, known not to be Dscript,
+#:                                         scores 46.3 - no signal at all
+#: Latin                          40.1     rune 4 scores 42.8
+#: Cyrillic                       41.0     rune 4 scores 44.0
+#: ==========================  =========  ==================================
+#:
+#: The one thing that does stand out, reported with its weakness: glyphs 5
+#: and 6 match Latin **N** at 24 and **E** at 21, inside the same-letter band
+#: of 27.2, while the other five sit at 44-52. But 2 of 7 glyphs landing that
+#: low has p ≈ 0.042 against the control's own rate, the Latin hypothesis was
+#: chosen *after* seeing those two shapes, and the control's best accidental
+#: match is 14. Suggestive; not established.
+#:
+#: So rune 3's alphabet is **unidentified**. What would settle it is a
+#: specific candidate to test - ``compare_to_reference`` makes that cheap,
+#: and ``RUNE3_INVENTORY`` describes the glyphs for matching by eye.
+RUNE3_ALPHABET_SEARCH = {
+    "glyphs": 7,
+    "segmentation": "stable across thresholds 80-100",
+    "tested": {
+        "artwork_rune_alphabet": {"rune3": 46.3, "control": 32.7,
+                                  "control_is": "rune 2, a verified true match",
+                                  "verdict": "excluded"},
+        "dscript": {"rune3": 44.4, "control": 46.3,
+                    "control_is": "rune 4, known not Dscript",
+                    "verdict": "excluded - no signal"},
+        "latin": {"rune3": 40.1, "control": 42.8,
+                  "control_is": "rune 4", "verdict": "no aggregate signal"},
+        "cyrillic": {"rune3": 41.0, "control": 44.0,
+                     "control_is": "rune 4", "verdict": "no signal"},
+    },
+    "weak_positive": {
+        "glyphs": (5, 6),
+        "matches": {"N": 24, "E": 21},
+        "same_letter_baseline": 27.2,
+        "p_value": 0.042,
+        "caveats": "post-hoc hypothesis; control's best accidental Latin "
+                   "match is 14; 2 of 7 is a thin result",
+    },
+    "verdict": "unidentified - four candidates excluded with controls, no "
+               "positive identification",
+}

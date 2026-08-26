@@ -947,6 +947,71 @@ class TestRune2Verification(unittest.TestCase):
         self.assertEqual(positions.MECHANISM_CAPACITY["total_reachable"], 4)
 
 
+class TestRune3Alphabet(unittest.TestCase):
+    """Which alphabet does rune 3 use? Four candidates, each with a control."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def setUp(self):
+        if not os.path.exists(self.IMAGE):
+            self.skipTest(f"artwork not present at {self.IMAGE}")
+        from PIL import ImageOps
+        from puzzle import runes
+        from puzzle.runes import load_rune4, RUNE4_SEPARATORS, signature
+        self.runes = runes
+        self.sigs3 = runes.strip_signatures(
+            self.IMAGE, runes.RUNE3_BOX, runes.RUNE3_THRESHOLD,
+            transform=ImageOps.mirror)
+        mask, glyphs, _ = load_rune4(self.IMAGE)
+        self.control = [signature(mask, glyphs[i]) for i in range(48)
+                        if i not in RUNE4_SEPARATORS]
+
+    def test_segmentation_is_seven_glyphs(self):
+        self.assertEqual(len(self.sigs3), 7)
+        self.assertEqual(len(self.runes.RUNE3_INVENTORY), 7)
+
+    def test_segmentation_is_stable_across_thresholds(self):
+        """A count that moves with the threshold is not a glyph count."""
+        from PIL import ImageOps
+        for t in (80, 90, 100):
+            got = self.runes.strip_signatures(
+                self.IMAGE, self.runes.RUNE3_BOX, t, transform=ImageOps.mirror)
+            self.assertEqual(len(got), 7, f"threshold {t} gave {len(got)}")
+
+    def test_not_the_artwork_own_alphabet(self):
+        """Rune 2, a verified true match, scores far better by the same pipeline."""
+        alphabet = self.runes.rune4_alphabet(self.IMAGE)
+        r3 = self.runes.compare_to_reference(self.sigs3, alphabet, self.control)
+        s2 = self.runes.strip_signatures(
+            self.IMAGE, self.runes.RUNE2_BOX, self.runes.RUNE2_THRESHOLD)
+        r2 = self.runes.compare_to_reference(s2, alphabet, self.control)
+        self.assertGreater(r3["mean"], r2["mean"] + 8,
+                           "rune 3 must be clearly worse than a true match")
+        self.assertGreater(r3["mean"], 40)
+
+    def test_control_is_what_makes_a_score_readable(self):
+        """A mean distance with no control is uninterpretable; assert we have one."""
+        alphabet = self.runes.rune4_alphabet(self.IMAGE)
+        r = self.runes.compare_to_reference(self.sigs3, alphabet, self.control)
+        self.assertIn("control_mean", r)
+        self.assertIn("control_min", r)
+        self.assertLess(r["control_min"], 30,
+                        "accidental close matches happen; the record must show it")
+
+    def test_record_reports_no_identification(self):
+        rec = self.runes.RUNE3_ALPHABET_SEARCH
+        self.assertTrue(rec["verdict"].startswith("unidentified"))
+        self.assertEqual(len(rec["tested"]), 4)
+        for name, entry in rec["tested"].items():
+            self.assertIn("control", entry, f"{name} recorded without a control")
+
+    def test_weak_positive_is_recorded_with_its_caveats(self):
+        """The N/E match is thin and post-hoc; the record must say so."""
+        wp = self.runes.RUNE3_ALPHABET_SEARCH["weak_positive"]
+        self.assertGreater(wp["p_value"], 0.01, "not strong enough to claim")
+        self.assertIn("post-hoc", wp["caveats"])
+
+
 class TestDscriptHypothesis(unittest.TestCase):
     """Are the rune strips Dscript? If so its base-100 numerals would read
     out rune 4's trailing 'number X'."""
