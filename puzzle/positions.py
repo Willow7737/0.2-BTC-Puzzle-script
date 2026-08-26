@@ -984,3 +984,91 @@ LINE_ORIENTATION_IS_NOT_A_MECHANISM = {
     "verdict": "refuted - the match is exactly the artwork's own base rate; "
                "food and real still carry no number",
 }
+
+
+#: The underline is used **once** in the whole artwork.
+#:
+#: The plinth's device - underline the word, underline the numeral - is the
+#: only unambiguous word-number pairing in the puzzle, so it was worth asking
+#: whether it recurs. A detector for thin horizontal runs with text above and
+#: clear space below was swept across the image on the blue channel (which
+#: reads ink under the red paint) with the plinth as positive control.
+#:
+#: It returns 139 candidates. Every one of the 24 most word-like was rendered
+#: and inspected: all are **rotated placard text** - the vertical BLACK LIVES
+#: MATTER / END POLICE BRUTALITY signs, whose letter strokes read as horizontal
+#: runs - or architectural edges such as the Statue pedestal's mouldings.
+#:
+#: **No underline exists outside the plinth**, which is what
+#: ``PLINTH_SINGLE_SECTION`` already concluded from reading the plinth itself.
+UNDERLINE_SWEEP = {
+    "candidates": 139,
+    "inspected": 24,
+    "genuine_outside_the_plinth": 0,
+    "false_positive_sources": ("rotated placard text", "architectural edges"),
+    "verdict": "the underline device appears exactly once",
+}
+
+
+#: **The artwork does not mark 21 words, and the marking devices show why.**
+#:
+#: Catalogue how each known word is singled out, and a pattern appears that no
+#: individual finding makes obvious:
+#:
+#: =========  ====================================  ======
+#: word       device                                 uses
+#: =========  ====================================  ======
+#: subject    underlined in running text                1
+#: tower      written along a clock hand                2
+#: moon       written along a clock hand                -
+#: real       lowercase inserted among capitals         1
+#: food       written down a tower shaft                1
+#: =========  ====================================  ======
+#:
+#: **Four different devices, none used more than twice.** Every one is bespoke
+#: to its object.
+#:
+#: A construction that needed to mark twenty-one words would need a device
+#: applied twenty-one times - a consistent, repeated convention a solver could
+#: learn once and then apply. The artwork shows the opposite: one-off markings,
+#: each invented for the surface it sits on. That is what a handful of
+#: deliberate clues looks like, not what an encoded word list looks like.
+#:
+#: It converges with everything else:
+#:
+#: * two independent sweeps for a sixth marked word found none, across 21
+#:   object surfaces and then across every text strip in the image;
+#: * the underline - the one unambiguous word-number device - is used exactly
+#:   once (``UNDERLINE_SWEEP``);
+#: * the mechanisms that can supply a *number* top out at four
+#:   (``MECHANISM_CAPACITY``);
+#: * ``food`` and ``real`` are marked but numberless, and no mechanism
+#:   proposed for them has survived a control.
+#:
+#: **So the honest reading is that the artwork does not contain a recoverable
+#: 21-word phrase.** It contains four or five deliberate word-number clues and
+#: an ordering rule, and no demonstrated way to reach the rest. The repository
+#: the artwork is archived in is titled *"Puzzle or Statement"* - the people
+#: closest to it asked the same question.
+#:
+#: What would overturn this: a single further word paired with a number by a
+#: device that survives a control. Not a candidate word, and not compute - one
+#: verified pairing. That is the whole bar, and it has not been cleared since
+#: the plinth.
+MARKING_DEVICES = {
+    "devices": {
+        "underline in running text": ("subject",),
+        "written along a clock hand": ("tower", "moon"),
+        "lowercase among capitals": ("real",),
+        "written down a shaft": ("food",),
+    },
+    "distinct_devices": 4,
+    "max_uses_of_any_device": 2,
+    "words_marked": 5,
+    "words_needed": 21,
+    "implication": "a 21-word encoding needs a repeated convention; these are "
+                   "bespoke one-off markings",
+    "verdict": "the artwork does not mark 21 words",
+    "what_would_overturn_it": "one further word paired with a number by a "
+                              "device that survives a control",
+}

@@ -1850,6 +1850,80 @@ it was *predicted before being measured*, not because 1.3° is impressive.
 
 **So `food` and `real` still carry no number, and the anomaly stands.**
 
+## 11g. Why the artwork does not mark 21 words
+
+Four more attempts, then the structural argument they add up to.
+
+### The underline is used once
+
+The plinth's device — underline the word, underline the numeral — is the only
+unambiguous word-number pairing in the puzzle, so it was worth asking whether it
+recurs. A detector for thin horizontal runs with text above and clear space
+below was swept across the image on the blue channel, with the plinth as
+positive control. It returns **139 candidates**; the 24 most word-like were
+rendered and inspected, and every one is **rotated placard text** — the vertical
+`BLACK LIVES MATTER` / `END POLICE BRUTALITY` signs, whose letter strokes read as
+horizontal runs — or architectural edges like the Statue pedestal's mouldings.
+**No underline exists outside the plinth.**
+
+### The plinth text does not supply the word list
+
+Section 1 of the 13th Amendment contains **8** BIP-39 words — `neither`,
+`crime`, `party`, `have`, `exist`, `any`, `place`, `subject` — not 21. And
+`subject` is the *last* of them in reading order, not the first. (Reversing puts
+`subject` at 1, but that cannot produce `tower` or `moon`, so it does not
+generalise.)
+
+### Rune 4's trailing glyph is unidentifiable *in principle*
+
+Worth separating from "not yet", because only one of those justifies stopping.
+The glyph is a single mark, one component, no holes. If it is Cyrillic it must
+be one of the six letters the combined rune-1 + rune-4 alphabet still lacks
+(`Ж Х Ц Щ Ъ Э`), none of which appears anywhere in either strip. If it is from
+another alphabet, one glyph carries too little signal: the only
+rendering-robust feature is hole count, which partitions the 26 Gravity Falls
+symbols into classes of 10, 8, 6 and 2 — zero holes narrows it to **ten**
+candidates. Rune 3 was identifiable because seven glyphs spelling a
+known-shaped word give seven constraints at once. One glyph gives one.
+
+### The marking devices
+
+Catalogue how each known word is singled out, and a pattern appears that no
+single finding makes obvious:
+
+| Word | Device | Uses |
+|---|---|---:|
+| `subject` | underlined in running text | 1 |
+| `tower`, `moon` | written along a clock hand | 2 |
+| `real` | lowercase inserted among capitals | 1 |
+| `food` | written down a tower shaft | 1 |
+
+**Four different devices, none used more than twice**, each bespoke to the
+surface it sits on.
+
+A construction that had to mark twenty-one words would need a device applied
+twenty-one times — a repeated convention a solver learns once and then applies.
+The artwork shows the opposite. That is what a handful of deliberate clues looks
+like; it is not what an encoded word list looks like.
+
+### The conclusion these converge on
+
+* two independent sweeps for a sixth marked word found none — 21 object
+  surfaces, then every text strip in the image;
+* the underline, the one unambiguous word-number device, is used exactly once;
+* the mechanisms that can supply a *number* top out at four;
+* `food` and `real` are marked but numberless, and no mechanism proposed for
+  them has survived a control.
+
+**The artwork does not contain a recoverable 21-word phrase.** It contains four
+or five deliberate word-number clues and an ordering rule, and no demonstrated
+way to reach the rest. The repository this artwork is archived in is titled
+*"Puzzle or Statement"* — the people closest to it asked the same question.
+
+**What would overturn this:** one further word paired with a number by a device
+that survives a control. Not a candidate word, and not compute — one verified
+pairing. That is the entire bar, and nothing has cleared it since the plinth.
+
 ## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`

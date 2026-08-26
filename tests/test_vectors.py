@@ -1933,3 +1933,37 @@ class TestLineOrientationIsNotAMechanism(unittest.TestCase):
         self.assertTrue(self.rec["verdict"].startswith("refuted"))
         marked = set(positions.MARKED_WITHOUT_NUMBER)
         self.assertEqual(marked, {"food", "real"})
+
+
+class TestMarkingDevices(unittest.TestCase):
+    """Four bespoke devices, none used twice, against 21 words needed."""
+
+    def setUp(self):
+        from puzzle import positions
+        self.p = positions
+        self.rec = positions.MARKING_DEVICES
+
+    def test_the_catalogue_matches_the_known_words(self):
+        marked = set()
+        for words in self.rec["devices"].values():
+            marked.update(words)
+        confirmed = {w for a in self.p.CONFIRMED for w in a.words}
+        self.assertTrue(confirmed.issubset(marked))
+        self.assertEqual(marked & set(self.p.MARKED_WITHOUT_NUMBER),
+                         {"food", "real"})
+        self.assertEqual(len(marked), self.rec["words_marked"])
+
+    def test_no_device_is_used_more_than_twice(self):
+        uses = max(len(w) for w in self.rec["devices"].values())
+        self.assertEqual(uses, self.rec["max_uses_of_any_device"])
+        self.assertLessEqual(uses, 2)
+
+    def test_the_shortfall_is_stated(self):
+        self.assertGreater(self.rec["words_needed"], self.rec["words_marked"] * 4)
+
+    def test_the_bar_for_overturning_it_is_recorded(self):
+        """A conclusion this strong must say what would break it."""
+        self.assertIn("survives a control", self.rec["what_would_overturn_it"])
+
+    def test_underline_used_once(self):
+        self.assertEqual(self.p.UNDERLINE_SWEEP["genuine_outside_the_plinth"], 0)
