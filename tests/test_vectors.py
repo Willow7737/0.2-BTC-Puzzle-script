@@ -1903,3 +1903,33 @@ class TestHourHandIsTheLength(unittest.TestCase):
     def test_it_claims_no_tractability_gain(self):
         self.assertFalse(self.rec["changes_tractability"])
         self.assertTrue(self.rec["confidence"].startswith("inference"))
+
+
+class TestLineOrientationIsNotAMechanism(unittest.TestCase):
+    """A mechanism proposed, tested, and killed by its own control."""
+
+    def setUp(self):
+        from puzzle import positions
+        self.rec = positions.LINE_ORIENTATION_IS_NOT_A_MECHANISM
+
+    def test_the_match_equals_the_control(self):
+        r = self.rec
+        self.assertAlmostEqual(r["control_artwork_edges_within_1_7_deg"],
+                               r["control_uniform_within_1_7_deg"], places=3)
+        self.assertGreaterEqual(r["control_artwork_edges_within_1_7_deg"], 0.20,
+                                "if arbitrary edges stopped matching, revisit")
+
+    def test_ray_spacing_makes_any_orientation_match(self):
+        """The structural reason, recomputed from the ray set."""
+        from puzzle import positions
+        rays = sorted({b % 180 for e in positions.all_rays().values()
+                       for _, _, b in e})
+        gaps = [rays[i + 1] - rays[i] for i in range(len(rays) - 1)]
+        self.assertLessEqual(max(gaps), 15.1)
+        self.assertLessEqual(max(gaps) / 2, 7.6)
+
+    def test_food_and_real_still_have_no_number(self):
+        from puzzle import positions
+        self.assertTrue(self.rec["verdict"].startswith("refuted"))
+        marked = set(positions.MARKED_WITHOUT_NUMBER)
+        self.assertEqual(marked, {"food", "real"})

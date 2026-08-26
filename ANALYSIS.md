@@ -1810,6 +1810,46 @@ This is a claim about the puzzle's architecture, not a step toward enumerating
 it — and it was reached *after* the facts it explains, which is the standing
 caution on any account this tidy.
 
+## 11f. Line orientation: a mechanism proposed, tested, and killed
+
+The reasoning that motivated it is sound. **All three confirmed words are
+written along something.** `tower` and `moon` ride clock hands — which are
+lines with a bearing, and their position *is* that bearing's ray. And the two
+marked words that carry no number are also written along lines: `food` runs
+down the Space Needle's shaft, `real` sits on the Statue's base. If a written
+word's line orientation gave its position, the `food`/`real` anomaly would
+resolve at a stroke.
+
+The Needle's shaft measures **4.4°** (22 scanline centroids, fit residual
+7.0 px). The nearest ray is position 5 at 2.7° — **off by 1.7°**. On its own
+that reads as a hit.
+
+**It is not.** The control is the artwork's own strong edges, sampled from the
+top 1% of gradient magnitude:
+
+| Orientations | Mean miss | Within 1.7° |
+|---|---:|---:|
+| the artwork's own strong edges | 3.26° | **25.2%** |
+| uniform random | 3.49° | **25.2%** |
+
+**One arbitrary edge in four does as well as the Needle.** The match sits
+exactly at the artwork's base rate, which is itself indistinguishable from
+uniform.
+
+The reason is structural and would apply to any composition. Twenty-four rays
+at 15° spacing put *every* orientation within 7.5° of some ray, so an
+orientation match is guaranteed — it carries information only if far tighter
+than that. And the artwork is **32% verticals and horizontals** by edge count,
+while the ray set contains a near-vertical (2.7°) and a near-horizontal (92.4°)
+ray. The commonest orientations in any drawing match for free.
+
+This is the same warning §3 already gave about the 15° model doubling the
+false-positive rate, now measured rather than estimated. It is also why the
+Seal's eye at 1.3° stays `STRONG` and not `CONFIRMED`: it survives only because
+it was *predicted before being measured*, not because 1.3° is impressive.
+
+**So `food` and `real` still carry no number, and the anomaly stands.**
+
 ## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`

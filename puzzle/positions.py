@@ -929,3 +929,58 @@ HOUR_HAND_IS_THE_LENGTH = {
                   "at once (the blank hand, rune 3's role, the length "
                   "ambiguity) but it was reached after the facts it explains",
 }
+
+
+#: **Line orientation does not encode position.** A tempting mechanism, tested
+#: and killed by its own control.
+#:
+#: The reasoning that motivated it: all three confirmed words are *written along
+#: something*. ``tower`` and ``moon`` ride clock hands, which are lines with a
+#: bearing, and their position is that bearing's ray. ``food`` runs down the
+#: Space Needle's shaft and ``real`` sits on the Statue's base - both also
+#: lines, and both marked words that carry **no number**. If a written word's
+#: line orientation gave its position, that anomaly would resolve.
+#:
+#: The Needle's shaft measures **4.4 degrees** (22 scanline centroids, fit
+#: residual 7.0 px), and the nearest ray is position 5 at 2.7 degrees - off by
+#: **1.7 degrees**. On its own that looks like a hit.
+#:
+#: It is not. The control is the artwork's own strong edges, sampled from the
+#: top 1% of gradient magnitude:
+#:
+#: ===============================  ===============  ==================
+#: orientations                     mean miss        within 1.7 deg
+#: ===============================  ===============  ==================
+#: the artwork's own strong edges   3.26 deg         **25.2%**
+#: uniform random                   3.49 deg         **25.2%**
+#: ===============================  ===============  ==================
+#:
+#: **One arbitrary edge in four does as well as the Needle.** The match sits
+#: exactly at the artwork's base rate, which is itself indistinguishable from
+#: uniform.
+#:
+#: The reason is structural, and it would apply to any composition. 24 rays at
+#: 15-degree spacing put *every* orientation within 7.5 degrees of some ray, so
+#: an orientation match is guaranteed and carries information only if it is far
+#: tighter than that. And the artwork is 32% verticals and horizontals by edge
+#: count, while the ray set contains a near-vertical (2.7 deg) and a
+#: near-horizontal (92.4 deg) ray - so the commonest orientations in any drawing
+#: match for free.
+#:
+#: So ``food`` and ``real`` still have no number, and the anomaly stands.
+LINE_ORIENTATION_IS_NOT_A_MECHANISM = {
+    "hypothesis": "a written word's line orientation gives its position",
+    "motivation": "all three confirmed words are written along a line, and "
+                  "food and real are marked words with no number",
+    "needle_axis_deg": 4.4,
+    "nearest_ray": {"position": 5, "bearing": 2.7, "off_by": 1.7},
+    "control_artwork_edges_within_1_7_deg": 0.252,
+    "control_uniform_within_1_7_deg": 0.252,
+    "artwork_edge_mean_miss_deg": 3.26,
+    "uniform_mean_miss_deg": 3.49,
+    "why": "24 rays at 15 deg spacing put every orientation within 7.5 deg of "
+           "one, and the artwork is 32% vertical/horizontal by edge count "
+           "while the rays include a near-vertical and a near-horizontal",
+    "verdict": "refuted - the match is exactly the artwork's own base rate; "
+               "food and real still carry no number",
+}
