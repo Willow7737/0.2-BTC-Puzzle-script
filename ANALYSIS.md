@@ -428,7 +428,7 @@ been. The two confirmed mechanisms have hard ceilings:
 |---|---:|---|
 | word on a clock hand, number from its bearing | **3** | a clock has three hands; there is no fourth |
 | numeral written beside the word and underlined | **1** | only `Section 1` does this |
-| | **4 total** | against 21 or 24 needed |
+| | **4 total** | against 21 needed (§11e; 24 was the earlier reading) |
 
 The bearing mechanism *requires the object to be a clock hand*. However much
 of the artwork is searched, it can never yield a fourth position. So the
@@ -520,9 +520,12 @@ plinth. Positions 2 and 24 have no known clue, and that is now the precise
 shape of the gap — not "most of the table is missing" but "two positions plus
 the words for twenty rays".
 
-Note this also decides the length question in favour of **24** over 21: a
+~~Note this also decides the length question in favour of **24** over 21: a
 21-word phrase would leave the rays for 22 and 23 spurious, whereas 24 uses
-every one of the clock's 21 reachable positions.
+every one of the clock's 21 reachable positions.~~ **Withdrawn — see §11e.**
+A clock is a coordinate system, and spare capacity in a coordinate system is
+not evidence that every coordinate must be used. The counting argument in §11e
+points the other way, to **21**.
 
 ### The cost: a worse false-positive rate
 
@@ -576,7 +579,10 @@ removed from the confirmed vocabulary.
 ### Consequence: it is not a 12-word mnemonic
 
 Position 21 exists. BIP-39 permits 12, 15, 18, 21 and 24 words, so the phrase
-is **21 or 24 words**. Every 12-word search ever run against this puzzle —
+is **21 or 24 words** — and §11e argues specifically for **21**, on the grounds
+that the blank hand names a length rather than a position and that 21 is the
+only length the artwork's two non-clock mechanisms exactly cover. Every 12-word
+search ever run against this puzzle —
 including all of this repository's, and the original script's — was
 structurally incapable of succeeding, no matter how long it ran.
 
@@ -1741,6 +1747,526 @@ widen either has now been closed with method:
 | date and numbered-source schemes | 1,167,608 tested, zero fit the anchors |
 | the whitepaper typos | canonical copying slips, below control |
 | the community's 16-entry table | reduces to the 5 already held |
+
+## 11e. The blank hand: 21 is the phrase length, not a position
+
+An anomaly this document recorded for a long time without explaining. Of the
+three clock hands, **two carry words** — `tower` on the minute hand at
+midpoint(1,2)=3, `moon` on the second hand at midpoint(12,1)=13 — and the third
+carries **none**. It points at midpoint(10,11)=21 and is blank. §3 called 21 an
+"orphan number": a position whose word was never found.
+
+Read it instead as a **global parameter**. BIP-39 permits phrase lengths of 12,
+15, 18, 21 and 24 — and **21 is one of them**. A hand naming a parameter rather
+than a word slot has no reason to carry a word. That *explains* the blankness
+rather than positing a word nobody has ever found.
+
+### The counting argument
+
+The clock reaches positions **3 to 23** under its two alignments. So a phrase of
+length *L* needs a mechanism outside the clock for every position below 3, plus
+any above 23:
+
+| Length | Positions with no clock ray | Mechanisms needed |
+|---|---|---:|
+| **21** | 1, 2 | **2** |
+| 24 | 1, 2, 24 | 3 |
+
+And the artwork contains **exactly two** non-clock mechanisms:
+
+1. **The plinth** — underlined `subject` beside an underlined `Section 1`.
+2. **Rune 3** — the one strip deliberately set apart: a different cipher, a
+   different language, attached to no object, floating beside a question mark —
+   and pointing at **2** under every reading of `TUESDAY` (§3).
+
+**21 is exactly saturated. 24 leaves a position with no mechanism at all.**
+
+That argument is not circular: it counts gaps against mechanisms, and would
+hold even if rune 3 turned out to mean something other than 2 — a 24-word
+phrase would still need a third non-clock clue that does not exist.
+
+### Independent support
+
+**21 is Bitcoin's signature number.** The supply cap is 21 million. For a
+Bitcoin puzzle, a 21-word phrase is the thematically obvious choice, and aiming
+the slowest hand at it is a natural way to say so.
+
+### What it resolves, and what it does not
+
+It explains **three anomalies at once**: why one hand is blank, why rune 3 is
+set apart from everything else in the artwork, and why the phrase length was
+ambiguous. It is the first reading in which every position from 1 to 21 has a
+mechanism behind it:
+
+| Positions | Mechanism |
+|---|---|
+| 1 | the plinth |
+| 2 | rune 3 |
+| 3–21 | the clock, both alignments |
+
+**It changes no arithmetic.** A 21-word phrase with three confirmed positions
+still leaves 17 unknown words, and 2048¹⁷ is exactly as unsearchable as 2048²⁰.
+This is a claim about the puzzle's architecture, not a step toward enumerating
+it — and it was reached *after* the facts it explains, which is the standing
+caution on any account this tidy.
+
+## 11f. Line orientation: a mechanism proposed, tested, and killed
+
+The reasoning that motivated it is sound. **All three confirmed words are
+written along something.** `tower` and `moon` ride clock hands — which are
+lines with a bearing, and their position *is* that bearing's ray. And the two
+marked words that carry no number are also written along lines: `food` runs
+down the Space Needle's shaft, `real` sits on the Statue's base. If a written
+word's line orientation gave its position, the `food`/`real` anomaly would
+resolve at a stroke.
+
+The Needle's shaft measures **4.4°** (22 scanline centroids, fit residual
+7.0 px). The nearest ray is position 5 at 2.7° — **off by 1.7°**. On its own
+that reads as a hit.
+
+**It is not.** The control is the artwork's own strong edges, sampled from the
+top 1% of gradient magnitude:
+
+| Orientations | Mean miss | Within 1.7° |
+|---|---:|---:|
+| the artwork's own strong edges | 3.26° | **25.2%** |
+| uniform random | 3.49° | **25.2%** |
+
+**One arbitrary edge in four does as well as the Needle.** The match sits
+exactly at the artwork's base rate, which is itself indistinguishable from
+uniform.
+
+The reason is structural and would apply to any composition. Twenty-four rays
+at 15° spacing put *every* orientation within 7.5° of some ray, so an
+orientation match is guaranteed — it carries information only if far tighter
+than that. And the artwork is **32% verticals and horizontals** by edge count,
+while the ray set contains a near-vertical (2.7°) and a near-horizontal (92.4°)
+ray. The commonest orientations in any drawing match for free.
+
+This is the same warning §3 already gave about the 15° model doubling the
+false-positive rate, now measured rather than estimated. It is also why the
+Seal's eye at 1.3° stays `STRONG` and not `CONFIRMED`: it survives only because
+it was *predicted before being measured*, not because 1.3° is impressive.
+
+**So `food` and `real` still carry no number, and the anomaly stands.**
+
+## 11g. Why the artwork does not mark 21 words
+
+Four more attempts, then the structural argument they add up to.
+
+### The underline is used once
+
+The plinth's device — underline the word, underline the numeral — is the only
+unambiguous word-number pairing in the puzzle, so it was worth asking whether it
+recurs. A detector for thin horizontal runs with text above and clear space
+below was swept across the image on the blue channel, with the plinth as
+positive control. It returns **139 candidates**; the 24 most word-like were
+rendered and inspected, and every one is **rotated placard text** — the vertical
+`BLACK LIVES MATTER` / `END POLICE BRUTALITY` signs, whose letter strokes read as
+horizontal runs — or architectural edges like the Statue pedestal's mouldings.
+**No underline exists outside the plinth.**
+
+### The plinth text does not supply the word list
+
+Section 1 of the 13th Amendment contains **8** BIP-39 words — `neither`,
+`crime`, `party`, `have`, `exist`, `any`, `place`, `subject` — not 21. And
+`subject` is the *last* of them in reading order, not the first. (Reversing puts
+`subject` at 1, but that cannot produce `tower` or `moon`, so it does not
+generalise.)
+
+### Rune 4's trailing glyph is unidentifiable *in principle*
+
+Worth separating from "not yet", because only one of those justifies stopping.
+The glyph is a single mark, one component, no holes. If it is Cyrillic it must
+be one of the six letters the combined rune-1 + rune-4 alphabet still lacks
+(`Ж Х Ц Щ Ъ Э`), none of which appears anywhere in either strip. If it is from
+another alphabet, one glyph carries too little signal: the only
+rendering-robust feature is hole count, which partitions the 26 Gravity Falls
+symbols into classes of 10, 8, 6 and 2 — zero holes narrows it to **ten**
+candidates. Rune 3 was identifiable because seven glyphs spelling a
+known-shaped word give seven constraints at once. One glyph gives one.
+
+### The marking devices
+
+Catalogue how each known word is singled out, and a pattern appears that no
+single finding makes obvious:
+
+| Word | Device | Uses |
+|---|---|---:|
+| `subject` | underlined in running text | 1 |
+| `tower`, `moon` | written along a clock hand | 2 |
+| `real` | lowercase inserted among capitals | 1 |
+| `food` | written down a tower shaft | 1 |
+
+**Four different devices, none used more than twice**, each bespoke to the
+surface it sits on.
+
+A construction that had to mark twenty-one words would need a device applied
+twenty-one times — a repeated convention a solver learns once and then applies.
+The artwork shows the opposite. That is what a handful of deliberate clues looks
+like; it is not what an encoded word list looks like.
+
+### The conclusion these converge on
+
+* two independent sweeps for a sixth marked word found none — 21 object
+  surfaces, then every text strip in the image;
+* the underline, the one unambiguous word-number device, is used exactly once;
+* the mechanisms that can supply a *number* top out at four;
+* `food` and `real` are marked but numberless, and no mechanism proposed for
+  them has survived a control.
+
+**The artwork does not contain a recoverable 21-word phrase.** It contains four
+or five deliberate word-number clues and an ordering rule, and no demonstrated
+way to reach the rest. The repository this artwork is archived in is titled
+*"Puzzle or Statement"* — the people closest to it asked the same question.
+
+**What would overturn this:** one further word paired with a number by a device
+that survives a control. Not a candidate word, and not compute — one verified
+pairing. That is the entire bar, and nothing has cleared it since the plinth.
+
+## 11h. Two more filters, and the one lead that is out of reach
+
+### A clue must be readable to be a clue
+
+A second filter on count-based proposals, independent of the chosen/inherited
+split in §11d. Even a *chosen* count is useless if a solver cannot recover it
+from the published image — the artist cannot have relied on a number nobody can
+read back.
+
+The flag is the clean case, and it looked genuinely promising: a US flag
+canonically carries 50 stars and 13 stripes, so a **deviation** would be a
+chosen number carrying real information. Worth counting.
+
+Isolating the salmon-red star colour and taking connected components returns
+**45** star-sized blobs, in rows of `3, 5, 8, 8, 8, 7, 4, 1, 1`. That is not a
+grid — the flag is drawn waving, rotated and folded, freehand, so the canton has
+no readable rows and the folds occlude stars.
+
+**45 against 50 is not a deviation. It is an unreadable count.** Any solver
+would get a different number.
+
+So count proposals split three ways rather than two:
+
+| | |
+|---|---|
+| readable + chosen | evidence |
+| readable + inherited | carries nothing (§11d) |
+| **unreadable** | **cannot be a clue at all** |
+
+Unreadable by this test: the flag's stars and stripes, the Great Seal pyramid's
+courses in dense line art, and "17 years of gold prices" — which needs data the
+image does not contain.
+
+### The foundation re-checked
+
+Everything rests on three CONFIRMED assignments, so the two clock ones were
+re-verified against pixels rather than notes: **`TOWER` and `MOON` are both
+plainly written along their hands**, mirrored with the clock face. The
+foundation holds.
+
+### u/stsh_n's other posts: closed from here, open to any browser
+
+The creator's own words, if any exist, remain the highest-value unread thing.
+Every route available in this environment has been tried:
+
+| Route | Result |
+|---|---|
+| `reddit.com` / `old.reddit.com` / `api.reddit.com` | **403** — Reddit's own block page, not the proxy; Reddit refuses datacenter IPs |
+| `web.archive.org` | **blocked by the environment's egress policy** — though `archive.org`'s availability API *is* reachable and confirms a profile snapshot exists, dated 2025-03-27 |
+| `timetravel.mementoweb.org` | CONNECT tunnel refused |
+| web search | nothing indexed for the username |
+
+**A snapshot of that profile exists and is simply out of reach from this
+container.** Anyone with an ordinary browser opens it in a minute. That is the
+single highest-value action available on this puzzle, and no amount of compute
+or further image analysis substitutes for it.
+
+## 11i. Hidden text — and a conclusion of mine that was wrong
+
+The archived Reddit thread (supplied as a PDF, OCR'd) reports that solvers found
+hidden content with photo-forensics tools. Checking their claims turned up more
+than they described, and **overturned this repository's word-supply conclusion.**
+
+### The technique
+
+A **level sweep** maps a narrow luminance window to full contrast; a **local
+stretch** does the same per tile, so faint marks on flat ground surface
+everywhere at once. The guard matters: tiles whose range is under 6 are left
+mid-grey, or featureless ground turns into noise and drowns the signal.
+
+### What is there
+
+| Text | Where |
+|---|---|
+| **`PAY FOR THE FUTURE.`** | vertical, left margin beside the Bitcoin address |
+| **`THIS IS THE FIRST PREDICTION.`** | vertical, immediately right of it |
+| **`SHT`** | the Statue's tablet, below the underlined `BLM` and the fist |
+| **`THIS`** | inserted into the title, which reads `FIND THE SEED PHRASE IN THE `**`THIS`**` PICTURE` — ungrammatical, so it is an insertion, the same device as `real` in `ONLY real Bitcoin` |
+
+`SHT` is legible **only** in the window 196–212 of 255. Contrast is the wrong way
+to detect it — a badly chosen window clips to a high-contrast field containing
+no text. What marks the right window is that the strokes *resolve*: at 204 the
+patch breaks into **9 ink components**, at every other window into 1 or 2.
+
+### The correction
+
+Section 10 recorded **"no sixth marked word"** after two sweeps — 21 object
+surfaces, then every text strip. **That conclusion is wrong.** Both sweeps ran
+at a *fixed* enhancement, and none of the text above is visible at any fixed
+enhancement. `future`, `first` and `this` are BIP-39; `predict` sits inside
+`PREDICTION`.
+
+§11g's structural argument is weakened too. It counted four bespoke marking
+devices, none used more than twice, and concluded the artwork does not mark 21
+words. Low-contrast hidden text is a **fifth device — and unlike the other four
+it is repeatable.** Nothing limits how many sentences can be hidden this way,
+and three separate placements are already confirmed.
+
+**The word-supply bottleneck is reopened.**
+
+### Still reported, not yet located
+
+Recorded as other people's claims rather than findings, so they stay testable:
+`TO TEST USE WORDS` and `FIRST THE AT` (u/DiOnline — note every word of the
+first is BIP-39: `test`, `use`, `word`), a hidden `BITCOIN` mid-image, something
+like `5A` on a clock arrow, and inscriptions at the monument (u/RaTMaTaT).
+
+### What the thread independently confirms
+
+Most of it is unverified speculation, and several claims in it contradict each
+other. Two items check out against work done here before the thread was seen:
+
+* u/Amadeus407 relays the creator's own statement, and the three Russian rune
+  plaintexts **match this repo's decodes of runes 1, 2 and 4 exactly**;
+* u/DiOnline states the puzzle's creator and the person who posted it are
+  different people — which is what §10 concluded from the two signatures and
+  the medium mismatch.
+
+One further lead worth its own test: `breathe` is **in the Electrum v1
+wordlist** though not in BIP-39. And solvers counted **28 unique rune glyphs**
+excluding `TUESDAY`, consistent with this repo's 27-letter Cyrillic alphabet
+plus a separator.
+
+## 11j. The left margin in full, and what the reported fragments are worth
+
+### The margin
+
+Read at the right stretch, the left margin carries three lines:
+
+```
+1KfZGvwZxsvSmemoCmEV75uqcNzYBHjkHZ
+PAY FOR THE FUTURE.
+THIS IS THE FIRST PREDICTION.
+```
+
+The placement is the point: they sit **directly beneath the address the prize
+is held at**. That reads as the artist captioning the donation, not instructing
+a solver.
+
+**And it corroborates rune 4.** Rune 4 ends `НОМЕР` — *number* — followed by a
+glyph §11g showed to be unidentifiable from internal evidence. An artwork that
+calls itself *the first* is an artwork with a number, and the natural reading of
+the pair is that the trailing glyph is **1**.
+
+That is an inference, not a measurement, and it should be held as one: the glyph
+does not look like a hand-drawn `1`, and since the cipher is a substitution its
+shape carries no information anyway. What the sentence adds is a *reason to
+expect a number there* — which the artwork did not previously give.
+
+It also revives a settled question. A "first" implies a series, and §10 searched
+for a sibling puzzle and found none. Either the series was never continued, or
+it exists somewhere unsearched.
+
+### The reported fragments: locate before decoding
+
+`TO TEST USE WORDS` and `FIRST THE AT` are u/DiOnline's transcriptions, and
+**neither has been located here.** Before treating them as ciphertext, two
+cautions:
+
+**They may not be separate text.** The confirmed sentence `THIS IS THE FIRST
+PREDICTION.` contains `THE FIRST` adjacent. `FIRST THE AT` is those two words
+reordered plus a stray — plausibly the *same* text, read badly.
+
+**The BIP-39 coincidence is not one.** It is tempting to note that `test`, `use`
+and `word` are all in the wordlist. But as written, `TO TEST USE WORDS` has only
+**2 of 4** words in BIP-39 — `to` and `words` are not — and 2 of 4 is exactly the
+base rate for ordinary English. *(An earlier note in this repo claimed all of
+them were, by silently singularising `words` and dropping `to`. Corrected.)*
+
+So first-letter extractions like `TTUW`/`FTA`, or last-letter ones like `OTES`,
+are being run on a transcription that may be wrong in its letters — which is
+precisely where such extractions produce meaningless strings that look
+suggestive. **The prerequisite is locating the text, not manipulating it.**
+
+### The sweep, and why it proves nothing
+
+The strip detector was re-run over the locally stretched image, hunting rows of
+letter-sized components in a mid-grey band — faint strokes rather than the
+artwork's black line work. It returns 135 candidates; all 22 outside the known
+text blocks were rendered and inspected, and every one is already catalogued:
+the address, the pyramid's brickwork, the `Order and stability` banner, `MOON`
+on its hand, the Great Seal's lettering.
+
+**But it recovered only one of its two positive controls.** `PAY FOR THE
+FUTURE.` was found; `THIS IS THE FIRST PREDICTION.` was not, though it sits a
+few pixels away and is equally legible by eye.
+
+A detector that misses half its controls cannot support a negative, and this one
+does not. There may well be more hidden text. This sweep is simply not the
+instrument to rule it out.
+
+## 11k. Hunting the "5A on the clock arrow" — not there, and that matters
+
+u/RaTMaTaT reported: *"On the clockwise arrow, it looks like something similar
+to 5A."* **"Clockwise arrow" is machine translation of the Russian *часовая
+стрелка* — which means *hour hand*.** That made it the most valuable unchecked
+claim in the thread, because the hour hand is the one pointing at 21 that
+carries **no word**. A marking on it would be the word-and-number pair this
+puzzle has been starved of.
+
+### The search
+
+Each hand was straightened into a strip — sampled along its ray from the hub at
+(473, 940) with perpendicular offsets — then swept across every luminance
+window, counting *resolving strokes* rather than contrast, the discriminator
+that worked for `SHT`.
+
+**The instrument was fixed until it passed its controls.** At a half-width of
+18 px it recovered neither `TOWER` nor `MOON`: the labels sit *beside* the
+hands, not on the ray. Every reading at that width was discarded rather than
+reported. At 48 px both controls come back plainly — `TOWER` legible above the
+minute hand, `MOON` above the second.
+
+### The result
+
+With controls passing, the hour hand carries **nothing at any window**. The
+letter-sized components it does produce are **rune 2's glyphs**, which fall
+inside the widened strip, plus dithering in the hand's own gradient. The
+monument's lower right — also reported to carry inscriptions — shows only the
+plinth's steps.
+
+**This negative is supported**, and unlike the hidden-text sweep in §11j it is
+worth banking: the detector recovers both of its positive controls, so its
+silence means something.
+
+### Why it is a good result rather than a disappointment
+
+§11e deduced that the phrase is **21 words** on the grounds that the hour hand
+is *deliberately* blank — naming a parameter rather than a word slot — while
+the other two hands carry words.
+
+That deduction has now survived a search designed specifically to overturn it.
+The blankness is real, not an artefact of looking at the wrong contrast.
+
+## 11l. The detector, rebuilt — and the hidden-text avenue closed
+
+§11j's sweep recovered only one of its two controls and so supported nothing.
+This is the rebuild, and the fix came from **measuring the known text instead of
+guessing thresholds**.
+
+### What the known text actually looks like
+
+| Text | Local ground | Ink |
+|---|---:|---|
+| `PAY FOR THE FUTURE.` | 189 | just below |
+| `THIS IS THE FIRST PREDICTION.` | 192 | just below |
+| `SHT` | 214 | just below |
+
+All three are ink sitting **just below the local modal luminance**. So the
+detector selects, per 64 px tile, the band `[mode − 34, mode − 3]`.
+
+Being *relative to the local mode* does two things a fixed stretch cannot: it
+adapts to each region's ground, and it **excludes the artwork's black line
+work**, which lies far below the mode. That is the whole difference.
+
+### Scope, stated rather than glossed
+
+The detector calls a strip on five aligned letter-sized components. **Both
+sentence controls pass.** The three-letter `SHT` does **not** — its letters do
+not resolve as separate components on the tablet's curve, and dropping the
+minimum to three to catch it yields 723 candidates instead of 193.
+
+So this instrument finds **sentences**, and its negative covers sentences only.
+Short marks of a few letters remain possible anywhere and are *not* excluded.
+
+### The result
+
+193 strips; **38** fall outside the artwork's known text blocks; the 20
+strongest of those were rendered and inspected by eye. Every one is
+already-catalogued content or paper texture — the pyramid's brickwork, the
+`COVID 19 IS A HOAX` graffiti, rune glyphs, the vial's `CVD19`, the Great Seal's
+lettering, the masked faces, the frame edge.
+
+**There is no further hidden sentence in this artwork.** Unlike §11j, this
+negative is supported: the detector recovers both of its sentence controls.
+
+### Where that leaves the word supply
+
+The hidden-text device gave what it had: `future`, `first`, `this` — plus `SHT`,
+which is not a word. Combined with the marked words, the supply stands at:
+
+| | |
+|---|---|
+| bound to a position | `subject`=1, `tower`=3, `moon`=13 (+ `eye`=9 STRONG) |
+| **unbound** | `food`, `real`, `first`, `future`, `this` |
+
+**Eight BIP-39 words, four bindings, seventeen positions unknown.** The
+bottleneck has moved: it is no longer finding words, it is *binding* them.
+
+## 11m. The binding census: there is no second binding device
+
+The word supply reopened when hidden text was found. The **bindings** did not
+move — and a binding, not a word, is what this puzzle is actually short of.
+
+### Every numeral in the artwork, and what it binds
+
+| Numeral | Binds |
+|---|---|
+| `Section 1` | **`subject`** — the one explicit pairing |
+| the clock dial | nothing directly; it is the *scale* the ray mechanism reads against |
+| `05.25.20` | nothing — and it sits beside `breathe`, which §11 settled is not a BIP-39 word |
+| `11.03.20` | nothing — no adjacent word, and excluded by the chronology |
+| `1865 - 202…?` | nothing — editorial |
+| the price axis | nothing — depicted content |
+| `COVID 19` / `5G` | nothing — graffiti |
+| the target address | nothing — it *is* the target |
+
+**One numeral out of eight binds a word.** The other bindings — `tower` and
+`moon` — come from the clock-ray mechanism, not from a numeral at all.
+
+### The two marked words, checked directly
+
+`food` is written on the Space Needle's **restaurant saucer** — confirmed
+legible by level sweep at window 160–180, which is a nice detail in itself, the
+word placed on the revolving restaurant. There is **no numeral near it**.
+
+`real` sits in `ONLY real BITCOIN` on the Statue's base. No numeral — and the
+tablet that would traditionally carry a date has been replaced by a BLM phone.
+
+### So the artwork binds four times, by two devices
+
+* an **underlined numeral beside an underlined word** — used **once**;
+* a **word written along a clock ray** — used **twice**, plus the Seal's eye at
+  `STRONG`.
+
+Searches for a third device have now covered:
+
+| Search | Result | Controls |
+|---|---|---|
+| underlines across the whole image | 1 use only | plinth recovered |
+| hidden sentences | 2 found, **neither contains a numeral** | both recovered |
+| the hour hand | blank | `TOWER` and `MOON` recovered |
+| line orientation | refuted at the base rate | n/a |
+
+Three of the four came back empty **with their controls passing**.
+
+### This is the precise shape of the obstacle
+
+**Eight BIP-39 words are in hand. Five of them are bound to nothing.**
+
+Finding more words does not help. The puzzle needs a mechanism that *attaches*
+a word to a position, and after four controlled searches the artwork does not
+appear to contain a third one.
 
 ## 12. Open questions
 

@@ -312,6 +312,41 @@ def cmd_positions(args) -> int:
     return 0
 
 
+def cmd_status(args) -> int:
+    """The scoreboard: what is actually known, recomputed from the records."""
+    from puzzle import positions, hidden_text, wordlist
+
+    length = positions.HOUR_HAND_IS_THE_LENGTH["saturated_at"]
+    confirmed = sorted(positions.CONFIRMED, key=lambda a: a.position)
+    bound = {w for a in confirmed for w in a.words}
+    unbound = set(positions.MARKED_WITHOUT_NUMBER) | hidden_text.hidden_bip39_words()
+
+    print(f"phrase length          : {length}  (deduced - the blank hour hand)")
+    print(f"wordlist               : {wordlist.WORDLIST_IS_BIP39['verdict']}")
+    print()
+    print("word-number pairs with a verified mechanism:")
+    for a in confirmed:
+        print(f"  {a.position:2d}  {'/'.join(sorted(a.words)):9s}  {a.basis[:56]}")
+    print(f"  ({len(confirmed)} of {length} positions)")
+    print()
+    print("one further pair, predicted before it was measured:")
+    for a in positions.PROPOSED:
+        if a.position == 9:
+            print(f"  {a.position:2d}  {'/'.join(sorted(a.words)):9s}  STRONG - {a.basis[:44]}")
+    print()
+    print(f"words in hand but bound to no position ({len(unbound)}):")
+    for w in sorted(unbound):
+        src = "marked" if w in positions.MARKED_WITHOUT_NUMBER else "hidden text"
+        print(f"      {w:9s}  {src}")
+    print()
+    unknown = length - len(confirmed) - 1
+    print(f"positions still unknown: {unknown}")
+    print(f"search wall            : 3 unknown positions is the practical ceiling")
+    print(f"verdict                : {'searchable' if unknown <= 3 else 'NOT searchable'}"
+          f" - {unknown} unknown means about 2048^{unknown} phrases")
+    return 0
+
+
 def cmd_search(args) -> int:
     pool = _resolve_pool(args)
     if not pool:
@@ -465,6 +500,10 @@ def build_parser() -> argparse.ArgumentParser:
                     help="exclude even the strong ones")
     sp.add_argument("--out", help="write the map as JSON")
     sp.set_defaults(func=cmd_positions)
+
+    sp = sub.add_parser("status",
+                        help="what is known: words, positions, the gap")
+    sp.set_defaults(func=cmd_status)
 
     sp = sub.add_parser("search", help="run the search")
     pool_args(sp)

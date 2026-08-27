@@ -112,3 +112,56 @@ def to_indices(words: Iterable[str]) -> list[int]:
         except KeyError:
             raise WordlistError(f"{w!r} is not a BIP-39 word") from None
     return out
+
+
+#: **The wordlist question, settled: it is BIP-39, and ``breathe`` is not a
+#: seed word.**
+#:
+#: A solver in the archived thread noted that ``breathe`` is absent from BIP-39
+#: but present in **Electrum's v1 wordlist** - 1626 words, a different scheme
+#: from the Electrum seeds ``puzzle.electrum`` already implements, and one that
+#: produces exactly the kind of legacy ``1...`` address this puzzle targets.
+#: That is a real possibility and it was tested rather than dismissed.
+#:
+#: The test: a correct wordlist must contain **every word the artwork
+#: deliberately marks or hides**. Those are ``subject``, ``tower``, ``moon``
+#: (confirmed pairs), ``food`` and ``real`` (marked, no number), and ``first``,
+#: ``future`` and ``this`` (hidden low-contrast text).
+#:
+#: ==============  =========
+#: wordlist        covers
+#: ==============  =========
+#: BIP-39          **8 of 8**
+#: Electrum v1     6 of 8 - missing ``food`` and ``this``
+#: ==============  =========
+#:
+#: **The decisive pair is ``breathe`` and ``food``.** ``breathe`` is in
+#: Electrum v1 and not BIP-39; ``food`` is in BIP-39 and not Electrum v1. **No
+#: wordlist contains both**, so at most one of them can be a seed word - and
+#: the artwork settles which. ``food`` is *deliberately written down the Space
+#: Needle's shaft*. ``breathe`` is plain visible text on a hoodie, which
+#: section 1 of ANALYSIS.md established years of searching had over-read.
+#:
+#: The marked one wins. So the scheme is BIP-39, and the ``breathe`` anomaly
+#: that has run through this analysis since section 1 is resolved: it is not a
+#: seed word, and it never was.
+#:
+#: This is the wall the community hit and could not get past. u/hmm_dimasiki:
+#: *"if we take as a basis that the whole seed phrase should be composed of the
+#: same set of words, then how to explain that the word 'food' is not in this
+#: set."* The answer is that ``breathe`` is the one to drop, not ``food``.
+WORDLIST_IS_BIP39 = {
+    "candidates": ("BIP-39", "Electrum v1"),
+    "electrum_v1_size": 1626,
+    "must_contain": ("subject", "tower", "moon", "food", "real",
+                     "first", "future", "this"),
+    "bip39_covers": 8,
+    "electrum_v1_covers": 6,
+    "electrum_v1_missing": ("food", "this"),
+    "decisive_pair": {"breathe": "Electrum v1 only", "food": "BIP-39 only"},
+    "no_list_contains_both": True,
+    "which_is_marked": "food - written down the Space Needle's shaft; "
+                       "breathe is plain visible text on a hoodie",
+    "verdict": "BIP-39; breathe is not a seed word",
+    "resolves": "the anomaly running through this analysis since section 1",
+}

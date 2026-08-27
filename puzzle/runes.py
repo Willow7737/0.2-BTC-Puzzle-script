@@ -1342,3 +1342,40 @@ TUESDAY_AS_A_NUMBER = {
     "existing_proposal_for_2": "camera, from an incidental count of two "
                                "cameras drawn",
 }
+
+
+#: **Rune 4's trailing glyph is unidentifiable in principle, not merely so far.**
+#:
+#: Worth separating from "we have not managed it yet", because the two call for
+#: different responses and only one of them justifies stopping.
+#:
+#: The glyph is a single mark: 13x20 px, one component, no enclosed holes. Two
+#: exhaustive cases:
+#:
+#: * **If it is Cyrillic**, it must be one of the six letters the combined
+#:   rune-1 + rune-4 alphabet still lacks - Ж Х Ц Щ Ъ Э - because it matches
+#:   none of the 27 that are covered (nearest is Д at 39, against a
+#:   same-letter baseline of 27.2). Those six appear nowhere in either strip,
+#:   so no reference for them exists anywhere in the artwork.
+#: * **If it is from another alphabet** - the Gravity Falls symbols being the
+#:   obvious candidate, since rune 3 uses them - one glyph carries too little
+#:   signal to identify across sources. The only rendering-robust feature
+#:   available is hole count, and it partitions the 26 GF symbols into classes
+#:   of 10, 8, 6 and 2. This glyph has zero holes, which narrows it to **ten**
+#:   candidates. The 12x12 fingerprint cannot help: it has no cross-source
+#:   power at all (RUNE3_SEARCH_WITHDRAWN).
+#:
+#: Rune 3 was identifiable because seven glyphs spelling a known-shaped word
+#: give seven constraints at once. One glyph gives one, and one is not enough.
+#:
+#: So this is where the trailing glyph stops - not for want of effort, but
+#: because the evidence needed to settle it is not present in the artwork.
+RUNE4_TAIL_IS_UNIDENTIFIABLE = {
+    "glyph": {"width": 13, "height": 20, "components": 1, "holes": 0},
+    "if_cyrillic": "must be one of Ж Х Ц Щ Ъ Э, which appear in neither strip",
+    "if_other_alphabet": "hole count narrows 26 GF symbols to 10; the 12x12 "
+                         "metric has no cross-source power",
+    "why_rune3_worked": "seven glyphs spelling a known word give seven "
+                        "constraints; one glyph gives one",
+    "verdict": "unidentifiable in principle from internal evidence",
+}

@@ -1862,3 +1862,419 @@ class TestVisibleWordsAreNotThePhrase(unittest.TestCase):
                 "ladder monkey needle pepper ribbon").split()
         rate = sum(1 for w in ctrl if wordlist.is_valid(w)) / len(ctrl)
         self.assertAlmostEqual(rate, 0.80, places=2)
+
+
+class TestHourHandIsTheLength(unittest.TestCase):
+    """The blank hand names the phrase length rather than a position."""
+
+    def setUp(self):
+        from puzzle import positions
+        self.p = positions
+        self.rec = positions.HOUR_HAND_IS_THE_LENGTH
+
+    def test_21_is_a_valid_bip39_length(self):
+        self.assertIn(21, self.rec["bip39_lengths"])
+
+    def test_clock_reach_is_recomputed(self):
+        reach = sorted(self.p.all_rays())
+        self.assertEqual((reach[0], reach[-1]), self.rec["clock_reaches"])
+        self.assertEqual(reach, list(range(3, 24)))
+
+    def test_the_counting_argument(self):
+        """21 is saturated by the available mechanisms; 24 is one short."""
+        reach = set(self.p.all_rays())
+        available = len(self.rec["non_clock_available"])
+        for length, gaps in self.rec["non_clock_needed"].items():
+            computed = tuple(sorted(set(range(1, length + 1)) - reach))
+            self.assertEqual(computed, gaps, f"length {length}")
+        self.assertEqual(len(self.rec["non_clock_needed"][21]), available)
+        self.assertGreater(len(self.rec["non_clock_needed"][24]), available)
+
+    def test_the_blank_hand_really_is_blank(self):
+        """Two hands carry words, one does not - the anomaly must be real."""
+        census = self.p.CLOCK_HAND_CENSUS["hands"]
+        labelled = [v for v in census.values()
+                    if "TOWER" in v or "MOON" in v]
+        blank = [v for v in census.values() if "unlabelled" in v]
+        self.assertEqual(len(labelled), 2)
+        self.assertEqual(len(blank), 1)
+        self.assertIn("21", blank[0])
+
+    def test_it_claims_no_tractability_gain(self):
+        self.assertFalse(self.rec["changes_tractability"])
+        self.assertTrue(self.rec["confidence"].startswith("inference"))
+
+
+class TestLineOrientationIsNotAMechanism(unittest.TestCase):
+    """A mechanism proposed, tested, and killed by its own control."""
+
+    def setUp(self):
+        from puzzle import positions
+        self.rec = positions.LINE_ORIENTATION_IS_NOT_A_MECHANISM
+
+    def test_the_match_equals_the_control(self):
+        r = self.rec
+        self.assertAlmostEqual(r["control_artwork_edges_within_1_7_deg"],
+                               r["control_uniform_within_1_7_deg"], places=3)
+        self.assertGreaterEqual(r["control_artwork_edges_within_1_7_deg"], 0.20,
+                                "if arbitrary edges stopped matching, revisit")
+
+    def test_ray_spacing_makes_any_orientation_match(self):
+        """The structural reason, recomputed from the ray set."""
+        from puzzle import positions
+        rays = sorted({b % 180 for e in positions.all_rays().values()
+                       for _, _, b in e})
+        gaps = [rays[i + 1] - rays[i] for i in range(len(rays) - 1)]
+        self.assertLessEqual(max(gaps), 15.1)
+        self.assertLessEqual(max(gaps) / 2, 7.6)
+
+    def test_food_and_real_still_have_no_number(self):
+        from puzzle import positions
+        self.assertTrue(self.rec["verdict"].startswith("refuted"))
+        marked = set(positions.MARKED_WITHOUT_NUMBER)
+        self.assertEqual(marked, {"food", "real"})
+
+
+class TestMarkingDevices(unittest.TestCase):
+    """Four bespoke devices, none used twice, against 21 words needed."""
+
+    def setUp(self):
+        from puzzle import positions
+        self.p = positions
+        self.rec = positions.MARKING_DEVICES
+
+    def test_the_catalogue_matches_the_known_words(self):
+        marked = set()
+        for words in self.rec["devices"].values():
+            marked.update(words)
+        confirmed = {w for a in self.p.CONFIRMED for w in a.words}
+        self.assertTrue(confirmed.issubset(marked))
+        self.assertEqual(marked & set(self.p.MARKED_WITHOUT_NUMBER),
+                         {"food", "real"})
+        self.assertEqual(len(marked), self.rec["words_marked"])
+
+    def test_no_device_is_used_more_than_twice(self):
+        uses = max(len(w) for w in self.rec["devices"].values())
+        self.assertEqual(uses, self.rec["max_uses_of_any_device"])
+        self.assertLessEqual(uses, 2)
+
+    def test_the_shortfall_is_stated(self):
+        self.assertGreater(self.rec["words_needed"], self.rec["words_marked"] * 4)
+
+    def test_the_bar_for_overturning_it_is_recorded(self):
+        """A conclusion this strong must say what would break it."""
+        self.assertIn("survives a control", self.rec["what_would_overturn_it"])
+
+    def test_underline_used_once(self):
+        self.assertEqual(self.p.UNDERLINE_SWEEP["genuine_outside_the_plinth"], 0)
+
+
+class TestCountsMustBeReadable(unittest.TestCase):
+    """A count a solver cannot recover cannot be the intended clue."""
+
+    def setUp(self):
+        from puzzle import positions
+        self.p = positions
+        self.rec = positions.COUNTS_MUST_BE_READABLE
+
+    def test_flag_star_count_is_unreadable_not_deviant(self):
+        r = self.rec
+        self.assertNotEqual(r["flag_stars_detected"], r["flag_stars_canonical"])
+        self.assertTrue(r["verdict"].endswith("unreadable count"))
+        # rows of a real 50-star canton alternate 6 and 5; these do not
+        self.assertNotIn(set(r["flag_star_rows"]), [{5, 6}])
+
+    def test_it_is_a_separate_filter_from_chosen_versus_inherited(self):
+        chosen = set(self.p.CHOSEN_VERSUS_INHERITED["chosen"])
+        inherited = set(self.p.CHOSEN_VERSUS_INHERITED["inherited"])
+        self.assertTrue(chosen and inherited)
+        self.assertIn("cannot be the intended clue", self.rec["principle"])
+
+    def test_creator_posts_recorded_as_environment_blocked(self):
+        rec = self.p.CREATOR_POSTS_UNREACHABLE
+        self.assertIn("reddit.com", rec["routes_tried"])
+        self.assertIn("web.archive.org", rec["routes_tried"])
+        self.assertTrue(rec["snapshot_exists"])
+        self.assertIn("open to any browser", rec["verdict"])
+
+
+class TestHiddenText(unittest.TestCase):
+    """Low-contrast text the earlier fixed-enhancement sweeps could not see."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def setUp(self):
+        from puzzle import hidden_text
+        self.h = hidden_text
+
+    def test_hidden_words_are_bip39(self):
+        from puzzle import wordlist
+        found = self.h.hidden_bip39_words()
+        self.assertTrue(found)
+        for w in found:
+            self.assertTrue(wordlist.is_valid(w), w)
+
+    def test_the_new_words_are_not_already_in_the_marked_set(self):
+        """If they were already known this would not be a correction."""
+        from puzzle import positions
+        known = {w for a in positions.CONFIRMED for w in a.words}
+        known |= set(positions.MARKED_WITHOUT_NUMBER)
+        self.assertEqual(self.h.hidden_bip39_words() & known, set())
+
+    def test_correction_names_what_it_supersedes(self):
+        c = self.h.CORRECTION
+        self.assertIn("positions.WORD_SUPPLY", c["affects"])
+        self.assertIn("positions.MARKING_DEVICES", c["affects"])
+        self.assertTrue(c["device_is_repeatable"])
+        from puzzle import positions
+        self.assertIn("SUPERSEDED", positions.MARKING_DEVICES)
+
+    def test_sht_is_readable_only_in_a_narrow_window(self):
+        """The whole point: no global enhancement shows it.
+
+        Contrast is the wrong measure - a badly chosen window clips to a
+        high-contrast field with no text in it. What distinguishes the right
+        window is that the strokes *resolve*, so count ink components.
+        """
+        if not os.path.exists(self.IMAGE):
+            self.skipTest("artwork not present")
+        import numpy as np
+        from scipy import ndimage
+
+        box = (252, 782, 292, 802)          # tight on the text, flat ground
+        def components(lo):
+            w = self.h.level_window(self.IMAGE, box, lo)
+            return ndimage.label(w < 128, np.ones((3, 3)))[1]
+
+        peak = components(204)
+        self.assertGreaterEqual(peak, 6, "the text must resolve into strokes")
+        for lo in (120, 150, 185, 225):
+            self.assertLess(components(lo), peak,
+                            f"window {lo} should not resolve the text")
+
+    def test_local_stretch_runs_and_preserves_shape(self):
+        if not os.path.exists(self.IMAGE):
+            self.skipTest("artwork not present")
+        from PIL import Image
+        out = self.h.local_stretch(self.IMAGE)
+        self.assertEqual(out.shape, Image.open(self.IMAGE).size[::-1])
+
+    def test_reported_but_unlocated_claims_are_kept_separate(self):
+        """Other people's claims must not be recorded as findings."""
+        found = {e["text"] for e in self.h.FOUND}
+        reported = {e["text"] for e in self.h.REPORTED_NOT_YET_FOUND}
+        self.assertEqual(found & reported, set())
+        self.assertIn("TO TEST USE WORDS", reported)
+
+
+class TestLeftMarginAndSweep(unittest.TestCase):
+    """The margin sentences, and a sweep that supports no negative."""
+
+    def setUp(self):
+        from puzzle import hidden_text
+        self.h = hidden_text
+
+    def test_margin_lines_are_recorded_in_order(self):
+        lines = self.h.LEFT_MARGIN["lines"]
+        self.assertEqual(len(lines), 3)
+        self.assertTrue(lines[0].startswith("1KfZ"))
+        self.assertIn("FIRST PREDICTION", lines[2])
+
+    def test_the_number_is_an_inference_not_a_measurement(self):
+        rec = self.h.LEFT_MARGIN
+        self.assertEqual(rec["inferred_x"], 1)
+        self.assertTrue(rec["inference_not_measurement"])
+        from puzzle import runes
+        # the glyph itself must stay recorded as unidentifiable
+        self.assertTrue(runes.RUNE4_TAIL_IS_UNIDENTIFIABLE["verdict"]
+                        .startswith("unidentifiable"))
+
+    def test_sweep_supports_no_negative(self):
+        s = self.h.HIDDEN_SWEEP
+        self.assertLess(s["controls_recovered"], s["controls"])
+        self.assertIn("supports no negative", s["verdict"])
+
+    def test_reported_fragment_is_not_all_bip39(self):
+        """A claim this repo briefly got wrong; keep it pinned."""
+        from puzzle import wordlist
+        as_written = ["to", "test", "use", "words"]
+        hits = [w for w in as_written if wordlist.is_valid(w)]
+        self.assertEqual(len(hits), 2)
+        note = [e for e in self.h.REPORTED_NOT_YET_FOUND
+                if e["text"] == "TO TEST USE WORDS"][0]["note"]
+        self.assertIn("2 of its 4", note)
+
+
+class TestClockArrowClaim(unittest.TestCase):
+    """A reported marking on the hour hand, searched for under controls."""
+
+    def setUp(self):
+        from puzzle import hidden_text
+        self.rec = hidden_text.CLOCK_ARROW_CLAIM
+
+    def test_this_negative_is_control_backed(self):
+        """Unlike HIDDEN_SWEEP, this one recovers both controls."""
+        from puzzle import hidden_text
+        self.assertIn("TOWER", self.rec["half_width_48px"])
+        self.assertIn("MOON", self.rec["half_width_48px"])
+        self.assertIn("supported", self.rec["verdict"])
+        # the other sweep must stay marked as supporting no negative
+        self.assertIn("supports no negative",
+                      hidden_text.HIDDEN_SWEEP["verdict"])
+
+    def test_the_discarded_width_is_recorded(self):
+        """A setting that failed its controls must not be quietly dropped."""
+        self.assertIn("discarded", self.rec["half_width_18px"])
+
+    def test_it_strengthens_the_length_deduction(self):
+        from puzzle import positions
+        self.assertIn("HOUR_HAND_IS_THE_LENGTH", self.rec["strengthens"])
+        self.assertEqual(positions.HOUR_HAND_IS_THE_LENGTH["saturated_at"], 21)
+
+    def test_the_claim_is_not_promoted_to_a_finding(self):
+        from puzzle import hidden_text
+        found = {e["text"] for e in hidden_text.FOUND}
+        self.assertNotIn("5A", found)
+
+
+class TestWordlistIsBip39(unittest.TestCase):
+    """Electrum v1 tested and excluded; the breathe anomaly resolved."""
+
+    def setUp(self):
+        from puzzle import wordlist
+        self.w = wordlist
+        self.rec = wordlist.WORDLIST_IS_BIP39
+
+    def test_bip39_holds_every_marked_or_hidden_word(self):
+        for word in self.rec["must_contain"]:
+            self.assertTrue(self.w.is_valid(word), word)
+        self.assertEqual(self.rec["bip39_covers"],
+                         len(self.rec["must_contain"]))
+
+    def test_electrum_v1_is_short_by_exactly_food_and_this(self):
+        self.assertEqual(set(self.rec["electrum_v1_missing"]), {"food", "this"})
+        self.assertLess(self.rec["electrum_v1_covers"],
+                        self.rec["bip39_covers"])
+
+    def test_breathe_and_food_cannot_share_a_wordlist(self):
+        """The constraint that decides the scheme."""
+        self.assertTrue(self.rec["no_list_contains_both"])
+        self.assertFalse(self.w.is_valid("breathe"))
+        self.assertTrue(self.w.is_valid("food"))
+
+    def test_the_marked_word_is_the_one_kept(self):
+        from puzzle import positions
+        self.assertIn("food", positions.MARKED_WITHOUT_NUMBER)
+        self.assertTrue(self.rec["verdict"].startswith("BIP-39"))
+
+
+class TestStatusCommand(unittest.TestCase):
+    """The scoreboard must recompute, not restate."""
+
+    def test_status_runs_and_reports_the_gap(self):
+        import subprocess, sys
+        r = subprocess.run([sys.executable, "solve.py", "status"],
+                           capture_output=True, text=True, timeout=120)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        out = r.stdout
+        self.assertIn("phrase length          : 21", out)
+        self.assertIn("BIP-39", out)
+        self.assertIn("NOT searchable", out)
+
+    def test_the_counts_match_the_records(self):
+        from puzzle import positions, hidden_text
+        confirmed = len(positions.CONFIRMED)
+        unbound = set(positions.MARKED_WITHOUT_NUMBER) | \
+            hidden_text.hidden_bip39_words()
+        self.assertEqual(confirmed, 3)
+        self.assertEqual(len(unbound), 5)
+        length = positions.HOUR_HAND_IS_THE_LENGTH["saturated_at"]
+        self.assertEqual(length - confirmed - 1, 17)
+
+
+class TestRebuiltDetector(unittest.TestCase):
+    """The rebuild: it must recover both sentence controls, or say nothing."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def setUp(self):
+        from puzzle import hidden_text
+        self.h = hidden_text
+        if not os.path.exists(self.IMAGE):
+            self.skipTest("artwork not present")
+
+    @staticmethod
+    def _overlaps(a, b):
+        return not (a[2] < b[0] or a[0] > b[2] or a[3] < b[1] or a[1] > b[3])
+
+    def test_both_sentence_controls_are_recovered(self):
+        """The whole point of the rebuild - the first sweep managed one."""
+        _, _, strips = self.h.detect(self.IMAGE)
+        for name, box in (("PAY FOR THE FUTURE", (64, 700, 94, 1060)),
+                          ("THIS IS THE FIRST PREDICTION", (88, 700, 118, 1060))):
+            self.assertTrue(any(self._overlaps(b, box) for b, _ in strips),
+                            f"control not recovered: {name}")
+
+    def test_the_band_is_relative_to_local_ground(self):
+        """Relative-to-mode is what excludes the artwork's black line work."""
+        import numpy as np
+        from PIL import Image
+        g = np.asarray(Image.open(self.IMAGE).convert("L")).astype(int)
+        mask = self.h.faint_ink(g)
+        # black line work must be excluded almost entirely
+        self.assertLess(mask[g < 60].mean(), 0.01)
+
+    def test_scope_limit_is_recorded_not_glossed(self):
+        scope = self.h.DETECTOR_SCOPE
+        self.assertEqual(scope["sentence_controls_passed"],
+                         scope["sentence_controls_total"])
+        self.assertIn("SHT", scope["short_mark_control"])
+        self.assertIn("sentences only", scope["negative_covers"])
+
+    def test_the_negative_is_scoped_to_sentences(self):
+        rec = self.h.REBUILT_SWEEP
+        self.assertEqual(rec["new_sentences_found"], 0)
+        self.assertIn("supported", rec["verdict"])
+        self.assertIn("short marks are out of scope", rec["caveat"])
+
+    def test_it_supersedes_the_broken_sweep(self):
+        """The old sweep must stay marked as supporting nothing."""
+        self.assertIn("supports no negative", self.h.HIDDEN_SWEEP["verdict"])
+
+
+class TestBindingCensus(unittest.TestCase):
+    """The obstacle stated precisely: bindings, not words."""
+
+    def setUp(self):
+        from puzzle import positions
+        self.p = positions
+        self.rec = positions.BINDING_CENSUS
+
+    def test_the_census_covers_every_known_numeral(self):
+        self.assertEqual(self.rec["numerals_total"],
+                         len(self.p.NUMERAL_CENSUS))
+
+    def test_exactly_one_numeral_binds_a_word(self):
+        binds = [k for k, v in self.p.NUMERAL_CENSUS.items()
+                 if "pairing" in v["role"]]
+        self.assertEqual(len(binds), self.rec["numerals_that_bind"])
+        self.assertEqual(binds, ["section_1"])
+
+    def test_bindings_total_matches_the_position_records(self):
+        confirmed = len(self.p.CONFIRMED)
+        self.assertEqual(confirmed + 1, self.rec["bindings_total"])
+        self.assertEqual(sum(self.rec["devices"].values()),
+                         self.rec["bindings_total"])
+
+    def test_unbound_words_are_the_ones_with_no_position(self):
+        from puzzle import hidden_text
+        unbound = set(self.p.MARKED_WITHOUT_NUMBER) | \
+            hidden_text.hidden_bip39_words()
+        self.assertEqual(set(self.rec["unbound_words"]), unbound)
+
+    def test_every_third_device_search_is_recorded(self):
+        """A negative is only worth stating if you can point at the searches."""
+        self.assertEqual(len(self.rec["third_device_searches"]), 4)
+        for name in ("UNDERLINE_SWEEP",
+                     "LINE_ORIENTATION_IS_NOT_A_MECHANISM"):
+            self.assertTrue(hasattr(self.p, name), name)

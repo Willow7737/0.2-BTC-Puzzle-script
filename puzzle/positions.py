@@ -26,7 +26,8 @@ The two grey hands cannot be separated from grey artwork by ridge detection,
 but the predicted bearings lie along them visibly.
 
 **Consequence: position 21 exists, so the phrase is not 12 words.** BIP-39
-allows 12/15/18/21/24, so it is 21 or 24 - which is why every 12-word search
+allows 12/15/18/21/24, so it is 21 or 24 - and HOUR_HAND_IS_THE_LENGTH
+argues 21. Either way this is why every 12-word search
 ever run against this puzzle was structurally unable to succeed.
 """
 
@@ -749,6 +750,19 @@ WORD_SUPPLY = {
                    "convention it demonstrably uses; search remains unseedable",
 }
 
+#: **SUPERSEDED.** This record's "no sixth marked word" is wrong. Both
+#: sweeps behind it ran at a fixed enhancement, and the artwork also carries
+#: text at a contrast no single enhancement shows - including the BIP-39
+#: words ``future``, ``first`` and ``this``. See
+#: ``puzzle.hidden_text.CORRECTION``.
+WORD_SUPPLY_SUPERSEDED = {
+    "claim": "five marked words, no sixth found",
+    "wrong_because": "both sweeps ran at a fixed enhancement",
+    "new_words": ("future", "first", "this"),
+    "see": "puzzle.hidden_text",
+}
+
+
 
 #: **The clock does not show a time.** The three hands are pointers.
 #:
@@ -865,4 +879,365 @@ CHOSEN_VERSUS_INHERITED = {
     "verdict": "the community's table reduces to the assignments already "
                "established; every further entry rests on a number the artist "
                "did not have to choose",
+}
+
+
+#: **The unlabelled hour hand names the phrase length, not a position.**
+#:
+#: An anomaly this repo recorded without explaining: of the three clock hands,
+#: two carry words - ``tower`` on the minute hand at midpoint(1,2)=3, ``moon``
+#: on the second hand at midpoint(12,1)=13 - and the third carries **none**.
+#: It points at midpoint(10,11)=21 and is blank. Earlier notes called 21 an
+#: "orphan number": a position whose word was never found.
+#:
+#: Read it instead as a **global parameter**. 21 is a valid BIP-39 mnemonic
+#: length (12, 15, 18, 21, 24 are the permitted values), and a hand that names
+#: a parameter rather than a word slot has no reason to carry a word. That
+#: explains the blankness instead of positing a word nobody can find.
+#:
+#: **The counting argument.** The clock reaches positions 3 to 23 under its two
+#: alignments. So a phrase of length *L* needs a mechanism outside the clock
+#: for every position below 3:
+#:
+#: =========  =======================  ==============================
+#: length     needs non-clock          available in the artwork
+#: =========  =======================  ==============================
+#: 21         positions 1, 2  -> **2**  the plinth, and rune 3  -> **2**
+#: 24         positions 1, 2, 24 -> 3   the same two -> 2, one short
+#: =========  =======================  ==============================
+#:
+#: **21 is exactly saturated; 24 leaves a position with no mechanism at all.**
+#: The two non-clock mechanisms are the plinth (underlined ``subject`` beside
+#: an underlined ``Section 1``) and rune 3 - the one strip deliberately set
+#: apart, in a different cipher and a different language, attached to no
+#: object, beside a question mark, and pointing at 2 under every reading.
+#:
+#: **Independent support.** 21 is Bitcoin's signature number: the supply cap is
+#: 21 million. For a Bitcoin puzzle, a 21-word phrase is the thematically
+#: obvious choice, and aiming the slowest hand at it is a natural way to say so.
+#:
+#: **A withdrawn argument.** ANALYSIS.md previously argued for 24 on the
+#: grounds that "a 21-word phrase would leave the rays for 22 and 23 spurious".
+#: That is weak: a clock is a coordinate system, and spare capacity in a
+#: coordinate system is not evidence that every coordinate must be used. A
+#: ruler with more marks than you need is still the right ruler.
+#:
+#: **What it does not do.** It changes no arithmetic. A 21-word phrase with
+#: three confirmed positions still leaves 17 unknown words, and 2048^17 is as
+#: unsearchable as 2048^20. This is a claim about the puzzle's architecture,
+#: not a step toward enumerating it.
+HOUR_HAND_IS_THE_LENGTH = {
+    "anomaly": "two hands carry words; the third is blank and points at 21",
+    "reading": "21 is the phrase length, not a position",
+    "bip39_lengths": (12, 15, 18, 21, 24),
+    "clock_reaches": (3, 23),
+    "non_clock_needed": {21: (1, 2), 24: (1, 2, 24)},
+    "non_clock_available": ("the plinth", "rune 3"),
+    "saturated_at": 21,
+    "thematic_support": "21 million is Bitcoin's supply cap",
+    "withdraws": "the argument that 24 is preferred because a 21-word phrase "
+                 "leaves rays 22 and 23 unused",
+    "changes_tractability": False,
+    "confidence": "inference, not measurement - it explains three anomalies "
+                  "at once (the blank hand, rune 3's role, the length "
+                  "ambiguity) but it was reached after the facts it explains",
+}
+
+
+#: **Line orientation does not encode position.** A tempting mechanism, tested
+#: and killed by its own control.
+#:
+#: The reasoning that motivated it: all three confirmed words are *written along
+#: something*. ``tower`` and ``moon`` ride clock hands, which are lines with a
+#: bearing, and their position is that bearing's ray. ``food`` runs down the
+#: Space Needle's shaft and ``real`` sits on the Statue's base - both also
+#: lines, and both marked words that carry **no number**. If a written word's
+#: line orientation gave its position, that anomaly would resolve.
+#:
+#: The Needle's shaft measures **4.4 degrees** (22 scanline centroids, fit
+#: residual 7.0 px), and the nearest ray is position 5 at 2.7 degrees - off by
+#: **1.7 degrees**. On its own that looks like a hit.
+#:
+#: It is not. The control is the artwork's own strong edges, sampled from the
+#: top 1% of gradient magnitude:
+#:
+#: ===============================  ===============  ==================
+#: orientations                     mean miss        within 1.7 deg
+#: ===============================  ===============  ==================
+#: the artwork's own strong edges   3.26 deg         **25.2%**
+#: uniform random                   3.49 deg         **25.2%**
+#: ===============================  ===============  ==================
+#:
+#: **One arbitrary edge in four does as well as the Needle.** The match sits
+#: exactly at the artwork's base rate, which is itself indistinguishable from
+#: uniform.
+#:
+#: The reason is structural, and it would apply to any composition. 24 rays at
+#: 15-degree spacing put *every* orientation within 7.5 degrees of some ray, so
+#: an orientation match is guaranteed and carries information only if it is far
+#: tighter than that. And the artwork is 32% verticals and horizontals by edge
+#: count, while the ray set contains a near-vertical (2.7 deg) and a
+#: near-horizontal (92.4 deg) ray - so the commonest orientations in any drawing
+#: match for free.
+#:
+#: So ``food`` and ``real`` still have no number, and the anomaly stands.
+LINE_ORIENTATION_IS_NOT_A_MECHANISM = {
+    "hypothesis": "a written word's line orientation gives its position",
+    "motivation": "all three confirmed words are written along a line, and "
+                  "food and real are marked words with no number",
+    "needle_axis_deg": 4.4,
+    "nearest_ray": {"position": 5, "bearing": 2.7, "off_by": 1.7},
+    "control_artwork_edges_within_1_7_deg": 0.252,
+    "control_uniform_within_1_7_deg": 0.252,
+    "artwork_edge_mean_miss_deg": 3.26,
+    "uniform_mean_miss_deg": 3.49,
+    "why": "24 rays at 15 deg spacing put every orientation within 7.5 deg of "
+           "one, and the artwork is 32% vertical/horizontal by edge count "
+           "while the rays include a near-vertical and a near-horizontal",
+    "verdict": "refuted - the match is exactly the artwork's own base rate; "
+               "food and real still carry no number",
+}
+
+
+#: The underline is used **once** in the whole artwork.
+#:
+#: The plinth's device - underline the word, underline the numeral - is the
+#: only unambiguous word-number pairing in the puzzle, so it was worth asking
+#: whether it recurs. A detector for thin horizontal runs with text above and
+#: clear space below was swept across the image on the blue channel (which
+#: reads ink under the red paint) with the plinth as positive control.
+#:
+#: It returns 139 candidates. Every one of the 24 most word-like was rendered
+#: and inspected: all are **rotated placard text** - the vertical BLACK LIVES
+#: MATTER / END POLICE BRUTALITY signs, whose letter strokes read as horizontal
+#: runs - or architectural edges such as the Statue pedestal's mouldings.
+#:
+#: **No underline exists outside the plinth**, which is what
+#: ``PLINTH_SINGLE_SECTION`` already concluded from reading the plinth itself.
+UNDERLINE_SWEEP = {
+    "candidates": 139,
+    "inspected": 24,
+    "genuine_outside_the_plinth": 0,
+    "false_positive_sources": ("rotated placard text", "architectural edges"),
+    "verdict": "the underline device appears exactly once",
+}
+
+
+#: **The artwork does not mark 21 words, and the marking devices show why.**
+#:
+#: Catalogue how each known word is singled out, and a pattern appears that no
+#: individual finding makes obvious:
+#:
+#: =========  ====================================  ======
+#: word       device                                 uses
+#: =========  ====================================  ======
+#: subject    underlined in running text                1
+#: tower      written along a clock hand                2
+#: moon       written along a clock hand                -
+#: real       lowercase inserted among capitals         1
+#: food       written down a tower shaft                1
+#: =========  ====================================  ======
+#:
+#: **Four different devices, none used more than twice.** Every one is bespoke
+#: to its object.
+#:
+#: A construction that needed to mark twenty-one words would need a device
+#: applied twenty-one times - a consistent, repeated convention a solver could
+#: learn once and then apply. The artwork shows the opposite: one-off markings,
+#: each invented for the surface it sits on. That is what a handful of
+#: deliberate clues looks like, not what an encoded word list looks like.
+#:
+#: It converges with everything else:
+#:
+#: * two independent sweeps for a sixth marked word found none, across 21
+#:   object surfaces and then across every text strip in the image;
+#: * the underline - the one unambiguous word-number device - is used exactly
+#:   once (``UNDERLINE_SWEEP``);
+#: * the mechanisms that can supply a *number* top out at four
+#:   (``MECHANISM_CAPACITY``);
+#: * ``food`` and ``real`` are marked but numberless, and no mechanism
+#:   proposed for them has survived a control.
+#:
+#: **So the honest reading is that the artwork does not contain a recoverable
+#: 21-word phrase.** It contains four or five deliberate word-number clues and
+#: an ordering rule, and no demonstrated way to reach the rest. The repository
+#: the artwork is archived in is titled *"Puzzle or Statement"* - the people
+#: closest to it asked the same question.
+#:
+#: What would overturn this: a single further word paired with a number by a
+#: device that survives a control. Not a candidate word, and not compute - one
+#: verified pairing. That is the whole bar, and it has not been cleared since
+#: the plinth.
+MARKING_DEVICES = {
+    "devices": {
+        "underline in running text": ("subject",),
+        "written along a clock hand": ("tower", "moon"),
+        "lowercase among capitals": ("real",),
+        "written down a shaft": ("food",),
+    },
+    "distinct_devices": 4,
+    "max_uses_of_any_device": 2,
+    "words_marked": 5,
+    "words_needed": 21,
+    "implication": "a 21-word encoding needs a repeated convention; these are "
+                   "bespoke one-off markings",
+    "verdict": "the artwork does not mark 21 words",
+    "SUPERSEDED": "a fifth device was missed - low-contrast hidden text, "
+                  "legible only inside a narrow luminance window and "
+                  "invisible at any fixed enhancement. Unlike the four above "
+                  "it is repeatable, and it carries BIP-39 words. See "
+                  "puzzle.hidden_text.CORRECTION.",
+    "what_would_overturn_it": "one further word paired with a number by a "
+                              "device that survives a control",
+}
+
+
+#: **A clue must be readable to be a clue.** A second filter on count-based
+#: proposals, independent of the chosen/inherited split.
+#:
+#: Even a *chosen* count is useless if a solver cannot recover it from the
+#: published image. The artist cannot have relied on a number nobody can read
+#: back, whatever they intended when drawing it.
+#:
+#: The flag is the clear case. A US flag canonically carries 50 stars and 13
+#: stripes, so a **deviation** would be chosen and would carry real
+#: information - which makes it worth counting. But the flag is drawn waving,
+#: rotated and partly folded, freehand. Isolating the salmon-red star colour
+#: and taking connected components returns **45** star-sized blobs, arranged in
+#: rows of 3, 5, 8, 8, 8, 7, 4, 1, 1 - not a grid at all, because the canton is
+#: tilted and the folds occlude stars.
+#:
+#: 45 against a canonical 50 is not evidence of a deviation; it is evidence
+#: that the count is **unreadable**. Any solver would get a different number.
+#:
+#: So count-based proposals split three ways, not two:
+#:
+#: ==================  ==========================================
+#: readable + chosen    evidence
+#: readable + inherited carries nothing (CHOSEN_VERSUS_INHERITED)
+#: unreadable           cannot be a clue at all
+#: ==================  ==========================================
+#:
+#: Unreadable by this test: the flag's stars and stripes, the Great Seal
+#: pyramid's courses in dense line art, and "17 years of gold prices" - which
+#: needs data the image does not contain.
+COUNTS_MUST_BE_READABLE = {
+    "principle": "a count a solver cannot recover from the image cannot be "
+                 "the intended clue, whatever the artist intended",
+    "flag_stars_detected": 45,
+    "flag_stars_canonical": 50,
+    "flag_star_rows": (3, 5, 8, 8, 8, 7, 4, 1, 1),
+    "why_unreadable": "drawn waving, rotated and folded, freehand - the canton "
+                      "has no readable grid and folds occlude stars",
+    "unreadable_examples": ("flag stars", "flag stripes",
+                            "Great Seal pyramid courses",
+                            "17 years of gold prices"),
+    "verdict": "45 vs 50 is not a deviation, it is an unreadable count",
+}
+
+#: The one external lead, and why it is closed **from here**.
+#:
+#: u/stsh_n's other posts are the highest-value thing nobody has read: the
+#: creator's own words, if any exist. Every route available in this environment
+#: has been tried and failed.
+#:
+#: ===============================  ==========================================
+#: route                             result
+#: ===============================  ==========================================
+#: reddit.com / old.reddit / api     403 - Reddit's own block page, not the
+#:                                   proxy; Reddit refuses datacenter IPs
+#: web.archive.org                   blocked by the environment's egress
+#:                                   policy, though archive.org's availability
+#:                                   API is reachable and confirms a snapshot
+#:                                   of the profile exists (2025-03-27)
+#: timetravel.mementoweb.org         CONNECT tunnel refused
+#: web search                        nothing indexed for the username
+#: ===============================  ==========================================
+#:
+#: **A snapshot of the profile exists and is simply out of reach from here.**
+#: Anyone with an ordinary browser can open it in a minute. That is the single
+#: highest-value action available to a human on this puzzle, and it is not
+#: something more compute or more image analysis can substitute for.
+CREATOR_POSTS_UNREACHABLE = {
+    "target": "https://www.reddit.com/user/stsh_n/",
+    "snapshot_exists": "web.archive.org/web/20250327170626/",
+    "routes_tried": ("reddit.com", "old.reddit.com", "api.reddit.com",
+                     "web.archive.org", "timetravel.mementoweb.org",
+                     "web search"),
+    "blocked_by": {"reddit": "403, Reddit blocks datacenter IPs",
+                   "web.archive.org": "environment egress policy",
+                   "timetravel": "CONNECT tunnel refused",
+                   "search": "nothing indexed"},
+    "verdict": "closed from this environment, open to any browser",
+}
+
+
+#: **The binding census: there is no second binding device.**
+#:
+#: A *binding* is the thing this puzzle is actually short of - not a word, and
+#: not a number, but a mechanism that **attaches one to the other**. The word
+#: supply reopened when hidden text was found; the bindings did not move.
+#:
+#: Every numeral in the artwork, and what it binds:
+#:
+#: ====================  ==============================================
+#: numeral               binds
+#: ====================  ==============================================
+#: ``Section 1``         **subject** - the one explicit pairing
+#: the clock dial        nothing directly; it is the *scale* the ray
+#:                       mechanism is read against
+#: ``05.25.20``          nothing - and it is adjacent to ``breathe``,
+#:                       which is not a BIP-39 word
+#: ``11.03.20``          nothing - no adjacent word, and excluded by the
+#:                       chronology
+#: ``1865 - 202...?``    nothing - editorial
+#: the price axis        nothing - depicted content
+#: ``COVID 19`` / ``5G``  nothing - graffiti
+#: the target address    nothing - it is the target
+#: ====================  ==============================================
+#:
+#: **One of eight numerals binds a word.** The other bindings in the artwork -
+#: ``tower`` and ``moon`` - come from the clock-ray mechanism, not from a
+#: numeral at all.
+#:
+#: The two marked-but-unbound words were checked directly for an adjacent
+#: numeral and neither has one. ``food`` sits on the Space Needle's restaurant
+#: saucer - confirmed legible by level sweep at window 160-180 - with nothing
+#: numeric near it. ``real`` sits in ``ONLY real BITCOIN`` on the Statue's
+#: base, where the tablet that would traditionally carry a date has been
+#: replaced by a BLM phone.
+#:
+#: So the artwork binds a word to a position **four times, by two devices**:
+#:
+#: * the underlined numeral beside an underlined word - used **once**;
+#: * a word written along a clock ray - used **twice**, plus the Seal's eye at
+#:   STRONG.
+#:
+#: Searches for a third device have now covered underlines across the whole
+#: image (``UNDERLINE_SWEEP``), hidden sentences (``hidden_text.REBUILT_SWEEP``
+#: - the two found contain no numerals), the hour hand
+#: (``hidden_text.CLOCK_ARROW_CLAIM``), and line orientation
+#: (``LINE_ORIENTATION_IS_NOT_A_MECHANISM``). All four came back empty, and the
+#: first three came back empty *with their controls passing*.
+#:
+#: **This is the precise shape of the obstacle.** Eight BIP-39 words are in
+#: hand and five of them are bound to nothing. Finding more words does not
+#: help; the puzzle needs a mechanism that attaches them, and the artwork does
+#: not appear to contain one.
+BINDING_CENSUS = {
+    "numerals_total": 8,
+    "numerals_that_bind": 1,
+    "which": "Section 1 -> subject",
+    "bindings_total": 4,
+    "devices": {"underlined numeral beside an underlined word": 1,
+                "word written along a clock ray": 3},
+    "unbound_words": ("food", "real", "first", "future", "this"),
+    "food_checked": "on the Needle's restaurant saucer; no numeral near it",
+    "real_checked": "in 'ONLY real BITCOIN'; no numeral, and the date-bearing "
+                    "tablet was replaced by a BLM phone",
+    "third_device_searches": ("UNDERLINE_SWEEP",
+                              "hidden_text.REBUILT_SWEEP",
+                              "hidden_text.CLOCK_ARROW_CLAIM",
+                              "LINE_ORIENTATION_IS_NOT_A_MECHANISM"),
+    "verdict": "no second binding device; the obstacle is binding, not words",
 }
