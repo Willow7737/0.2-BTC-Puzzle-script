@@ -234,3 +234,54 @@ HIDDEN_SWEEP = {
     "controls_recovered": 1,
     "verdict": "supports no negative - the detector misses half its controls",
 }
+
+
+#: **The reported "5A on the clock arrow" is not there.** A controlled search.
+#:
+#: u/RaTMaTaT wrote: *"On the clockwise arrow, it looks like something similar
+#: to 5A."* ``Clockwise arrow`` is almost certainly machine translation of the
+#: Russian *часовая стрелка* - which means **hour hand**. That made it the most
+#: valuable unchecked claim in the thread, because the hour hand is the one
+#: that points at 21 and carries **no word**. A marking on it would be the
+#: word-and-number pair the puzzle has been short of.
+#:
+#: Each hand was straightened into a strip by sampling along its ray from the
+#: hub at (473, 940) with perpendicular offsets, then swept across every
+#: luminance window.
+#:
+#: **The instrument was fixed until it passed its controls.** At a half-width
+#: of 18 px it recovered neither ``TOWER`` nor ``MOON`` - the labels sit
+#: *beside* the hands, not on the ray - so every reading at that width was
+#: discarded. At 48 px both controls come back plainly.
+#:
+#: With controls passing, the hour hand carries **nothing** at any window. The
+#: letter-sized components it does produce are rune 2's glyphs, which fall
+#: inside the widened strip, and dithering in the hand's own gradient. The
+#: monument's lower right, also reported to carry inscriptions, shows only the
+#: plinth's steps.
+#:
+#: **This negative is supported**, unlike the earlier hidden-text sweep: the
+#: detector recovers both of its positive controls.
+#:
+#: It also strengthens :data:`positions.HOUR_HAND_IS_THE_LENGTH`. That reading
+#: turns on the hour hand being *deliberately* blank while the other two carry
+#: words. The blankness has now survived a search designed to overturn it.
+CLOCK_ARROW_CLAIM = {
+    "claim": "something similar to 5A on the hour hand",
+    "by": "u/RaTMaTaT",
+    "translation_note": "'clockwise arrow' renders Russian часовая стрелка, "
+                        "which means hour hand",
+    "why_it_mattered": "the hour hand points at 21 and carries no word; a "
+                       "marking on it would be a word-and-number pair",
+    "method": "straighten each hand into a strip along its ray from the hub, "
+              "then sweep every luminance window",
+    "half_width_18px": "recovered neither control - readings discarded",
+    "half_width_48px": "both TOWER and MOON recovered",
+    "hour_hand_result": "nothing at any window; the components found are "
+                        "rune 2's glyphs and gradient dithering",
+    "monument_lower_right": "plinth steps only, no inscriptions",
+    "verdict": "not present - and this negative is supported, the detector "
+               "recovers both controls",
+    "strengthens": "positions.HOUR_HAND_IS_THE_LENGTH - the blankness "
+                   "survived a search designed to overturn it",
+}

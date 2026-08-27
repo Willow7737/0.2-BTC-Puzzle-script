@@ -2103,3 +2103,35 @@ class TestLeftMarginAndSweep(unittest.TestCase):
         note = [e for e in self.h.REPORTED_NOT_YET_FOUND
                 if e["text"] == "TO TEST USE WORDS"][0]["note"]
         self.assertIn("2 of its 4", note)
+
+
+class TestClockArrowClaim(unittest.TestCase):
+    """A reported marking on the hour hand, searched for under controls."""
+
+    def setUp(self):
+        from puzzle import hidden_text
+        self.rec = hidden_text.CLOCK_ARROW_CLAIM
+
+    def test_this_negative_is_control_backed(self):
+        """Unlike HIDDEN_SWEEP, this one recovers both controls."""
+        from puzzle import hidden_text
+        self.assertIn("TOWER", self.rec["half_width_48px"])
+        self.assertIn("MOON", self.rec["half_width_48px"])
+        self.assertIn("supported", self.rec["verdict"])
+        # the other sweep must stay marked as supporting no negative
+        self.assertIn("supports no negative",
+                      hidden_text.HIDDEN_SWEEP["verdict"])
+
+    def test_the_discarded_width_is_recorded(self):
+        """A setting that failed its controls must not be quietly dropped."""
+        self.assertIn("discarded", self.rec["half_width_18px"])
+
+    def test_it_strengthens_the_length_deduction(self):
+        from puzzle import positions
+        self.assertIn("HOUR_HAND_IS_THE_LENGTH", self.rec["strengthens"])
+        self.assertEqual(positions.HOUR_HAND_IS_THE_LENGTH["saturated_at"], 21)
+
+    def test_the_claim_is_not_promoted_to_a_finding(self):
+        from puzzle import hidden_text
+        found = {e["text"] for e in hidden_text.FOUND}
+        self.assertNotIn("5A", found)

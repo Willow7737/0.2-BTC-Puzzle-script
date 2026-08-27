@@ -2115,6 +2115,49 @@ A detector that misses half its controls cannot support a negative, and this one
 does not. There may well be more hidden text. This sweep is simply not the
 instrument to rule it out.
 
+## 11k. Hunting the "5A on the clock arrow" — not there, and that matters
+
+u/RaTMaTaT reported: *"On the clockwise arrow, it looks like something similar
+to 5A."* **"Clockwise arrow" is machine translation of the Russian *часовая
+стрелка* — which means *hour hand*.** That made it the most valuable unchecked
+claim in the thread, because the hour hand is the one pointing at 21 that
+carries **no word**. A marking on it would be the word-and-number pair this
+puzzle has been starved of.
+
+### The search
+
+Each hand was straightened into a strip — sampled along its ray from the hub at
+(473, 940) with perpendicular offsets — then swept across every luminance
+window, counting *resolving strokes* rather than contrast, the discriminator
+that worked for `SHT`.
+
+**The instrument was fixed until it passed its controls.** At a half-width of
+18 px it recovered neither `TOWER` nor `MOON`: the labels sit *beside* the
+hands, not on the ray. Every reading at that width was discarded rather than
+reported. At 48 px both controls come back plainly — `TOWER` legible above the
+minute hand, `MOON` above the second.
+
+### The result
+
+With controls passing, the hour hand carries **nothing at any window**. The
+letter-sized components it does produce are **rune 2's glyphs**, which fall
+inside the widened strip, plus dithering in the hand's own gradient. The
+monument's lower right — also reported to carry inscriptions — shows only the
+plinth's steps.
+
+**This negative is supported**, and unlike the hidden-text sweep in §11j it is
+worth banking: the detector recovers both of its positive controls, so its
+silence means something.
+
+### Why it is a good result rather than a disappointment
+
+§11e deduced that the phrase is **21 words** on the grounds that the hour hand
+is *deliberately* blank — naming a parameter rather than a word slot — while
+the other two hands carry words.
+
+That deduction has now survived a search designed specifically to overturn it.
+The blankness is real, not an artefact of looking at the wrong contrast.
+
 ## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
