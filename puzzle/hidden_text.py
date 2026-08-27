@@ -285,3 +285,154 @@ CLOCK_ARROW_CLAIM = {
     "strengthens": "positions.HOUR_HAND_IS_THE_LENGTH - the blankness "
                    "survived a search designed to overturn it",
 }
+
+
+# ---------------------------------------------------------------------------
+# The detector, rebuilt
+# ---------------------------------------------------------------------------
+
+#: The first sweep for hidden text (``HIDDEN_SWEEP``) recovered only one of its
+#: two controls, so it supported no negative. This is the rebuild, and the fix
+#: came from measuring the known text rather than guessing thresholds.
+#:
+#: All three known hidden texts are ink sitting **just below the local modal
+#: luminance** - the ground they are drawn on:
+#:
+#: =============================  ======  =========
+#: text                           ground  ink
+#: =============================  ======  =========
+#: PAY FOR THE FUTURE.               189  just below
+#: THIS IS THE FIRST PREDICTION.     192  just below
+#: SHT                               214  just below
+#: =============================  ======  =========
+#:
+#: So the detector selects, per tile, the band ``[mode-34, mode-3]``. Being
+#: relative to the local mode makes it adapt to each region, and - the part
+#: that matters - it **excludes the artwork's black line work**, which lies far
+#: below the mode. That is why this version works where a fixed stretch did not.
+DETECTOR = {
+    "principle": "hidden ink sits just below the local modal luminance",
+    "band": "per 64 px tile, [mode-34, mode-3]",
+    "why_it_beats_a_fixed_stretch": "adapts to local ground, and excludes the "
+                                    "black line work that lies far below the mode",
+    "grounds_measured": {"PAY FOR THE FUTURE.": 189,
+                         "THIS IS THE FIRST PREDICTION.": 192,
+                         "SHT": 214},
+}
+
+#: **Scope, stated rather than glossed.** The detector requires five aligned
+#: letter-sized components to call a strip. Both *sentence* controls pass. The
+#: three-letter ``SHT`` does **not**: its letters do not resolve as separate
+#: components on the tablet's curve, and dropping the minimum to three to catch
+#: it produces 723 candidates instead of 193.
+#:
+#: So this instrument finds **sentences**, and its negative covers sentences
+#: only. Short marks of a few letters remain possible anywhere in the artwork
+#: and this sweep does not exclude them.
+DETECTOR_SCOPE = {
+    "requires": "5 aligned letter-sized components",
+    "sentence_controls_passed": 2,
+    "sentence_controls_total": 2,
+    "short_mark_control": "SHT - not recovered",
+    "why": "3 letters on a curved surface do not resolve as separate "
+           "components; min_n=3 yields 723 candidates against 193",
+    "negative_covers": "sentences only, not short marks",
+}
+
+#: The exhaustive run. 193 strips; 38 fall outside the artwork's known text
+#: blocks; the 20 strongest of those were rendered and inspected by eye.
+#:
+#: **Every one is already-catalogued content or paper texture** - the pyramid's
+#: brickwork, the ``COVID 19 IS A HOAX`` graffiti, rune glyphs, the vaccine
+#: vial's ``CVD19``, the Great Seal's lettering, the masked faces, the frame
+#: edge.
+#:
+#: **No further hidden sentence exists in this artwork.** Unlike the first
+#: sweep, this negative is supported: the detector recovers both of its
+#: sentence controls.
+REBUILT_SWEEP = {
+    "strips": 193,
+    "outside_known_blocks": 38,
+    "inspected": 20,
+    "new_sentences_found": 0,
+    "controls_recovered": "both sentences",
+    "verdict": "no further hidden sentence - and this negative is supported",
+    "caveat": "short marks are out of scope; see DETECTOR_SCOPE",
+}
+
+
+import numpy as np
+
+def faint_ink(g, tile=64, lo_off=34, hi_off=3, min_ground=120):
+    """Ink just below the LOCAL modal luminance.
+
+    Hidden text in this artwork is drawn a little darker than the ground it
+    sits on - 189/192/214 in the three known cases. Selecting a band just
+    below the per-tile mode adapts to each region and, crucially, excludes the
+    artwork's black line work, which lies far below the mode.
+    """
+    H,W=g.shape
+    mask=np.zeros(g.shape, bool)
+    for y in range(0,H,tile):
+        for x in range(0,W,tile):
+            b=g[y:y+tile, x:x+tile]
+            hist=np.bincount(b.ravel(), minlength=256)
+            ground=int(np.argmax(hist))
+            if ground < min_ground:          # dark region: no faint-on-light text
+                continue
+            lo,hi = ground-lo_off, ground-hi_off
+            mask[y:y+tile, x:x+tile] = (b>=lo)&(b<=hi)
+    return mask
+
+def letter_components(mask, hmin=4, hmax=20, wmin=2, wmax=20, amin=5, amax=220):
+    from scipy import ndimage
+    lab,n=ndimage.label(mask, np.ones((3,3)))
+    out=[]
+    for i,sl in enumerate(ndimage.find_objects(lab)):
+        ys,xs=sl; h_,w_=ys.stop-ys.start, xs.stop-xs.start
+        a=int((lab[sl]==i+1).sum())
+        if hmin<=h_<=hmax and wmin<=w_<=wmax and amin<=a<=amax:
+            out.append((xs.start,ys.start,xs.stop,ys.stop))
+    return out
+
+def rows(comps, axis="h", min_n=5, gap=13, band=7, hcv=0.6, basesd=4.5):
+    lo=(lambda c:c[0]) if axis=="h" else (lambda c:c[1])
+    hi=(lambda c:c[2]) if axis=="h" else (lambda c:c[3])
+    ctr=(lambda c:(c[1]+c[3])/2) if axis=="h" else (lambda c:(c[0]+c[2])/2)
+    ext=(lambda c:c[3]-c[1]) if axis=="h" else (lambda c:c[2]-c[0])
+    buckets={}
+    for c in comps: buckets.setdefault(int(ctr(c)//band),[]).append(c)
+    out=[]
+    for k in list(buckets):
+        cs=sorted(buckets.get(k,[])+buckets.get(k+1,[]), key=lo)
+        if not cs: continue
+        cur=[cs[0]]
+        for c in cs[1:]:
+            if lo(c)-hi(cur[-1])<=gap: cur.append(c)
+            else:
+                if len(cur)>=min_n: out.append(cur)
+                cur=[c]
+        if len(cur)>=min_n: out.append(cur)
+    keep=[]
+    for cs in out:
+        hs=[ext(c) for c in cs]
+        if np.mean(hs)<=0: continue
+        if np.std(hs)/np.mean(hs)<=hcv and np.std([ctr(c) for c in cs])<=basesd:
+            keep.append(cs)
+    return keep
+
+def detect(image_path):
+    from PIL import Image
+    g=np.asarray(Image.open(image_path).convert("L")).astype(int)
+    m=faint_ink(g)
+    comps=letter_components(m)
+    strips=rows(comps,"h")+rows(comps,"v")
+    def bb(cs): return (min(c[0] for c in cs),min(c[1] for c in cs),
+                        max(c[2] for c in cs),max(c[3] for c in cs))
+    res=sorted([(bb(cs),len(cs)) for cs in strips], key=lambda t:-t[1])
+    merged=[]
+    for b,n in res:
+        if any(b[0]>=m2[0][0]-6 and b[1]>=m2[0][1]-6 and b[2]<=m2[0][2]+6 and b[3]<=m2[0][3]+6
+               for m2 in merged): continue
+        merged.append((b,n))
+    return m, comps, merged

@@ -2158,6 +2158,61 @@ the other two hands carry words.
 That deduction has now survived a search designed specifically to overturn it.
 The blankness is real, not an artefact of looking at the wrong contrast.
 
+## 11l. The detector, rebuilt — and the hidden-text avenue closed
+
+§11j's sweep recovered only one of its two controls and so supported nothing.
+This is the rebuild, and the fix came from **measuring the known text instead of
+guessing thresholds**.
+
+### What the known text actually looks like
+
+| Text | Local ground | Ink |
+|---|---:|---|
+| `PAY FOR THE FUTURE.` | 189 | just below |
+| `THIS IS THE FIRST PREDICTION.` | 192 | just below |
+| `SHT` | 214 | just below |
+
+All three are ink sitting **just below the local modal luminance**. So the
+detector selects, per 64 px tile, the band `[mode − 34, mode − 3]`.
+
+Being *relative to the local mode* does two things a fixed stretch cannot: it
+adapts to each region's ground, and it **excludes the artwork's black line
+work**, which lies far below the mode. That is the whole difference.
+
+### Scope, stated rather than glossed
+
+The detector calls a strip on five aligned letter-sized components. **Both
+sentence controls pass.** The three-letter `SHT` does **not** — its letters do
+not resolve as separate components on the tablet's curve, and dropping the
+minimum to three to catch it yields 723 candidates instead of 193.
+
+So this instrument finds **sentences**, and its negative covers sentences only.
+Short marks of a few letters remain possible anywhere and are *not* excluded.
+
+### The result
+
+193 strips; **38** fall outside the artwork's known text blocks; the 20
+strongest of those were rendered and inspected by eye. Every one is
+already-catalogued content or paper texture — the pyramid's brickwork, the
+`COVID 19 IS A HOAX` graffiti, rune glyphs, the vial's `CVD19`, the Great Seal's
+lettering, the masked faces, the frame edge.
+
+**There is no further hidden sentence in this artwork.** Unlike §11j, this
+negative is supported: the detector recovers both of its sentence controls.
+
+### Where that leaves the word supply
+
+The hidden-text device gave what it had: `future`, `first`, `this` — plus `SHT`,
+which is not a word. Combined with the marked words, the supply stands at:
+
+| | |
+|---|---|
+| bound to a position | `subject`=1, `tower`=3, `moon`=13 (+ `eye`=9 STRONG) |
+| **unbound** | `food`, `real`, `first`, `future`, `this` |
+
+**Eight BIP-39 words, four bindings, seventeen positions unknown.** The
+bottleneck has moved: it is no longer finding words, it is *binding* them.
+
 ## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`

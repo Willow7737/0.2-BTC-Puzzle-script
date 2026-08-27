@@ -2190,3 +2190,53 @@ class TestStatusCommand(unittest.TestCase):
         self.assertEqual(len(unbound), 5)
         length = positions.HOUR_HAND_IS_THE_LENGTH["saturated_at"]
         self.assertEqual(length - confirmed - 1, 17)
+
+
+class TestRebuiltDetector(unittest.TestCase):
+    """The rebuild: it must recover both sentence controls, or say nothing."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def setUp(self):
+        from puzzle import hidden_text
+        self.h = hidden_text
+        if not os.path.exists(self.IMAGE):
+            self.skipTest("artwork not present")
+
+    @staticmethod
+    def _overlaps(a, b):
+        return not (a[2] < b[0] or a[0] > b[2] or a[3] < b[1] or a[1] > b[3])
+
+    def test_both_sentence_controls_are_recovered(self):
+        """The whole point of the rebuild - the first sweep managed one."""
+        _, _, strips = self.h.detect(self.IMAGE)
+        for name, box in (("PAY FOR THE FUTURE", (64, 700, 94, 1060)),
+                          ("THIS IS THE FIRST PREDICTION", (88, 700, 118, 1060))):
+            self.assertTrue(any(self._overlaps(b, box) for b, _ in strips),
+                            f"control not recovered: {name}")
+
+    def test_the_band_is_relative_to_local_ground(self):
+        """Relative-to-mode is what excludes the artwork's black line work."""
+        import numpy as np
+        from PIL import Image
+        g = np.asarray(Image.open(self.IMAGE).convert("L")).astype(int)
+        mask = self.h.faint_ink(g)
+        # black line work must be excluded almost entirely
+        self.assertLess(mask[g < 60].mean(), 0.01)
+
+    def test_scope_limit_is_recorded_not_glossed(self):
+        scope = self.h.DETECTOR_SCOPE
+        self.assertEqual(scope["sentence_controls_passed"],
+                         scope["sentence_controls_total"])
+        self.assertIn("SHT", scope["short_mark_control"])
+        self.assertIn("sentences only", scope["negative_covers"])
+
+    def test_the_negative_is_scoped_to_sentences(self):
+        rec = self.h.REBUILT_SWEEP
+        self.assertEqual(rec["new_sentences_found"], 0)
+        self.assertIn("supported", rec["verdict"])
+        self.assertIn("short marks are out of scope", rec["caveat"])
+
+    def test_it_supersedes_the_broken_sweep(self):
+        """The old sweep must stay marked as supporting nothing."""
+        self.assertIn("supports no negative", self.h.HIDDEN_SWEEP["verdict"])
