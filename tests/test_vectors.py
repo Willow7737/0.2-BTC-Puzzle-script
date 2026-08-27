@@ -2135,3 +2135,58 @@ class TestClockArrowClaim(unittest.TestCase):
         from puzzle import hidden_text
         found = {e["text"] for e in hidden_text.FOUND}
         self.assertNotIn("5A", found)
+
+
+class TestWordlistIsBip39(unittest.TestCase):
+    """Electrum v1 tested and excluded; the breathe anomaly resolved."""
+
+    def setUp(self):
+        from puzzle import wordlist
+        self.w = wordlist
+        self.rec = wordlist.WORDLIST_IS_BIP39
+
+    def test_bip39_holds_every_marked_or_hidden_word(self):
+        for word in self.rec["must_contain"]:
+            self.assertTrue(self.w.is_valid(word), word)
+        self.assertEqual(self.rec["bip39_covers"],
+                         len(self.rec["must_contain"]))
+
+    def test_electrum_v1_is_short_by_exactly_food_and_this(self):
+        self.assertEqual(set(self.rec["electrum_v1_missing"]), {"food", "this"})
+        self.assertLess(self.rec["electrum_v1_covers"],
+                        self.rec["bip39_covers"])
+
+    def test_breathe_and_food_cannot_share_a_wordlist(self):
+        """The constraint that decides the scheme."""
+        self.assertTrue(self.rec["no_list_contains_both"])
+        self.assertFalse(self.w.is_valid("breathe"))
+        self.assertTrue(self.w.is_valid("food"))
+
+    def test_the_marked_word_is_the_one_kept(self):
+        from puzzle import positions
+        self.assertIn("food", positions.MARKED_WITHOUT_NUMBER)
+        self.assertTrue(self.rec["verdict"].startswith("BIP-39"))
+
+
+class TestStatusCommand(unittest.TestCase):
+    """The scoreboard must recompute, not restate."""
+
+    def test_status_runs_and_reports_the_gap(self):
+        import subprocess, sys
+        r = subprocess.run([sys.executable, "solve.py", "status"],
+                           capture_output=True, text=True, timeout=120)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        out = r.stdout
+        self.assertIn("phrase length          : 21", out)
+        self.assertIn("BIP-39", out)
+        self.assertIn("NOT searchable", out)
+
+    def test_the_counts_match_the_records(self):
+        from puzzle import positions, hidden_text
+        confirmed = len(positions.CONFIRMED)
+        unbound = set(positions.MARKED_WITHOUT_NUMBER) | \
+            hidden_text.hidden_bip39_words()
+        self.assertEqual(confirmed, 3)
+        self.assertEqual(len(unbound), 5)
+        length = positions.HOUR_HAND_IS_THE_LENGTH["saturated_at"]
+        self.assertEqual(length - confirmed - 1, 17)
