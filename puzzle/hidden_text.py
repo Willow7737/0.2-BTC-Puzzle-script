@@ -55,12 +55,23 @@ FOUND = (
 )
 
 #: Reported by solvers in the thread and **not yet located here**. Recorded so
-#: the claims are testable rather than folklore.
+#: the claims are testable rather than folklore - and treated with suspicion,
+#: since faint-text transcriptions are exactly the kind of reading that goes
+#: wrong. A sweep for them, using the two confirmed sentences as controls,
+#: recovered only one of the two controls, so it supports **no** negative:
+#: their absence here is not evidence of their absence.
 REPORTED_NOT_YET_FOUND = (
     {"text": "TO TEST USE WORDS", "by": "DiOnline",
-     "note": "every word of it is BIP-39 - test, use, word"},
+     "note": "as written, only 2 of its 4 words are BIP-39 - 'test' and "
+             "'use'; 'to' and 'words' are not. An earlier version of this "
+             "record claimed all of them were, by silently singularising "
+             "'words' and dropping 'to'. Two of four is exactly the base "
+             "rate for ordinary English, so it is not evidence of anything."},
     {"text": "FIRST THE AT", "by": "DiOnline",
-     "note": "accompanies the phrase above"},
+     "note": "likely a partial misread. The confirmed sentence THIS IS THE "
+             "FIRST PREDICTION contains 'THE FIRST' adjacent, and this "
+             "fragment is those two words plus a stray - so it may be the "
+             "same text read badly, not a separate phrase."},
     {"text": "BITCOIN", "by": "RaTMaTaT", "where": "middle of the image"},
     {"text": "something like 5A", "by": "RaTMaTaT",
      "where": "on a clock arrow"},
@@ -161,3 +172,65 @@ def hidden_bip39_words() -> set:
     for entry in FOUND:
         out.update(entry["bip39_words"])
     return out
+
+
+#: The left margin, read in full. Beneath the target address, in faint hand:
+#:
+#:     ``1KfZGvwZxsvSmemoCmEV75uqcNzYBHjkHZ``
+#:     ``PAY FOR THE FUTURE.``
+#:     ``THIS IS THE FIRST PREDICTION.``
+#:
+#: The placement is the interesting part. These sit directly under the address
+#: the prize is held at, which reads as the artist captioning the donation
+#: rather than instructing a solver.
+#:
+#: **"THIS IS THE FIRST PREDICTION" corroborates rune 4.** Rune 4 ends
+#: ``НОМЕР`` - "number" - followed by a glyph this repository has shown to be
+#: unidentifiable from internal evidence. An artwork that calls itself *the
+#: first* of something is an artwork with a number, and the natural reading of
+#: the pair is that the trailing glyph is **1**.
+#:
+#: That is an inference, not a measurement: the glyph does not resemble a hand
+#: drawn ``1`` (it reads as a vertical stroke crossed by diagonals), and the
+#: cipher is a substitution, so shape carries no information anyway. What the
+#: sentence supplies is a *reason to expect* a number there, which is more than
+#: the artwork offered before.
+#:
+#: It also revives a question already answered once: a "first" implies a
+#: series. ``forensics.NO_SIBLING_PUZZLE`` searched and found none. Either the
+#: series was never continued, or it exists somewhere unsearched.
+LEFT_MARGIN = {
+    "lines": ("1KfZGvwZxsvSmemoCmEV75uqcNzYBHjkHZ",
+              "PAY FOR THE FUTURE.",
+              "THIS IS THE FIRST PREDICTION."),
+    "placement": "directly beneath the target address",
+    "reads_as": "the artist captioning the donation, not instructing a solver",
+    "corroborates": "rune 4's trailing 'НОМЕР X' - an artwork calling itself "
+                    "the first is an artwork with a number",
+    "inferred_x": 1,
+    "inference_not_measurement": True,
+    "implies_a_series": "and forensics.NO_SIBLING_PUZZLE found none",
+}
+
+#: The sweep for further hidden sentences, and why it proves nothing.
+#:
+#: The strip detector was re-run over the locally stretched image, looking for
+#: rows of letter-sized components in a mid-grey band - faint strokes, not the
+#: artwork's black line work. It returns 135 candidates; the 22 outside the
+#: known text blocks were all rendered and inspected, and every one is content
+#: already catalogued: the address, the pyramid's brickwork, the ``Order and
+#: stability`` banner, ``MOON`` on its hand, the Great Seal's lettering.
+#:
+#: **But it recovered only one of its two positive controls.** ``PAY FOR THE
+#: FUTURE.`` was found; ``THIS IS THE FIRST PREDICTION.`` was not, though it
+#: sits a few pixels away and is equally legible by eye. A detector that misses
+#: half its controls cannot support a negative, so this one does not: there may
+#: be more hidden text, and this sweep is not the instrument to rule it out.
+HIDDEN_SWEEP = {
+    "candidates": 135,
+    "inspected_outside_known_blocks": 22,
+    "new_text_found": 0,
+    "controls": 2,
+    "controls_recovered": 1,
+    "verdict": "supports no negative - the detector misses half its controls",
+}

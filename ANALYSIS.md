@@ -2047,6 +2047,74 @@ wordlist** though not in BIP-39. And solvers counted **28 unique rune glyphs**
 excluding `TUESDAY`, consistent with this repo's 27-letter Cyrillic alphabet
 plus a separator.
 
+## 11j. The left margin in full, and what the reported fragments are worth
+
+### The margin
+
+Read at the right stretch, the left margin carries three lines:
+
+```
+1KfZGvwZxsvSmemoCmEV75uqcNzYBHjkHZ
+PAY FOR THE FUTURE.
+THIS IS THE FIRST PREDICTION.
+```
+
+The placement is the point: they sit **directly beneath the address the prize
+is held at**. That reads as the artist captioning the donation, not instructing
+a solver.
+
+**And it corroborates rune 4.** Rune 4 ends `НОМЕР` — *number* — followed by a
+glyph §11g showed to be unidentifiable from internal evidence. An artwork that
+calls itself *the first* is an artwork with a number, and the natural reading of
+the pair is that the trailing glyph is **1**.
+
+That is an inference, not a measurement, and it should be held as one: the glyph
+does not look like a hand-drawn `1`, and since the cipher is a substitution its
+shape carries no information anyway. What the sentence adds is a *reason to
+expect a number there* — which the artwork did not previously give.
+
+It also revives a settled question. A "first" implies a series, and §10 searched
+for a sibling puzzle and found none. Either the series was never continued, or
+it exists somewhere unsearched.
+
+### The reported fragments: locate before decoding
+
+`TO TEST USE WORDS` and `FIRST THE AT` are u/DiOnline's transcriptions, and
+**neither has been located here.** Before treating them as ciphertext, two
+cautions:
+
+**They may not be separate text.** The confirmed sentence `THIS IS THE FIRST
+PREDICTION.` contains `THE FIRST` adjacent. `FIRST THE AT` is those two words
+reordered plus a stray — plausibly the *same* text, read badly.
+
+**The BIP-39 coincidence is not one.** It is tempting to note that `test`, `use`
+and `word` are all in the wordlist. But as written, `TO TEST USE WORDS` has only
+**2 of 4** words in BIP-39 — `to` and `words` are not — and 2 of 4 is exactly the
+base rate for ordinary English. *(An earlier note in this repo claimed all of
+them were, by silently singularising `words` and dropping `to`. Corrected.)*
+
+So first-letter extractions like `TTUW`/`FTA`, or last-letter ones like `OTES`,
+are being run on a transcription that may be wrong in its letters — which is
+precisely where such extractions produce meaningless strings that look
+suggestive. **The prerequisite is locating the text, not manipulating it.**
+
+### The sweep, and why it proves nothing
+
+The strip detector was re-run over the locally stretched image, hunting rows of
+letter-sized components in a mid-grey band — faint strokes rather than the
+artwork's black line work. It returns 135 candidates; all 22 outside the known
+text blocks were rendered and inspected, and every one is already catalogued:
+the address, the pyramid's brickwork, the `Order and stability` banner, `MOON`
+on its hand, the Great Seal's lettering.
+
+**But it recovered only one of its two positive controls.** `PAY FOR THE
+FUTURE.` was found; `THIS IS THE FIRST PREDICTION.` was not, though it sits a
+few pixels away and is equally legible by eye.
+
+A detector that misses half its controls cannot support a negative, and this one
+does not. There may well be more hidden text. This sweep is simply not the
+instrument to rule it out.
+
 ## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`

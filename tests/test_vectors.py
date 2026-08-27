@@ -2065,3 +2065,41 @@ class TestHiddenText(unittest.TestCase):
         reported = {e["text"] for e in self.h.REPORTED_NOT_YET_FOUND}
         self.assertEqual(found & reported, set())
         self.assertIn("TO TEST USE WORDS", reported)
+
+
+class TestLeftMarginAndSweep(unittest.TestCase):
+    """The margin sentences, and a sweep that supports no negative."""
+
+    def setUp(self):
+        from puzzle import hidden_text
+        self.h = hidden_text
+
+    def test_margin_lines_are_recorded_in_order(self):
+        lines = self.h.LEFT_MARGIN["lines"]
+        self.assertEqual(len(lines), 3)
+        self.assertTrue(lines[0].startswith("1KfZ"))
+        self.assertIn("FIRST PREDICTION", lines[2])
+
+    def test_the_number_is_an_inference_not_a_measurement(self):
+        rec = self.h.LEFT_MARGIN
+        self.assertEqual(rec["inferred_x"], 1)
+        self.assertTrue(rec["inference_not_measurement"])
+        from puzzle import runes
+        # the glyph itself must stay recorded as unidentifiable
+        self.assertTrue(runes.RUNE4_TAIL_IS_UNIDENTIFIABLE["verdict"]
+                        .startswith("unidentifiable"))
+
+    def test_sweep_supports_no_negative(self):
+        s = self.h.HIDDEN_SWEEP
+        self.assertLess(s["controls_recovered"], s["controls"])
+        self.assertIn("supports no negative", s["verdict"])
+
+    def test_reported_fragment_is_not_all_bip39(self):
+        """A claim this repo briefly got wrong; keep it pinned."""
+        from puzzle import wordlist
+        as_written = ["to", "test", "use", "words"]
+        hits = [w for w in as_written if wordlist.is_valid(w)]
+        self.assertEqual(len(hits), 2)
+        note = [e for e in self.h.REPORTED_NOT_YET_FOUND
+                if e["text"] == "TO TEST USE WORDS"][0]["note"]
+        self.assertIn("2 of its 4", note)
