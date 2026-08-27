@@ -750,6 +750,19 @@ WORD_SUPPLY = {
                    "convention it demonstrably uses; search remains unseedable",
 }
 
+#: **SUPERSEDED.** This record's "no sixth marked word" is wrong. Both
+#: sweeps behind it ran at a fixed enhancement, and the artwork also carries
+#: text at a contrast no single enhancement shows - including the BIP-39
+#: words ``future``, ``first`` and ``this``. See
+#: ``puzzle.hidden_text.CORRECTION``.
+WORD_SUPPLY_SUPERSEDED = {
+    "claim": "five marked words, no sixth found",
+    "wrong_because": "both sweeps ran at a fixed enhancement",
+    "new_words": ("future", "first", "this"),
+    "see": "puzzle.hidden_text",
+}
+
+
 
 #: **The clock does not show a time.** The three hands are pointers.
 #:
@@ -1069,6 +1082,11 @@ MARKING_DEVICES = {
     "implication": "a 21-word encoding needs a repeated convention; these are "
                    "bespoke one-off markings",
     "verdict": "the artwork does not mark 21 words",
+    "SUPERSEDED": "a fifth device was missed - low-contrast hidden text, "
+                  "legible only inside a narrow luminance window and "
+                  "invisible at any fixed enhancement. Unlike the four above "
+                  "it is repeatable, and it carries BIP-39 words. See "
+                  "puzzle.hidden_text.CORRECTION.",
     "what_would_overturn_it": "one further word paired with a number by a "
                               "device that survives a control",
 }

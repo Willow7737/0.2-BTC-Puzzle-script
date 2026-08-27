@@ -1996,3 +1996,72 @@ class TestCountsMustBeReadable(unittest.TestCase):
         self.assertIn("web.archive.org", rec["routes_tried"])
         self.assertTrue(rec["snapshot_exists"])
         self.assertIn("open to any browser", rec["verdict"])
+
+
+class TestHiddenText(unittest.TestCase):
+    """Low-contrast text the earlier fixed-enhancement sweeps could not see."""
+
+    IMAGE = os.environ.get("PUZZLE_IMAGE", "puzzle.png")
+
+    def setUp(self):
+        from puzzle import hidden_text
+        self.h = hidden_text
+
+    def test_hidden_words_are_bip39(self):
+        from puzzle import wordlist
+        found = self.h.hidden_bip39_words()
+        self.assertTrue(found)
+        for w in found:
+            self.assertTrue(wordlist.is_valid(w), w)
+
+    def test_the_new_words_are_not_already_in_the_marked_set(self):
+        """If they were already known this would not be a correction."""
+        from puzzle import positions
+        known = {w for a in positions.CONFIRMED for w in a.words}
+        known |= set(positions.MARKED_WITHOUT_NUMBER)
+        self.assertEqual(self.h.hidden_bip39_words() & known, set())
+
+    def test_correction_names_what_it_supersedes(self):
+        c = self.h.CORRECTION
+        self.assertIn("positions.WORD_SUPPLY", c["affects"])
+        self.assertIn("positions.MARKING_DEVICES", c["affects"])
+        self.assertTrue(c["device_is_repeatable"])
+        from puzzle import positions
+        self.assertIn("SUPERSEDED", positions.MARKING_DEVICES)
+
+    def test_sht_is_readable_only_in_a_narrow_window(self):
+        """The whole point: no global enhancement shows it.
+
+        Contrast is the wrong measure - a badly chosen window clips to a
+        high-contrast field with no text in it. What distinguishes the right
+        window is that the strokes *resolve*, so count ink components.
+        """
+        if not os.path.exists(self.IMAGE):
+            self.skipTest("artwork not present")
+        import numpy as np
+        from scipy import ndimage
+
+        box = (252, 782, 292, 802)          # tight on the text, flat ground
+        def components(lo):
+            w = self.h.level_window(self.IMAGE, box, lo)
+            return ndimage.label(w < 128, np.ones((3, 3)))[1]
+
+        peak = components(204)
+        self.assertGreaterEqual(peak, 6, "the text must resolve into strokes")
+        for lo in (120, 150, 185, 225):
+            self.assertLess(components(lo), peak,
+                            f"window {lo} should not resolve the text")
+
+    def test_local_stretch_runs_and_preserves_shape(self):
+        if not os.path.exists(self.IMAGE):
+            self.skipTest("artwork not present")
+        from PIL import Image
+        out = self.h.local_stretch(self.IMAGE)
+        self.assertEqual(out.shape, Image.open(self.IMAGE).size[::-1])
+
+    def test_reported_but_unlocated_claims_are_kept_separate(self):
+        """Other people's claims must not be recorded as findings."""
+        found = {e["text"] for e in self.h.FOUND}
+        reported = {e["text"] for e in self.h.REPORTED_NOT_YET_FOUND}
+        self.assertEqual(found & reported, set())
+        self.assertIn("TO TEST USE WORDS", reported)

@@ -1981,6 +1981,72 @@ container.** Anyone with an ordinary browser opens it in a minute. That is the
 single highest-value action available on this puzzle, and no amount of compute
 or further image analysis substitutes for it.
 
+## 11i. Hidden text — and a conclusion of mine that was wrong
+
+The archived Reddit thread (supplied as a PDF, OCR'd) reports that solvers found
+hidden content with photo-forensics tools. Checking their claims turned up more
+than they described, and **overturned this repository's word-supply conclusion.**
+
+### The technique
+
+A **level sweep** maps a narrow luminance window to full contrast; a **local
+stretch** does the same per tile, so faint marks on flat ground surface
+everywhere at once. The guard matters: tiles whose range is under 6 are left
+mid-grey, or featureless ground turns into noise and drowns the signal.
+
+### What is there
+
+| Text | Where |
+|---|---|
+| **`PAY FOR THE FUTURE.`** | vertical, left margin beside the Bitcoin address |
+| **`THIS IS THE FIRST PREDICTION.`** | vertical, immediately right of it |
+| **`SHT`** | the Statue's tablet, below the underlined `BLM` and the fist |
+| **`THIS`** | inserted into the title, which reads `FIND THE SEED PHRASE IN THE `**`THIS`**` PICTURE` — ungrammatical, so it is an insertion, the same device as `real` in `ONLY real Bitcoin` |
+
+`SHT` is legible **only** in the window 196–212 of 255. Contrast is the wrong way
+to detect it — a badly chosen window clips to a high-contrast field containing
+no text. What marks the right window is that the strokes *resolve*: at 204 the
+patch breaks into **9 ink components**, at every other window into 1 or 2.
+
+### The correction
+
+Section 10 recorded **"no sixth marked word"** after two sweeps — 21 object
+surfaces, then every text strip. **That conclusion is wrong.** Both sweeps ran
+at a *fixed* enhancement, and none of the text above is visible at any fixed
+enhancement. `future`, `first` and `this` are BIP-39; `predict` sits inside
+`PREDICTION`.
+
+§11g's structural argument is weakened too. It counted four bespoke marking
+devices, none used more than twice, and concluded the artwork does not mark 21
+words. Low-contrast hidden text is a **fifth device — and unlike the other four
+it is repeatable.** Nothing limits how many sentences can be hidden this way,
+and three separate placements are already confirmed.
+
+**The word-supply bottleneck is reopened.**
+
+### Still reported, not yet located
+
+Recorded as other people's claims rather than findings, so they stay testable:
+`TO TEST USE WORDS` and `FIRST THE AT` (u/DiOnline — note every word of the
+first is BIP-39: `test`, `use`, `word`), a hidden `BITCOIN` mid-image, something
+like `5A` on a clock arrow, and inscriptions at the monument (u/RaTMaTaT).
+
+### What the thread independently confirms
+
+Most of it is unverified speculation, and several claims in it contradict each
+other. Two items check out against work done here before the thread was seen:
+
+* u/Amadeus407 relays the creator's own statement, and the three Russian rune
+  plaintexts **match this repo's decodes of runes 1, 2 and 4 exactly**;
+* u/DiOnline states the puzzle's creator and the person who posted it are
+  different people — which is what §10 concluded from the two signatures and
+  the medium mismatch.
+
+One further lead worth its own test: `breathe` is **in the Electrum v1
+wordlist** though not in BIP-39. And solvers counted **28 unique rune glyphs**
+excluding `TUESDAY`, consistent with this repo's 27-letter Cyrillic alphabet
+plus a separator.
+
 ## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
