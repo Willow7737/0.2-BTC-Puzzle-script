@@ -2240,3 +2240,41 @@ class TestRebuiltDetector(unittest.TestCase):
     def test_it_supersedes_the_broken_sweep(self):
         """The old sweep must stay marked as supporting nothing."""
         self.assertIn("supports no negative", self.h.HIDDEN_SWEEP["verdict"])
+
+
+class TestBindingCensus(unittest.TestCase):
+    """The obstacle stated precisely: bindings, not words."""
+
+    def setUp(self):
+        from puzzle import positions
+        self.p = positions
+        self.rec = positions.BINDING_CENSUS
+
+    def test_the_census_covers_every_known_numeral(self):
+        self.assertEqual(self.rec["numerals_total"],
+                         len(self.p.NUMERAL_CENSUS))
+
+    def test_exactly_one_numeral_binds_a_word(self):
+        binds = [k for k, v in self.p.NUMERAL_CENSUS.items()
+                 if "pairing" in v["role"]]
+        self.assertEqual(len(binds), self.rec["numerals_that_bind"])
+        self.assertEqual(binds, ["section_1"])
+
+    def test_bindings_total_matches_the_position_records(self):
+        confirmed = len(self.p.CONFIRMED)
+        self.assertEqual(confirmed + 1, self.rec["bindings_total"])
+        self.assertEqual(sum(self.rec["devices"].values()),
+                         self.rec["bindings_total"])
+
+    def test_unbound_words_are_the_ones_with_no_position(self):
+        from puzzle import hidden_text
+        unbound = set(self.p.MARKED_WITHOUT_NUMBER) | \
+            hidden_text.hidden_bip39_words()
+        self.assertEqual(set(self.rec["unbound_words"]), unbound)
+
+    def test_every_third_device_search_is_recorded(self):
+        """A negative is only worth stating if you can point at the searches."""
+        self.assertEqual(len(self.rec["third_device_searches"]), 4)
+        for name in ("UNDERLINE_SWEEP",
+                     "LINE_ORIENTATION_IS_NOT_A_MECHANISM"):
+            self.assertTrue(hasattr(self.p, name), name)

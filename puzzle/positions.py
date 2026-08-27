@@ -1170,3 +1170,74 @@ CREATOR_POSTS_UNREACHABLE = {
                    "search": "nothing indexed"},
     "verdict": "closed from this environment, open to any browser",
 }
+
+
+#: **The binding census: there is no second binding device.**
+#:
+#: A *binding* is the thing this puzzle is actually short of - not a word, and
+#: not a number, but a mechanism that **attaches one to the other**. The word
+#: supply reopened when hidden text was found; the bindings did not move.
+#:
+#: Every numeral in the artwork, and what it binds:
+#:
+#: ====================  ==============================================
+#: numeral               binds
+#: ====================  ==============================================
+#: ``Section 1``         **subject** - the one explicit pairing
+#: the clock dial        nothing directly; it is the *scale* the ray
+#:                       mechanism is read against
+#: ``05.25.20``          nothing - and it is adjacent to ``breathe``,
+#:                       which is not a BIP-39 word
+#: ``11.03.20``          nothing - no adjacent word, and excluded by the
+#:                       chronology
+#: ``1865 - 202...?``    nothing - editorial
+#: the price axis        nothing - depicted content
+#: ``COVID 19`` / ``5G``  nothing - graffiti
+#: the target address    nothing - it is the target
+#: ====================  ==============================================
+#:
+#: **One of eight numerals binds a word.** The other bindings in the artwork -
+#: ``tower`` and ``moon`` - come from the clock-ray mechanism, not from a
+#: numeral at all.
+#:
+#: The two marked-but-unbound words were checked directly for an adjacent
+#: numeral and neither has one. ``food`` sits on the Space Needle's restaurant
+#: saucer - confirmed legible by level sweep at window 160-180 - with nothing
+#: numeric near it. ``real`` sits in ``ONLY real BITCOIN`` on the Statue's
+#: base, where the tablet that would traditionally carry a date has been
+#: replaced by a BLM phone.
+#:
+#: So the artwork binds a word to a position **four times, by two devices**:
+#:
+#: * the underlined numeral beside an underlined word - used **once**;
+#: * a word written along a clock ray - used **twice**, plus the Seal's eye at
+#:   STRONG.
+#:
+#: Searches for a third device have now covered underlines across the whole
+#: image (``UNDERLINE_SWEEP``), hidden sentences (``hidden_text.REBUILT_SWEEP``
+#: - the two found contain no numerals), the hour hand
+#: (``hidden_text.CLOCK_ARROW_CLAIM``), and line orientation
+#: (``LINE_ORIENTATION_IS_NOT_A_MECHANISM``). All four came back empty, and the
+#: first three came back empty *with their controls passing*.
+#:
+#: **This is the precise shape of the obstacle.** Eight BIP-39 words are in
+#: hand and five of them are bound to nothing. Finding more words does not
+#: help; the puzzle needs a mechanism that attaches them, and the artwork does
+#: not appear to contain one.
+BINDING_CENSUS = {
+    "numerals_total": 8,
+    "numerals_that_bind": 1,
+    "which": "Section 1 -> subject",
+    "bindings_total": 4,
+    "devices": {"underlined numeral beside an underlined word": 1,
+                "word written along a clock ray": 3},
+    "unbound_words": ("food", "real", "first", "future", "this"),
+    "food_checked": "on the Needle's restaurant saucer; no numeral near it",
+    "real_checked": "in 'ONLY real BITCOIN'; no numeral, and the date-bearing "
+                    "tablet was replaced by a BLM phone",
+    "third_device_searches": ("UNDERLINE_SWEEP",
+                              "hidden_text.REBUILT_SWEEP",
+                              "hidden_text.CLOCK_ARROW_CLAIM",
+                              "LINE_ORIENTATION_IS_NOT_A_MECHANISM"),
+    "verdict": "no second binding device; the obstacle is binding, not words",
+}

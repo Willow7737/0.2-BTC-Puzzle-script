@@ -2213,6 +2213,61 @@ which is not a word. Combined with the marked words, the supply stands at:
 **Eight BIP-39 words, four bindings, seventeen positions unknown.** The
 bottleneck has moved: it is no longer finding words, it is *binding* them.
 
+## 11m. The binding census: there is no second binding device
+
+The word supply reopened when hidden text was found. The **bindings** did not
+move — and a binding, not a word, is what this puzzle is actually short of.
+
+### Every numeral in the artwork, and what it binds
+
+| Numeral | Binds |
+|---|---|
+| `Section 1` | **`subject`** — the one explicit pairing |
+| the clock dial | nothing directly; it is the *scale* the ray mechanism reads against |
+| `05.25.20` | nothing — and it sits beside `breathe`, which §11 settled is not a BIP-39 word |
+| `11.03.20` | nothing — no adjacent word, and excluded by the chronology |
+| `1865 - 202…?` | nothing — editorial |
+| the price axis | nothing — depicted content |
+| `COVID 19` / `5G` | nothing — graffiti |
+| the target address | nothing — it *is* the target |
+
+**One numeral out of eight binds a word.** The other bindings — `tower` and
+`moon` — come from the clock-ray mechanism, not from a numeral at all.
+
+### The two marked words, checked directly
+
+`food` is written on the Space Needle's **restaurant saucer** — confirmed
+legible by level sweep at window 160–180, which is a nice detail in itself, the
+word placed on the revolving restaurant. There is **no numeral near it**.
+
+`real` sits in `ONLY real BITCOIN` on the Statue's base. No numeral — and the
+tablet that would traditionally carry a date has been replaced by a BLM phone.
+
+### So the artwork binds four times, by two devices
+
+* an **underlined numeral beside an underlined word** — used **once**;
+* a **word written along a clock ray** — used **twice**, plus the Seal's eye at
+  `STRONG`.
+
+Searches for a third device have now covered:
+
+| Search | Result | Controls |
+|---|---|---|
+| underlines across the whole image | 1 use only | plinth recovered |
+| hidden sentences | 2 found, **neither contains a numeral** | both recovered |
+| the hour hand | blank | `TOWER` and `MOON` recovered |
+| line orientation | refuted at the base rate | n/a |
+
+Three of the four came back empty **with their controls passing**.
+
+### This is the precise shape of the obstacle
+
+**Eight BIP-39 words are in hand. Five of them are bound to nothing.**
+
+Finding more words does not help. The puzzle needs a mechanism that *attaches*
+a word to a position, and after four controlled searches the artwork does not
+appear to contain a third one.
+
 ## 12. Open questions
 
 - **Is the phrase 12 words?** Nothing establishes the length. `--length`
